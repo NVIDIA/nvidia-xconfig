@@ -226,4 +226,16 @@ NvCfgBool nvCfgGetEDID(NvCfgDeviceHandle handle,
                        unsigned int display_device,
                        NvCfgDisplayDeviceInformation *info);
 
+
+/*
+ * nvCfgIsPrimaryDevice() - determines whether the specified NVIDIA
+ * device is the primary device.  On success, NVCFG_TRUE will be
+ * returned and is_primary_device set to indicate whether the
+ * device is the primary device.  On failure, NVCFG_FALSE will be
+ * returned.
+ */
+
+NvCfgBool nvCfgIsPrimaryDevice(NvCfgDeviceHandle handle,
+                               NvCfgBool *is_primary_device);
+
 #endif /* __NVIDIA_CFG__ */

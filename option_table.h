@@ -37,6 +37,10 @@
 #define VIRTUAL_OPTION                      26
 #define USE_DISPLAY_DEVICE_OPTION           27
 #define CUSTOM_EDID_OPTION                  28
+#define TV_STANDARD_OPTION                  29
+#define TV_OUT_FORMAT_OPTION                30
+#define TV_OVER_SCAN_OPTION                 31
+#define COOL_BITS_OPTION                    32
 
 /*
  * To add a boolean option to nvidia-xconfig:
@@ -138,6 +142,13 @@ static const NVGetoptOption __options[] = {
       NVGETOPT_IS_BOOLEAN, NULL,
       "Disable or enable the \"NoBandWidthTest\" X configuration option." },
 
+    { "cool-bits", COOL_BITS_OPTION,
+      NVGETOPT_INTEGER_ARGUMENT | NVGETOPT_ALLOW_DISABLE, NULL,
+      "Enable or disable the \"Coolbits\" X configuration option. Setting this "
+      "option will enable support in the NV-CONTROL X extension for manipulating "
+      "GPU clock settings. Default value is 0.\n"
+      "WARNING: this may cause system damage and void warranties." },
+
     { "composite",
       XCONFIG_BOOL_VAL(COMPOSITE_BOOL_OPTION), NVGETOPT_IS_BOOLEAN, NULL,
       "Enable or disable the \"Composite\" X extension." },
@@ -153,8 +164,11 @@ static const NVGetoptOption __options[] = {
     { "custom-edid", CUSTOM_EDID_OPTION,
       NVGETOPT_STRING_ARGUMENT | NVGETOPT_ALLOW_DISABLE, "CUSTOM-EDID",
       "Enable or disable the  \"CustomEDID\" X configuration option; "
-      "setting this option forces the X driver to use the EDID specified "
-      "in a file rather than the display's EDID." },
+      "setting this option forces the X driver to use the EDID specified."
+      "This option is a semicolon-separated list of pairs of display device names "
+      "and filename pairs; e.g \"CRT-0:\\tmp\\edid.bin\". Note that a display "
+      "device name must always be specified even if only one EDID is"
+      " specified. " },
 
     { "dac-8bit", XCONFIG_BOOL_VAL(DAC_8BIT_BOOL_OPTION),
       NVGETOPT_IS_BOOLEAN, NULL,
@@ -392,7 +406,7 @@ static const NVGetoptOption __options[] = {
       "Enable or disable the \"Rotate\" X configuration option.  Valid values "
       "for [ROTATE] are 'normal', 'left', 'CCW', 'inverted', "
       "'right', and 'CW'.  Rotation can be disabled " },
-
+ 
     { "screen", SCREEN_OPTION, NVGETOPT_STRING_ARGUMENT, NULL,
       "The nvidia-xconfig utility operates on one or more screens within a "
       "Server Layout in the X configuration file.  If this option is "
@@ -425,6 +439,24 @@ static const NVGetoptOption __options[] = {
       "clone mode stereo), 5 (SeeReal digital flat panel), 6 (Sharp3D "
       "digital flat panel)." },
 
+    { "tv-standard", TV_STANDARD_OPTION,
+      NVGETOPT_STRING_ARGUMENT | NVGETOPT_ALLOW_DISABLE, "TV-STANDARD",
+      "Enable or disable the \"TVStandard\" X configuration option. Valid " 
+      "values for \"TVStandard\" are: \"PAL-B\", \"PAL-D\", \"PAL-G\", "
+      "\"PAL-H\", \"PAL-I\", \"PAL-K1\", \"PAL-M\", \"PAL-N\", \"PAL-NC\", " 
+      "\"NTSC-J\", \"NTSC-M\", \"HD480i\", \"HD480p\", \"HD720p\", "
+      "\"HD1080i\", \"HD1080p\", \"HD576i\", \"HD576p\"." },
+    
+    { "tv-out-format", TV_OUT_FORMAT_OPTION,
+      NVGETOPT_STRING_ARGUMENT | NVGETOPT_ALLOW_DISABLE, "TV-OUT-FORMAT",
+      "Enable or disable the \"TVOutFormat\" X configuration option. Valid "
+      "values for \"TVOutFormat\" are: \"SVIDEO\" and \"COMPOSITE\"." },
+  
+    { "tv-over-scan", TV_OVER_SCAN_OPTION,
+      NVGETOPT_DOUBLE_ARGUMENT | NVGETOPT_ALLOW_DISABLE, NULL,
+      "Enable or disable the \"TVOverScan\" X configuration option. Valid "
+      "values are decimal values in the range 1.0 and 0.0." }, 
+          
     { "twinview", XCONFIG_BOOL_VAL(TWINVIEW_BOOL_OPTION),
       NVGETOPT_IS_BOOLEAN, NULL, "Enable or disable TwinView." },
 
@@ -488,6 +520,14 @@ static const NVGetoptOption __options[] = {
       NVGETOPT_STRING_ARGUMENT | NVGETOPT_ALLOW_DISABLE, "DISPLAY-DEVICE",
       "Force the X driver to use the display device specified." },
 
+    { "use-events", 
+      XCONFIG_BOOL_VAL(USE_EVENTS_BOOL_OPTION), NVGETOPT_IS_BOOLEAN, NULL,
+      "Enable or disable \"UseEvents\" X configuration option. Setting this " 
+      "option will enable the X driver to use the system events in some cases "
+      "when it is waiting for the hardware. With this option X driver sets an "
+      "event handler and waits for the hardware through the poll() system "
+      "call. This option defaults to FALSE." },
+     
     { "virtual", VIRTUAL_OPTION,
       NVGETOPT_STRING_ARGUMENT | NVGETOPT_ALLOW_DISABLE, "WIDTHxHEIGHT",
       "Specify the virtual screen resolution." },

@@ -49,7 +49,8 @@
  */
 
 int nvgetopt(int argc, char *argv[], const NVGetoptOption *options,
-             char **strval, int *boolval, int *intval, int *disable_val)
+             char **strval, int *boolval, int *intval, double *doubleval,
+             int *disable_val)
 {
     char *c, *a, *arg, *name = NULL, *argument=NULL;
     int i, found = NVGETOPT_FALSE, ret = 0, val = NVGETOPT_FALSE;
@@ -239,6 +240,14 @@ int nvgetopt(int argc, char *argv[], const NVGetoptOption *options,
             }
         } else if ((o->flags & NVGETOPT_STRING_ARGUMENT) && (strval)) {
             *strval = strdup(argument);
+        } else if ((o->flags & NVGETOPT_DOUBLE_ARGUMENT) && (doubleval)) {
+            char *endptr;
+            *doubleval = (double) strtod(argument, &endptr);
+            if (*endptr) {
+                fprintf(stderr, "%s: \"%s\" is not a valid argument for "
+                        "option \"%s\".\n", argv[0], argument, arg);
+                goto done;
+            }
         } else {
             fprintf(stderr, "%s: error while assigning argument for "
                     "option \"%s\".\n", argv[0], arg);

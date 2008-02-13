@@ -88,8 +88,9 @@ typedef struct {
 #define PROBE_ALL_GPUS_BOOL_OPTION              33
 #define DYNAMIC_TWINVIEW_BOOL_OPTION            34
 #define INCLUDE_IMPLICIT_METAMODES_BOOL_OPTION  35
+#define USE_EVENTS_BOOL_OPTION                  36
 
-#define XCONFIG_BOOL_OPTION_COUNT (INCLUDE_IMPLICIT_METAMODES_BOOL_OPTION + 1)
+#define XCONFIG_BOOL_OPTION_COUNT (USE_EVENTS_BOOL_OPTION + 1)
 
 /* # of 32-bit variables needed to hold all the boolean options (bits) */
 #define XCONFIG_BOOL_OPTION_SLOTS  \
@@ -140,6 +141,7 @@ typedef struct __options {
     int nvagp;
     int transparent_index;
     int stereo;
+    int cool_bits;
 
     char *xconfig;
     char *output_xconfig;
@@ -157,6 +159,10 @@ typedef struct __options {
     char *twinview_orientation;
     char *use_display_device;
     char *custom_edid;
+    char *tv_standard;
+    char *tv_out_format;
+
+    double tv_over_scan;
 
     struct {
         int x;

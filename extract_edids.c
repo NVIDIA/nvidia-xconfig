@@ -77,6 +77,7 @@
 #include <sys/types.h>
 #include <pwd.h>
 #include <stdarg.h>
+#include <strings.h> /* bzero() */
 
 #include "nvidia-xconfig.h"
 

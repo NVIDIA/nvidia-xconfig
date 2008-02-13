@@ -236,6 +236,7 @@ Options *parse_commandline(int argc, char *argv[])
     int c, boolval;
     char *strval;
     int intval, disable;
+    double doubleval;
 
     op = (Options *) nvalloc(sizeof(Options));
     
@@ -243,11 +244,13 @@ Options *parse_commandline(int argc, char *argv[])
     op->nvagp = -1;
     op->transparent_index = -1;
     op->stereo = -1;
+    op->cool_bits = -1;
+    op->tv_over_scan = -1.0;
     
     while (1) {
         
         c = nvgetopt(argc, argv, __options, &strval,
-                     &boolval, &intval, &disable);
+                     &boolval, &intval, &doubleval, &disable);
 
         if (c == -1)
             break;
@@ -344,6 +347,101 @@ Options *parse_commandline(int argc, char *argv[])
                 goto fail;
             }
             op->transparent_index = intval;
+            break;
+
+        case TV_STANDARD_OPTION:
+            
+            {
+                const char* valid_values[] = {
+                    "PAL-B",
+                    "PAL-D",
+                    "PAL-G",
+                    "PAL-H",
+                    "PAL-I",
+                    "PAL-K1",
+                    "PAL-M",
+                    "PAL-N",
+                    "PAL-NC",
+                    "NTSC-J",
+                    "NTSC-M",
+                    "HD480i",
+                    "HD480p",
+                    "HD720p",
+                    "HD1080i",
+                    "HD1080p",
+                    "HD576i",
+                    "HD576p",
+                    NULL
+                };
+                int i;
+                
+                /* mark as disabled, so we can remove the option later */
+
+                if (disable) {
+                    op->tv_standard = NV_DISABLE_STRING_OPTION;
+                    break;
+                }
+
+                for (i = 0; valid_values[i]; i++) {
+                    if (!strcasecmp(strval, valid_values[i]))
+                        break;
+                }
+
+                if (valid_values[i]) {
+                    op->tv_standard = strval;
+                } else {
+                    fprintf(stderr, "Invalid TVStandard option: %s.\n", strval);
+                    goto fail;
+                }
+            }
+            break;
+
+        case TV_OUT_FORMAT_OPTION:
+            
+            /* mark as disabled, so we can remove the option later */
+
+            if (disable) {
+                op->tv_out_format = NV_DISABLE_STRING_OPTION;
+                break;
+            }
+
+            if (!strcasecmp(strval, "SVIDEO")) {
+                op->tv_out_format = "SVIDEO";
+            } else if (!strcasecmp(strval, "COMPOSITE")) {
+                op->tv_out_format = "COMPOSITE";
+            } else {
+                fprintf(stderr, "Invalid TVOutFormat option: %s.\n", strval);
+                goto fail;
+            }
+            break;
+
+        case TV_OVER_SCAN_OPTION:
+            
+            /* mark as disabled, so we can remove the option later */
+
+            if (disable) {
+                op->tv_over_scan = -2.0;
+                break;
+            }
+
+            if (doubleval >= 0.0 && doubleval <= 1.0) {
+                op->tv_over_scan = doubleval;
+            } else {
+                fprintf(stderr, "Invalid TVOverScan value: %f.\n", doubleval);
+                goto fail;
+            }
+            break;
+
+        case COOL_BITS_OPTION:
+
+            /* mark as disabled, so we can remove the option later */
+
+            if (disable) {
+                op->cool_bits = -2;
+                break;
+            }
+
+            op->cool_bits = intval;
             break;
 
         case STEREO_OPTION:

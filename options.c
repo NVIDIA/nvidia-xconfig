@@ -74,6 +74,7 @@ static const NvidiaXConfigOption __options[] = {
     { PROBE_ALL_GPUS_BOOL_OPTION,            FALSE, "ProbeAllGpus" },
     { DYNAMIC_TWINVIEW_BOOL_OPTION,          FALSE, "DynamicTwinView" },
     { INCLUDE_IMPLICIT_METAMODES_BOOL_OPTION,FALSE, "IncludeImplicitMetaModes" },
+    { USE_EVENTS_BOOL_OPTION,                FALSE, "UseEvents" },
     { 0,                                     FALSE, NULL },
 };
 
@@ -513,6 +514,45 @@ void update_options(Options *op, XConfigScreenPtr screen)
             set_option_value(screen, "CustomEDID", op->custom_edid);
         }
     }
- 
 
+    /* add the TVStandard option */
+
+    if (op->tv_standard) {
+        remove_option(screen, "TVStandard");
+        if (op->tv_standard != NV_DISABLE_STRING_OPTION) {
+           set_option_value(screen, "TVStandard", op->tv_standard);
+        }
+    }
+
+    /* add the TVOutFormat option */
+
+    if (op->tv_out_format) {
+        remove_option(screen, "TVOutFormat");
+        if (op->tv_out_format != NV_DISABLE_STRING_OPTION) {
+           set_option_value(screen, "TVOutFormat", op->tv_out_format);
+        }
+    }
+
+    /* add the TVOverScan option */
+
+    if (op->tv_over_scan != -1.0) {
+        remove_option(screen, "TVOverScan");
+        if (op->tv_over_scan != -2.0) {
+            snprintf(scratch, 8, "%f", op->tv_over_scan);
+            set_option_value(screen, "TVOverScan", scratch);
+        }
+    }
+
+    /* add the Coolbits option */
+
+    if (op->cool_bits != -1) {
+        remove_option(screen, "Coolbits");
+        if (op->cool_bits != -2) {
+            snprintf(scratch, 8, "%d", op->cool_bits);
+            set_option_value(screen, "Coolbits", scratch);
+        }
+    }
+
+
+  
 } /* update_options() */

@@ -73,9 +73,17 @@
 
 #define NVGETOPT_ALLOW_DISABLE    0x8
 
+/*
+ * indicates that the option takes an argument to be interpretted as
+ * an double; on success, nvgetopt will return the parsed double
+ * argument through 'doubleval'.
+ */
+
+#define NVGETOPT_DOUBLE_ARGUMENT  0x10
 
 #define NVGETOPT_HAS_ARGUMENT (NVGETOPT_STRING_ARGUMENT | \
-                               NVGETOPT_INTEGER_ARGUMENT)
+                               NVGETOPT_INTEGER_ARGUMENT | \
+                               NVGETOPT_DOUBLE_ARGUMENT)
 
 typedef struct {
     const char *name;
@@ -86,6 +94,7 @@ typedef struct {
 } NVGetoptOption;
 
 int nvgetopt(int argc, char *argv[], const NVGetoptOption *options,
-             char **strval, int *boolval, int *intval, int *disable_val);
+             char **strval, int *boolval, int *intval, double *doubleval,
+             int *disable_val);
 
 #endif /* __NVGETOPT_H__ */

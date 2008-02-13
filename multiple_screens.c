@@ -114,8 +114,10 @@ DevicesPtr find_devices(Options *op)
     DisplayDevicePtr pDisplayDevice;
     int i, j, n, count = 0;
     unsigned int mask, bit;
+    DeviceRec tmpDevice;
     NvCfgDeviceHandle handle;
     NvCfgDevice *devs = NULL;
+    NvCfgBool is_primary_device;
     char *lib_path;
     void *lib_handle;
 
@@ -128,6 +130,8 @@ DevicesPtr find_devices(Options *op)
     NvCfgBool (*__getEDID)(NvCfgDeviceHandle handle,
                            unsigned int display_device,
                            NvCfgDisplayDeviceInformation *info);
+    NvCfgBool (*__isPrimaryDevice)(NvCfgDeviceHandle handle,
+                                  NvCfgBool *is_primary_device);
     NvCfgBool (*__closeDevice)(NvCfgDeviceHandle handle);
     
     /* dlopen() the nvidia-cfg library */
@@ -157,7 +161,8 @@ DevicesPtr find_devices(Options *op)
         dlclose(lib_handle);                                   \
         return NULL;                                           \
     }
-        
+
+    /* required functions */
     __GET_FUNC(__getDevices, "nvCfgGetDevices");
     __GET_FUNC(__openDevice, "nvCfgOpenDevice");
     __GET_FUNC(__getNumCRTCs, "nvCfgGetNumCRTCs");
@@ -165,6 +170,9 @@ DevicesPtr find_devices(Options *op)
     __GET_FUNC(__getDisplayDevices, "nvCfgGetDisplayDevices");
     __GET_FUNC(__getEDID, "nvCfgGetEDID");
     __GET_FUNC(__closeDevice, "nvCfgCloseDevice");
+
+    /* optional functions */
+    __isPrimaryDevice = dlsym(lib_handle, "nvCfgIsPrimaryDevice");
     
     if (__getDevices(&count, &devs) != NVCFG_TRUE) {
         return NULL;
@@ -232,6 +240,14 @@ DevicesPtr find_devices(Options *op)
             pDevices->devices[i].displayDevices = NULL;
         }
 
+        if ((i != 0) && (__isPrimaryDevice != NULL) &&
+            (__isPrimaryDevice(handle, &is_primary_device) == NVCFG_TRUE) &&
+            (is_primary_device == NVCFG_TRUE)) {
+            memcpy(&tmpDevice, &pDevices->devices[0], sizeof(DeviceRec));
+            memcpy(&pDevices->devices[0], &pDevices->devices[i], sizeof(DeviceRec));
+            memcpy(&pDevices->devices[i], &tmpDevice, sizeof(DeviceRec));
+        }
+        
         if (__closeDevice(handle) != NVCFG_TRUE)
             goto fail;
     }
