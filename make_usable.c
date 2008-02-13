@@ -35,30 +35,10 @@
 #include "configProcs.h"
 
 
-static void ensure_module_loaded(XConfigPtr config, char *name);
 static int update_device(XConfigPtr config, XConfigDevicePtr device);
 static void update_depth(Options *op, XConfigScreenPtr screen);
 static void update_display(Options *op, XConfigScreenPtr screen);
 
-/*
- * ensure_module_loaded() - make sure the given module is present
- */
-
-static void ensure_module_loaded(XConfigPtr config, char *name) {
-    XConfigLoadPtr load;
-    int found = FALSE;
-
-    for (load = config->modules->loads; load && !found; load = load->next) {
-        if (xconfigNameCompare(name, load->name) == 0) found = TRUE;
-    }
-
-    if (!found) {
-        config->modules->loads =
-            xconfigAddNewLoadDirective(config->modules->loads,
-                                       name, XCONFIG_LOAD_MODULE,
-                                       NULL, FALSE);
-    }
-} /* ensure_module_loaded */
 
 /*
  * update_modules() - make sure the glx module is present, and remove
@@ -68,16 +48,25 @@ static void ensure_module_loaded(XConfigPtr config, char *name) {
 int update_modules(XConfigPtr config)
 {
     XConfigLoadPtr load, next;
+    int found;
 
     if (config->modules == NULL) {
         config->modules = xconfigAlloc(sizeof(XConfigModuleRec));
     }
 
-    /* make sure all our required modules are loaded */
-    ensure_module_loaded(config, "glx");
-#if defined(NV_SUNOS)
-    ensure_module_loaded(config, "xtsol");
-#endif // defined(NV_SUNOS)
+    /* make sure glx is loaded */
+
+    found = FALSE;
+    for (load = config->modules->loads; load; load = load->next) {
+        if (xconfigNameCompare("glx", load->name) == 0) found = TRUE;
+    }
+
+    if (!found) {
+        config->modules->loads =
+            xconfigAddNewLoadDirective(config->modules->loads,
+                                       "glx", XCONFIG_LOAD_MODULE,
+                                       NULL, FALSE);
+    }
 
     /* make sure GLcore and dri are not loaded */
 
@@ -168,10 +157,6 @@ XConfigLayoutPtr get_layout(Options *op, XConfigPtr config)
 int update_extensions(Options *op, XConfigPtr config)
 {
     char *value;
-
-    /* validate the composite option against any other options specified */
-
-    validate_composite(op, config);
 
     if (GET_BOOL_OPTION(op->boolean_options, COMPOSITE_BOOL_OPTION)) {
 

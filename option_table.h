@@ -35,8 +35,6 @@
 #define LOGO_PATH_OPTION                    24
 #define TWINVIEW_ORIENTATION_OPTION         25
 #define VIRTUAL_OPTION                      26
-#define USE_DISPLAY_DEVICE_OPTION           27
-#define CUSTOM_EDID_OPTION                  28
 
 /*
  * To add a boolean option to nvidia-xconfig:
@@ -150,12 +148,6 @@ static const NVGetoptOption __options[] = {
       "millimeters of the X screen when XRandR changes the size in pixels "
       "of the X screen." },
 
-    { "custom-edid", CUSTOM_EDID_OPTION,
-      NVGETOPT_STRING_ARGUMENT | NVGETOPT_ALLOW_DISABLE, "CUSTOM-EDID",
-      "Enable or disable the  \"CustomEDID\" X configuration option; "
-      "setting this option forces the X driver to use the EDID specified "
-      "in a file rather than the display's EDID." },
-
     { "dac-8bit", XCONFIG_BOOL_VAL(DAC_8BIT_BOOL_OPTION),
       NVGETOPT_IS_BOOLEAN, NULL,
       "Most Quadro parts by default use a 10 bit color look up table (LUT) "
@@ -202,7 +194,7 @@ static const NVGetoptOption __options[] = {
       "Forces the initialization of the X server with "
       "the exact timings specified in the ModeLine." },
 
-    { "extract-edids-from-file", 'E', NVGETOPT_STRING_ARGUMENT, "FILE",
+    { "extract-edids-from-log", 'E', NVGETOPT_STRING_ARGUMENT, "LOG",
       "Extract any raw EDID byte blocks contained in the specified X "
       "log file [LOG]; raw EDID bytes are printed by the NVIDIA X driver to "
       "the X log as hexidecimal when verbose logging is enabled with the "
@@ -483,10 +475,6 @@ static const NVGetoptOption __options[] = {
       NVGETOPT_IS_BOOLEAN, NULL,
       "Enable use of the X Int10 module to soft-boot all secondary cards, "
       "rather than POSTing the cards through the NVIDIA kernel module." },
-
-    { "use-display-device", USE_DISPLAY_DEVICE_OPTION,
-      NVGETOPT_STRING_ARGUMENT | NVGETOPT_ALLOW_DISABLE, "DISPLAY-DEVICE",
-      "Force the X driver to use the display device specified." },
 
     { "virtual", VIRTUAL_OPTION,
       NVGETOPT_STRING_ARGUMENT | NVGETOPT_ALLOW_DISABLE, "WIDTHxHEIGHT",
