@@ -234,7 +234,6 @@ Options *parse_commandline(int argc, char *argv[])
 {
     Options *op;
     int c, boolval;
-    u32 bit;
     char *strval;
     int intval, disable;
 
@@ -257,17 +256,9 @@ Options *parse_commandline(int argc, char *argv[])
 
         if ((c >= XCONFIG_BOOL_OPTION_START) &&
             (c <= (XCONFIG_BOOL_OPTION_START + XCONFIG_BOOL_OPTION_COUNT))) {
+
+            set_boolean_option(op, c - XCONFIG_BOOL_OPTION_START, boolval);
             
-            bit = GET_BOOL_OPTION_BIT(c - XCONFIG_BOOL_OPTION_START);
-            GET_BOOL_OPTION_SLOT(op->boolean_options,
-                                 c - XCONFIG_BOOL_OPTION_START) |= bit;
-            if (boolval) {
-                GET_BOOL_OPTION_SLOT(op->boolean_option_values,
-                                     c - XCONFIG_BOOL_OPTION_START) |= bit;
-            } else {
-                GET_BOOL_OPTION_SLOT(op->boolean_option_values,
-                                     c - XCONFIG_BOOL_OPTION_START) &= ~bit;
-            }
             continue;
         }
         
@@ -512,7 +503,7 @@ Options *parse_commandline(int argc, char *argv[])
         case QUERY_GPU_INFO_OPTION: op->query_gpu_info = TRUE; break;
 
         case 'E':
-            op->extract_edids_from_log = strval;
+            op->extract_edids_from_file = strval;
             break;
 
         case EXTRACT_EDIDS_OUTPUT_FILE_OPTION:
@@ -583,6 +574,15 @@ Options *parse_commandline(int argc, char *argv[])
             op->logo_path = disable ? NV_DISABLE_STRING_OPTION : strval;
             break;
   
+        case USE_DISPLAY_DEVICE_OPTION:
+            op->use_display_device = 
+                disable ? NV_DISABLE_STRING_OPTION : strval;
+            break;
+       
+        case CUSTOM_EDID_OPTION:
+            op->custom_edid = disable ? NV_DISABLE_STRING_OPTION : strval;
+            break;
+          
         default:
             goto fail;
         }
@@ -939,33 +939,71 @@ int update_xconfig(Options *op, XConfigPtr config)
 
 /*
  * get_xserver_in_use() - try to determine which X server is in use
- * (XFree86, Xorg)
+ * (XFree86, Xorg); also determine if the X server supports the
+ * Extension section of the X config file; support for the "Extension"
+ * section was added between X.Org 6.7 and 6.8.
  *
- * XXX need to update for modular layout
+ * Some of the parsing here mimics what is done in the
+ * check_for_modular_xorg() function in nvidia-installer
  */
 
-# define NV_LINE_LEN 1024
+#define NV_LINE_LEN 1024
+#define EXTRA_PATH "/bin:/usr/bin:/sbin:/usr/sbin:/usr/X11R6/bin:/usr/bin/X11"
+#define VERSION_FORMAT "X Protocol Version %d, Revision %d, Release %d.%d"
+
 static void get_xserver_in_use(Options *op)
 {
 #if defined(NV_SUNOS)    
-    op->gop.xserver=X_IS_XORG;
+
+    /*
+     * Solaris x86/x64 always uses X.Org 6.8 or higher, atleast as far
+     * as the NVIDIA X driver is concerned
+     */
+    
+    op->gop.xserver = X_IS_XORG;
+    op->supports_extension_section = TRUE;
+    
 #else
-    char *cmd;
+    
     FILE *stream = NULL;
     int xserver = -1;
-
-    cmd = xconfigStrcat(op->gop.x_project_root, "/bin/X -version 2>&1", NULL);
+    int dummy, len, release_major, release_minor;
+    char *cmd, *ptr, *ret;
+    
+    op->supports_extension_section = FALSE;
+    
+    /* run `X -version` with a PATH that hopefully includes the X binary */
+    
+    cmd = xconfigStrcat("PATH=", op->gop.x_project_root, ":",
+                        EXTRA_PATH, ":$PATH X -version 2>&1", NULL);
+    
     if ((stream = popen(cmd, "r"))) {
-         char buf[NV_LINE_LEN];
+        char buf[NV_LINE_LEN];
+        
+        /* read in as much of the input as we can fit into the buffer */
+        
+        ptr = buf;
 
-         while (1) {
-            if (fgets(buf, NV_LINE_LEN-1, stream) == NULL) break;
-            
-            if (xserver == -1) {
-                if (strcmp(buf, "XFree86") >= 0) {
-                    xserver = X_IS_XF86;
-                } else if (strcmp(buf, "X Window System") >= 0) {
-                    xserver = X_IS_XORG;
+        do {
+            len = NV_LINE_LEN - (ptr - buf) - 1;
+            ret = fgets(ptr, len, stream);
+            ptr = strchr(ptr, '\0');
+        } while ((ret != NULL) && (len > 1));
+        
+        /* Check if this is an XFree86 release */
+        
+        if (strstr(buf, "XFree86 Version") != NULL) {
+            xserver = X_IS_XF86;
+            op->supports_extension_section = FALSE;
+        } else if (strstr(buf, "X Window System") != NULL) {
+            xserver = X_IS_XORG;
+            if ((ptr = strstr(buf, "X Protocol Version")) != NULL &&
+                sscanf(ptr, VERSION_FORMAT, &dummy, &dummy,
+                       &release_major, &release_minor) == 4) {
+                
+                if ((release_major > 6) ||
+                    ((release_major == 6) && (release_minor >= 8))) {
+                    op->supports_extension_section = TRUE; 
                 }
             }
         } 
@@ -1037,7 +1075,7 @@ int main(int argc, char *argv[])
         return (ret ? 0 : 1);
     }
  
-    if (op->extract_edids_from_log) {
+    if (op->extract_edids_from_file) {
         ret = extract_edids(op);
         return (ret ? 0 : 1);
     }

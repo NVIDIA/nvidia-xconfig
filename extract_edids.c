@@ -25,8 +25,8 @@
  * extract-edids.c
  *
  * This source file gives us the means to extract EDIDs from verbose X
- * log files.  A verbose log will contain a raw EDID byte dump like
- * this:
+ * log files or from .txt files. A verbose log will contain a raw EDID 
+ * byte dump like this:
  *
  * (--) NVIDIA(0): Raw EDID bytes:
  * (--) NVIDIA(0):
@@ -41,14 +41,27 @@
  * (--) NVIDIA(0):
  * (--) NVIDIA(0): --- End of EDID for ViewSonic VPD150 (DFP-1) ---
  *
- * We read a log file, identify and read any EDID(s) contained in the
- * log file, and then write the EDID bytes to edid.bin files (just
+ * A .txt file will contain a raw EDID byte dump like this:
+ *
+ * 00 FF FF FF FF FF FF 00-06 10 F4 01 01 01 01 01    ................
+ * 27 08 01 01 28 1F 17 96-E8 44 E4 A1 57 4A 97 23    '...(....D..WJ.#
+ * 19 4F 57 BF EE 00 01 01-01 01 01 01 01 01 01 01    .OW.............
+ * 01 01 01 01 01 01 64 19-00 40 41 00 26 30 18 88    ......d..@A.&0..
+ * 36 00 33 E6 10 00 00 18-40 1F 00 30 41 00 24 30    6.3.....@..0A.$0
+ * 20 60 33 00 33 E6 10 00-00 18 00 00 00 FD 00 38     `3.3..........8
+ * 4C 1F 3D 08 00 0A 20 20-20 20 20 20 00 00 00 FC    L.=...      ....
+ * 00 41 70 70 6C 65 53 74-75 64 69 6F 0A 20 00 88    .AppleStudio. ..
+ *
+ * EDID Version                : 1.1
+ *
+ * We read a log file or a .txt file, identify and read any EDID(s) contained 
+ * in the file, and then write the EDID bytes to edid.bin files (just
  * like what nvidia-settings can capture for display devices running
  * on the current X server).
  *
  * This is useful for NVIDIA engineers to simulate users' display
- * environments, based on a verbose nvidia-bug-report.log or X log.
- * This utility is included in nvidia-xconfig, since maybe users will
+ * environments, based on a verbose nvidia-bug-report.log or X log or a .txt
+ * file. This utility is included in nvidia-xconfig, since maybe users will
  * find use for this, too.
  */
 
@@ -84,6 +97,9 @@
 
 #define EDID_OUTPUT_FILE_NAME "edid.bin"
 
+#define LOG_FILE 10
+#define TEXT_FILE 20
+#define UNKNOWN_FILE 30
 
 typedef struct {
     int size;
@@ -98,12 +114,18 @@ typedef struct {
 } FileRec, *FilePtr;
 
 
+static int findFileType(FilePtr pFile);
 
-static EdidPtr findEdid(FilePtr pFile);
+static EdidPtr findEdidforLogFile(FilePtr pFile);
+static EdidPtr findEdidforTextFile(FilePtr pFile);
 
-static int findEdidHeader(FilePtr pFile);
-static int readEdidData(FilePtr pFile, EdidPtr pEdid);
-static int readEdidFooter(FilePtr pFile, EdidPtr pEdid);
+static int findEdidHeaderforLogFile(FilePtr pFile);
+static int readEdidDataforLogFile(FilePtr pFile, EdidPtr pEdid);
+static int readEdidFooterforLogFile(FilePtr pFile, EdidPtr pEdid);
+
+static int findEdidfooterforTextFile(FilePtr pFile);
+static int readEdidDataforTextFile(FilePtr pFile, EdidPtr pEdid);
+static int readMonitorNameforTextFile(FilePtr pFile, EdidPtr pEdid);
 
 static char *findFileName(char *option);
 static int writeEdidFile(EdidPtr pEdid, char *filename);
@@ -118,27 +140,28 @@ static void freeEdid(EdidPtr pEdid);
 
 int extract_edids(Options *op)
 {
-    int fd = -1, ret, funcRet = FALSE;
+    int fd = -1, ret, fileType, funcRet = FALSE;
     char *filename;
     
     struct stat stat_buf;
-
+ 
     FileRec file;
     EdidPtr pEdid, *pEdids;
     int nEdids, i;
     
     nEdids = 0;
+    pEdid = NULL;
     pEdids = NULL;
     
     memset(&file, 0, sizeof(FileRec));
     file.start = (void *) -1;
     
     /* open the file and get its length */
-
-    fd = open(op->extract_edids_from_log, O_RDONLY);
-
+    
+    fd = open(op->extract_edids_from_file, O_RDONLY);
+    
     if (fd == -1) {
-        fmterr("Unable to open file \"%s\".", op->extract_edids_from_log);
+        fmterr("Unable to open file \"%s\".", op->extract_edids_from_file);
         goto done;
     }
     
@@ -146,14 +169,14 @@ int extract_edids(Options *op)
 
     if (ret == -1) {
         fmterr("Unable to get length of file \"%s\".",
-               op->extract_edids_from_log);
+               op->extract_edids_from_file);
         goto done;
     }
     
     file.length = stat_buf.st_size;
 
     if (file.length == 0) {
-        fmterr("File \"%s\" is empty.", op->extract_edids_from_log);
+        fmterr("File \"%s\" is empty.", op->extract_edids_from_file);
         goto done;
     }
     
@@ -163,26 +186,55 @@ int extract_edids(Options *op)
                       MAP_SHARED, fd, 0);
 
     if (file.start == (void *) -1) {
-        fmterr("Unable to map file \"%s\".", op->extract_edids_from_log);
+        fmterr("Unable to map file \"%s\".", op->extract_edids_from_file);
         goto done;
     }
     
     /* start parsing at the start of file */
 
     file.current = file.start;
+    
+    /* check for the file type(log or .txt) */
+
+    fileType = findFileType(&file);
+    
+    /* if the file does not contain any edid information, goto done */
+  
+    if (fileType == UNKNOWN_FILE) {
+        funcRet = TRUE;
+        goto done;
+    } 
+
+    if (fileType == LOG_FILE) {
+        file.current = file.start;
+    }
 
     /* scan through the whole file, and build a list of pEdids */
-
+    
     while(1) {
+    
+        if (fileType == LOG_FILE) {
+    
+            pEdid = findEdidforLogFile(&file);
+    
+        }
         
-        pEdid = findEdid(&file);
-        
+        if (fileType == TEXT_FILE) {
+    
+            pEdid = findEdidforTextFile(&file);
+    
+        }
+   
         if (!pEdid) break;
         
         pEdids = nvrealloc(pEdids, sizeof(pEdids) * (nEdids + 1));
         
         pEdids[nEdids] = pEdid;
         nEdids++;
+
+        /* Only one edid in a .txt file */
+
+        if (fileType == TEXT_FILE) break;
     }
     
     /* fall through to the 'done' label */
@@ -211,7 +263,7 @@ int extract_edids(Options *op)
 
     fmtout("");
     fmtout("Found %d EDID%s in \"%s\".",
-           nEdids, (nEdids == 1) ? "": "s", op->extract_edids_from_log);
+           nEdids, (nEdids == 1) ? "": "s", op->extract_edids_from_file);
 
     filename = findFileName(op->extract_edids_output_file);
     
@@ -234,7 +286,20 @@ int extract_edids(Options *op)
 
 } // extract_edids()
 
+/*
+ * findFileType() - scan through the pFile to determine the file type
+ * file type can be LOG_FILE, TEXT_FILE, UNKNOWN_FILE(file with no EDID) 
+ */
 
+static int findFileType(FilePtr pFile)
+{ 
+    if (findEdidHeaderforLogFile(pFile)) return LOG_FILE;
+   
+    if (findEdidfooterforTextFile(pFile)) return TEXT_FILE;
+
+    return UNKNOWN_FILE;
+
+} // findFileType()
 
 /*
  * findEdid() - scan through pFile for an EDID header, if we find one,
@@ -242,15 +307,15 @@ int extract_edids(Options *op)
  * allocated pEdid data structure.  On failure, return NULL.
  */
  
-static EdidPtr findEdid(FilePtr pFile)
+static EdidPtr findEdidforLogFile(FilePtr pFile)
 {
     EdidPtr pEdid = nvalloc(sizeof(EdidRec));
     
-    if (!findEdidHeader(pFile)) goto fail;
+    if (!findEdidHeaderforLogFile(pFile)) goto fail;
     
-    if (!readEdidData(pFile, pEdid)) goto fail;
+    if (!readEdidDataforLogFile(pFile, pEdid)) goto fail;
 
-    if (!readEdidFooter(pFile, pEdid)) goto fail;
+    if (!readEdidFooterforLogFile(pFile, pEdid)) goto fail;
     
     return pEdid;
     
@@ -260,10 +325,28 @@ static EdidPtr findEdid(FilePtr pFile)
     
     return NULL;
     
-} // findEdid()
+} // findEdidforLogFile()
 
+/*
+ * scan through the pFile for EDID data and Monitor name.
+ */
 
+static EdidPtr findEdidforTextFile(FilePtr pFile)
+{
+    EdidPtr pEdid = nvalloc(sizeof(EdidRec));
 
+    if (!readEdidDataforTextFile(pFile,pEdid)) goto fail;
+    if (!readMonitorNameforTextFile(pFile, pEdid)) goto fail;
+
+    return pEdid;
+
+ fail:
+
+    freeEdid(pEdid);
+
+    return NULL;
+
+} // findEdidforTextFile()
 
 
 /*
@@ -274,7 +357,7 @@ static EdidPtr findEdid(FilePtr pFile)
  * file, return FALSE.
  */
 
-static int findEdidHeader(FilePtr pFile)
+static int findEdidHeaderforLogFile(FilePtr pFile)
 {
     while (((pFile->current - pFile->start) + 15) <= pFile->length) {
         
@@ -302,7 +385,7 @@ static int findEdidHeader(FilePtr pFile)
 
     return FALSE;
     
-} // findEdidHeader()
+} // findEdidHeaderforLogFile()
 
 
 
@@ -314,14 +397,14 @@ static int findEdidHeader(FilePtr pFile)
  * and upper nibbles of each EDID byte, and to advance past the label,
  * that looks something like "(--) NVIDIA(0):".
  */
-    
+
 #define STATE_LOOKING_FOR_TOP_NIBBLE    0
 #define STATE_LOOKING_FOR_BOTTOM_NIBBLE 1
 #define STATE_LOOKING_FOR_END_OF_LABEL 2
 
 #define MAX_EDID_SIZE 4096
 
-static int readEdidData(FilePtr pFile, EdidPtr pEdid)
+static int readEdidDataforLogFile(FilePtr pFile, EdidPtr pEdid)
 {
     int state;
     
@@ -333,7 +416,7 @@ static int readEdidData(FilePtr pFile, EdidPtr pEdid)
     /* clear the scratch EDID data */
 
     bzero(pData, MAX_EDID_SIZE);
-    
+
     /*
      * start the parsing state machine by looking for the upper nibble
      * of the first byte in the EDID
@@ -468,9 +551,166 @@ static int readEdidData(FilePtr pFile, EdidPtr pEdid)
     
     return FALSE;
 
-} // readEdidData()
+} // readEdidDataforLogFile()
 
+/*
+ * read EDID data for the .txt file; pFile->current gives the starting 
+ * position of the EDID bytes, which is same as file starting position.
+ * We use a state machine to look for the lower and upper nibbles of each
+ * EDID byte, and to advance past the label.
+ */
 
+static int readEdidDataforTextFile(FilePtr pFile, EdidPtr pEdid)
+{
+    int state;
+
+    unsigned char pData[MAX_EDID_SIZE];
+    int k;
+
+    char c;
+
+    /* clear the scratch EDID data */
+
+    bzero(pData, MAX_EDID_SIZE);
+
+    /*
+     * start the parsing state machine by looking for the upper nibble
+     * of the first byte in the EDID
+     */
+
+    state = STATE_LOOKING_FOR_TOP_NIBBLE;
+    k = 0;
+
+    while(1) {
+
+    c = pFile->current[0];
+
+        switch (state) {
+
+        case STATE_LOOKING_FOR_TOP_NIBBLE:
+            
+            /*
+             * if we found a hex value, treat it as upper nibble, then
+             * look for lower nibble
+             */
+
+            if (IS_HEX(c)) {
+                pData[k] |= ((HEX_TO_NIBBLE(c)) << 4);
+                state = STATE_LOOKING_FOR_BOTTOM_NIBBLE;
+                goto nextChar;
+            }
+            
+            /* skip '-' and keep looking for top nibble */
+
+            if (c == '-') {
+                state = STATE_LOOKING_FOR_TOP_NIBBLE;
+                goto nextChar;
+            }
+           
+            /* 
+             * if two consecutive white space, change lebel.
+             * if one white space, skip it.
+             */
+  
+            if (isspace(c)) {
+                
+                if (isspace(pFile->current[1])) {
+                    state = STATE_LOOKING_FOR_END_OF_LABEL;
+                    goto nextChar;
+                } else {
+                    state = STATE_LOOKING_FOR_TOP_NIBBLE;
+                    goto nextChar;
+                }
+            }
+
+            goto fail; /* anything else is an error */
+
+            break;
+
+        case STATE_LOOKING_FOR_BOTTOM_NIBBLE:
+
+            /*
+             * if we found a hex value, treat it as the lower nibble,
+             * then look for the upper nibble of the next byte
+             */
+  
+            if (IS_HEX(c)) {
+                pData[k] |= (HEX_TO_NIBBLE(c));
+                state = STATE_LOOKING_FOR_TOP_NIBBLE;
+                k++;
+                if (k >= MAX_EDID_SIZE) goto fail;
+                goto nextChar;
+            }
+
+            goto fail; /* anything else is an error */
+
+            break;
+
+        case STATE_LOOKING_FOR_END_OF_LABEL:
+            
+            /* if we found two consecutive '\r\n', then the reding of EDID
+             * information is complete. if only one '\r\n', then change the
+             * state.
+             */
+
+            if (c == '\r' && pFile->current[1] == '\n') {
+                
+                if (pFile->current[2] == '\r' && pFile->current[3] == '\n') {
+                   goto done;
+                } else {
+                    state = STATE_LOOKING_FOR_TOP_NIBBLE;
+                    goto nextChar;
+                }
+            }
+            
+            /* skip the white space */
+ 
+            if (isspace(c)) {
+            
+                state = STATE_LOOKING_FOR_END_OF_LABEL;
+                goto nextChar;
+ 
+            }
+
+            break;
+
+        default:
+
+            goto fail;
+
+            break;
+        }
+
+    nextChar:
+
+        /*
+         * if we are at the end of the mapping without hitting our
+         * exit condition, fail
+         */
+
+        if ((pFile->current - pFile->start) >= pFile->length) goto fail;
+
+        pFile->current++;
+    } /* while(1) */
+
+ done:
+    
+    /* we are done parsing the EDID, save what we have into pEdid */
+   
+    if (k <= 0) goto fail;
+
+    pEdid->size = k;
+    pEdid->bytes = nvalloc(k);
+
+    memcpy(pEdid->bytes, pData, k);
+
+    return TRUE;
+     
+ fail:
+
+    return FALSE;
+
+} // readEdidDataforTextFile()
 
 /*
  * readEdidFooter() - the EDID footer is in the form:
@@ -482,7 +722,7 @@ static int readEdidData(FilePtr pFile, EdidPtr pEdid)
  * assigned and TRUE is returned.  On failure, FALSE is returned.
  */
 
-static int readEdidFooter(FilePtr pFile, EdidPtr pEdid)
+static int readEdidFooterforLogFile(FilePtr pFile, EdidPtr pEdid)
 {
     char *begin;
     int len;
@@ -555,9 +795,107 @@ static int readEdidFooter(FilePtr pFile, EdidPtr pEdid)
 
     return FALSE;
     
-} // readEdidFooter()
+} // readEdidFooterforLogFile()
 
+/* 
+ * read Edid Footer i.e. "EDID Version".
+ * this information is used to check whether the .txt file contains
+ * any edid information or not
+ */
+ 
+static int findEdidfooterforTextFile(FilePtr pFile)
+{   
+    pFile->current = pFile->start;
+    while (((pFile->current - pFile->start) + 12) <= pFile->length) {
 
+        if ((pFile->current[0]  == 'E') &&
+            (pFile->current[1]  == 'D') &&
+            (pFile->current[2]  == 'I') &&
+            (pFile->current[3]  == 'D') && 
+            (pFile->current[4]  == ' ') &&
+            (pFile->current[5]  == 'V') &&
+            (pFile->current[6]  == 'e') &&
+            (pFile->current[7]  == 'r') &&
+            (pFile->current[8]  == 's') &&
+            (pFile->current[9]  == 'i') &&
+            (pFile->current[10] == 'o') &&
+            (pFile->current[11] == 'n')) {
+            
+            pFile->current = pFile->start;
+            return TRUE;
+        }
+        pFile->current++;
+    }
+    
+return FALSE;
+
+} // findEdidfooterforTextFile()
+
+/* read the monitor information */
+
+static int readMonitorNameforTextFile(FilePtr pFile, EdidPtr pEdid)
+{
+    char *begin;
+    int len;
+
+    while (((pFile->current - pFile->start) + 12) <= pFile->length) {
+
+        if ((pFile->current[0]  == 'M') &&
+            (pFile->current[1]  == 'o') &&
+            (pFile->current[2]  == 'n') &&
+            (pFile->current[3]  == 'i') &&
+            (pFile->current[4]  == 't') &&
+            (pFile->current[5]  == 'o') &&
+            (pFile->current[6]  == 'r') &&
+            (pFile->current[7]  == ' ') &&
+            (pFile->current[8]  == 'N') &&
+            (pFile->current[9]  == 'a') &&
+            (pFile->current[10] == 'm') &&
+            (pFile->current[11] == 'e')) {
+        
+            pFile->current += 12;
+            goto next;
+        }
+     
+        pFile->current++;
+
+    }
+    return FALSE;
+
+    next:
+
+       /* search for start of the expected text */
+
+       while (pFile->current[0] != ':') pFile->current++;
+       pFile->current += 2;
+
+       begin = pFile->current;
+
+       /* search for the end of expected text */
+  
+       while (((pFile->current - pFile->start) + 2) <= pFile->length) {
+
+           if ((pFile->current[0] == '\r') && (pFile->current[1] == '\n')) {
+
+               len = pFile->current - begin;
+               
+               if ((len > 512) || (len < 1)) {
+                   return FALSE;
+               }
+   
+               pEdid->name = nvalloc(len + 1);
+
+               strncpy(pEdid->name, begin, len);
+               pEdid->name[len] = '\0';
+
+               return TRUE;
+           }
+           pFile->current++;
+       }
+
+     return FALSE;
+
+} // readMonitorNameforTextFile() 
 
 /*
  * findFileName() - determine the filename to use for writing out the

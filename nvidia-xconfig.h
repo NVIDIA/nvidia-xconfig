@@ -150,11 +150,13 @@ typedef struct __options {
     char *rotate;
 
     char *nvidia_cfg_path;
-    char *extract_edids_from_log;
+    char *extract_edids_from_file;
     char *extract_edids_output_file;
     char *twinview_xinerama_info_order;
     char *logo_path;
     char *twinview_orientation;
+    char *use_display_device;
+    char *custom_edid;
 
     struct {
         int x;
@@ -163,6 +165,8 @@ typedef struct __options {
 
     TextRows add_modes;
     TextRows remove_modes;
+
+    int supports_extension_section;
 
     GenerateOptions gop;
 
@@ -243,6 +247,8 @@ int print_tree(Options *op, XConfigPtr config);
 /* options.c */
 
 void remove_option_from_list(XConfigOptionPtr *list, const char *name);
+void set_boolean_option(Options *op, const int c, const int boolval);
+void validate_composite(Options *op, XConfigPtr config);
 void update_options(Options *op, XConfigScreenPtr screen);
 
 /* lscf.c */
