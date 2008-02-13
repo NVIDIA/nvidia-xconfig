@@ -366,4 +366,13 @@ void update_options(Options *op, XConfigScreenPtr screen)
         }
     }
     
+    /* add the LogoPath option */
+
+    if (op->logo_path) {
+        remove_option(screen, "LogoPath");
+        if (op->logo_path != NV_DISABLE_STRING_OPTION) {
+            set_option_value(screen, "LogoPath", op->logo_path);
+        }
+    }
+   
 } /* update_options() */

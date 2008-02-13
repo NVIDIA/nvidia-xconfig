@@ -153,6 +153,7 @@ typedef struct __options {
     char *extract_edids_from_log;
     char *extract_edids_output_file;
     char *twinview_xinerama_info_order;
+    char *logo_path;
     char *twinview_orientation;
 
     struct {

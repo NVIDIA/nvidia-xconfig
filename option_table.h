@@ -32,8 +32,9 @@
 #define EXTRACT_EDIDS_OUTPUT_FILE_OPTION    21
 #define MULTI_GPU_OPTION                    22
 #define TWINVIEW_XINERAMA_INFO_ORDER_OPTION 23
-#define TWINVIEW_ORIENTATION_OPTION         24
-#define VIRTUAL_OPTION                      25
+#define LOGO_PATH_OPTION                    24
+#define TWINVIEW_ORIENTATION_OPTION         25
+#define VIRTUAL_OPTION                      26
 
 /*
  * To add a boolean option to nvidia-xconfig:
@@ -271,6 +272,11 @@ static const NVGetoptOption __options[] = {
     { "logo",
       XCONFIG_BOOL_VAL(NOLOGO_BOOL_OPTION), NVGETOPT_IS_BOOLEAN, NULL,
       "Disable or enable the \"NoLogo\" X configuration option." },
+
+    { "logo-path", LOGO_PATH_OPTION,
+      NVGETOPT_STRING_ARGUMENT | NVGETOPT_ALLOW_DISABLE, "PATH",
+      "Set the path to the PNG file to be used as the logo splash screen at X "
+      "server startup." },
 
     { "mode",
       MODE_OPTION, NVGETOPT_IS_BOOLEAN | NVGETOPT_STRING_ARGUMENT, NULL,

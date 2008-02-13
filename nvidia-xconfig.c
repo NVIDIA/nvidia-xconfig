@@ -579,6 +579,10 @@ Options *parse_commandline(int argc, char *argv[])
                 break;
             }
 
+        case LOGO_PATH_OPTION:
+            op->logo_path = disable ? NV_DISABLE_STRING_OPTION : strval;
+            break;
+  
         default:
             goto fail;
         }
