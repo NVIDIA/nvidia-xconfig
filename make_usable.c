@@ -274,7 +274,8 @@ static void update_depth(Options *op, XConfigScreenPtr screen)
     
     /* update the depth */
     if ((op->depth == 8) || (op->depth == 15) ||
-        (op->depth == 16) || (op->depth == 24)) {
+        (op->depth == 16) || (op->depth == 24) ||
+        (op->depth == 30)) {
         screen->defaultdepth = op->depth;
     } else {
         /* read the default depth to SVC and set it as the default depth */

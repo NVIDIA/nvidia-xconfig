@@ -179,7 +179,7 @@ static const NVGetoptOption __options[] = {
     
     { "depth", 'd', NVGETOPT_INTEGER_ARGUMENT, NULL,
       "Set the default depth to [DEPTH]; valid values for [DEPTH] are "
-      "8, 15, 16 and 24." },
+      "8, 15, 16, 24, and 30." },
 
     { "disable-glx-root-clipping",
       XCONFIG_BOOL_VAL(DISABLE_GLX_ROOT_CLIPPING_BOOL_OPTION),

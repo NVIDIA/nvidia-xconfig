@@ -282,7 +282,8 @@ Options *parse_commandline(int argc, char *argv[])
             if ((op->depth != 8) &&
                 (op->depth != 15) &&
                 (op->depth != 16) &&
-                (op->depth != 24)) {
+                (op->depth != 24) &&
+                (op->depth != 30)) {
                 fprintf(stderr, "\n");
                 fprintf(stderr, "Invalid depth: %d.\n", op->depth);
                 fprintf(stderr, "\n");
