@@ -79,6 +79,9 @@ Examines the system and configures an X screen for each display device it finds.
 .BI "nvidia-xconfig \-\-mode=" 1600x1200
 Adds a 1600x1200 mode to an existing X configuration.
 .TP
+.BI "nvidia-xconfig \-\-mode-list=" "1600x1200 1280x1024"
+Removes any existing modes from the X configuration file, replacing them with "1600x1200" and "1280x1024".
+.TP
 .B nvidia-xconfig \-\-only\-one\-x\-screen \-\-sli=Auto
 Configures the X server to have just one X screen that will use SLI when available.
 .\" .SH FILES

@@ -170,6 +170,7 @@ typedef struct __options {
     } virtual;
 
     TextRows add_modes;
+    TextRows add_modes_list;
     TextRows remove_modes;
 
     int supports_extension_section;

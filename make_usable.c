@@ -195,7 +195,7 @@ int update_extensions(Options *op, XConfigPtr config)
 
         config->extensions->options =
             xconfigAddNewOption(config->extensions->options,
-                                nvstrdup("Composite"), nvstrdup(value));
+                                "Composite", value);
     }
     
     return TRUE;

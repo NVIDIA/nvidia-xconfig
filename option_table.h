@@ -20,27 +20,28 @@
 #define FORCE_GENERATE_OPTION               9
 #define MOUSE_LIST_OPTION                   10
 #define MODE_OPTION                         11
-#define REMOVE_MODE_OPTION                  12
-#define NVIDIA_CFG_PATH_OPTION              13
-#define NVAGP_OPTION                        14
-#define SLI_OPTION                          15
-#define DISABLE_SCF_OPTION                  16
-#define TRANSPARENT_INDEX_OPTION            17
-#define STEREO_OPTION                       18
-#define ROTATE_OPTION                       19
-#define QUERY_GPU_INFO_OPTION               20
-#define EXTRACT_EDIDS_OUTPUT_FILE_OPTION    21
-#define MULTI_GPU_OPTION                    22
-#define TWINVIEW_XINERAMA_INFO_ORDER_OPTION 23
-#define LOGO_PATH_OPTION                    24
-#define TWINVIEW_ORIENTATION_OPTION         25
-#define VIRTUAL_OPTION                      26
-#define USE_DISPLAY_DEVICE_OPTION           27
-#define CUSTOM_EDID_OPTION                  28
-#define TV_STANDARD_OPTION                  29
-#define TV_OUT_FORMAT_OPTION                30
-#define TV_OVER_SCAN_OPTION                 31
-#define COOL_BITS_OPTION                    32
+#define MODE_LIST_OPTION                    12
+#define REMOVE_MODE_OPTION                  13
+#define NVIDIA_CFG_PATH_OPTION              14
+#define NVAGP_OPTION                        15
+#define SLI_OPTION                          16
+#define DISABLE_SCF_OPTION                  17
+#define TRANSPARENT_INDEX_OPTION            18
+#define STEREO_OPTION                       19
+#define ROTATE_OPTION                       20
+#define QUERY_GPU_INFO_OPTION               21
+#define EXTRACT_EDIDS_OUTPUT_FILE_OPTION    22
+#define MULTI_GPU_OPTION                    23
+#define TWINVIEW_XINERAMA_INFO_ORDER_OPTION 24
+#define LOGO_PATH_OPTION                    25
+#define TWINVIEW_ORIENTATION_OPTION         26
+#define VIRTUAL_OPTION                      27
+#define USE_DISPLAY_DEVICE_OPTION           28
+#define CUSTOM_EDID_OPTION                  29
+#define TV_STANDARD_OPTION                  30
+#define TV_OUT_FORMAT_OPTION                31
+#define TV_OVER_SCAN_OPTION                 32
+#define COOL_BITS_OPTION                    33
 
 /*
  * To add a boolean option to nvidia-xconfig:
@@ -304,6 +305,10 @@ static const NVGetoptOption __options[] = {
       MODE_OPTION, NVGETOPT_IS_BOOLEAN | NVGETOPT_STRING_ARGUMENT, NULL,
       "Add the specified mode to the mode list." },
 
+    { "mode-list", MODE_LIST_OPTION, NVGETOPT_STRING_ARGUMENT, "MODELIST",
+      "Remove all existing modes from the X configuration's modelist and "
+      "add the one(s) specified in the [MODELIST] string." },
+
     { "remove-mode", REMOVE_MODE_OPTION, NVGETOPT_STRING_ARGUMENT, "MODE",
       "Remove the specified mode from the mode list." },
 
@@ -320,7 +325,7 @@ static const NVGetoptOption __options[] = {
 
     { "multigpu", MULTI_GPU_OPTION,
       NVGETOPT_STRING_ARGUMENT | NVGETOPT_ALLOW_DISABLE, NULL,
-      "Enable or disable MultiGPU.  Valid values for [MULTIGPU] are 'Off', "
+      "Enable or disable MultiGPU.  Valid values for [MULTIGPU] are 'Off', 'On',"
       " 'Auto', 'AFR', 'SFR', 'AA'." },
 
     { "multisample-compatibility",
@@ -429,7 +434,7 @@ static const NVGetoptOption __options[] = {
 
     { "sli", SLI_OPTION,
       NVGETOPT_STRING_ARGUMENT | NVGETOPT_ALLOW_DISABLE, NULL,
-      "Enable or disable SLI.  Valid values for [SLI] are 'Off', 'Auto', "
+      "Enable or disable SLI.  Valid values for [SLI] are 'Off', 'On', 'Auto', "
       "'AFR', 'SFR', 'AA', 'AFRofAA'." },
 
     { "stereo", STEREO_OPTION,

@@ -472,6 +472,24 @@ Options *parse_commandline(int argc, char *argv[])
             }
             break;
 
+        case MODE_LIST_OPTION:
+            {
+                char *token;
+                token = strtok(strval, " ");
+                if (!token) {
+                    fprintf(stderr, "\n");
+                    fprintf(stderr, "Invalid Mode List string: %s.\n", strval);
+                    fprintf(stderr, "\n");
+                    goto fail;
+                }
+                do {
+                    nv_text_rows_append(&op->add_modes_list, token);
+                    token = strtok(NULL, " ");
+                } while (token != NULL);
+
+                break;
+            }
+
         case REMOVE_MODE_OPTION:
             nv_text_rows_append(&op->remove_modes, strval);
             break;

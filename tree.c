@@ -160,19 +160,24 @@ static void print_modes(XConfigScreenPtr screen)
 {
     XConfigDisplayPtr display;
     XConfigModePtr mode;
-
-    printf("        |       |--> Modes");
+    int printedSomething = 0;
 
     for (display = screen->displays; display; display = display->next) {
         if (display->depth == screen->defaultdepth) {
             for (mode = display->modes; mode; mode = mode->next) {
+                if (!printedSomething) {
+                    printf("        |       |--> Modes");
+                }
                 printf(" \"%s\"", mode->mode_name);
+                printedSomething = 1;
             }
             break;
         }
     }
 
-    printf("\n");
+    if (printedSomething) {
+        printf("\n");
+    }
 
 } /* print_modes() */
 

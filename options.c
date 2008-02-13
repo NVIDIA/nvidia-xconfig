@@ -277,8 +277,7 @@ static void set_option_value(XConfigScreenPtr screen,
 
     /* then, add the option to the screen's option list */
 
-    screen->options = xconfigAddNewOption(screen->options,
-                                          nvstrdup(name), nvstrdup(val));
+    screen->options = xconfigAddNewOption(screen->options, name, val);
 } /* set_option_value() */
 
 
@@ -344,7 +343,23 @@ static void update_display_options(Options *op, XConfigScreenPtr screen)
             display->modes = xconfigAddMode(display->modes,
                                             op->add_modes.t[i]);
         }
+        if (op->add_modes_list.n) {
+            int mode_list_size = op->add_modes_list.n;
 
+            xconfigFreeModeList(display->modes);
+            display->modes = NULL;
+
+            /*
+             * xconfigAddMode() prepends, rather than appends, so add the
+             * modes in reverse order
+             */
+
+            for (i = 0; i < op->add_modes_list.n; i++) {
+                display->modes = xconfigAddMode(display->modes,
+                                      op->add_modes_list.t[mode_list_size-i-1]);
+            }
+        }
+        
         /* XXX should we sort the mode list? */
 
         /*

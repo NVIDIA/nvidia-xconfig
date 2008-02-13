@@ -320,8 +320,8 @@ static int set_xinerama(int xinerama_enabled, XConfigPtr config)
 
     config->flags->options =
         xconfigAddNewOption(config->flags->options,
-                            nvstrdup("Xinerama"),
-                            nvstrdup(xinerama_enabled?"1":"0"));
+                            "Xinerama",
+                            (xinerama_enabled ? "1" : "0"));
 
     return TRUE;
 
