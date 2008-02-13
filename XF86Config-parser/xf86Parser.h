@@ -647,6 +647,7 @@ int xconfigCheckCoreInputDevices(XConfigPtr config, XConfigLayoutPtr layout);
  */
 
 GenericListPtr xconfigAddListItem(GenericListPtr head, GenericListPtr c_new);
+GenericListPtr xconfigRemoveListItem(GenericListPtr list, GenericListPtr item);
 int xconfigItemNotSublist(GenericListPtr list_1, GenericListPtr list_2);
 char *xconfigAddComment(char *cur, char *add);
 XConfigLoadPtr xconfigAddNewLoadDirective(XConfigLoadPtr head,
@@ -673,7 +674,7 @@ XConfigOptionPtr xconfigFindOption(XConfigOptionPtr list, const char *name);
 char            *xconfigFindOptionValue(XConfigOptionPtr list,
                                         const char *name);
 int              xconfigFindOptionBoolean (XConfigOptionPtr,
-                                           const char *, int);
+                                           const char *name);
 XConfigOptionPtr xconfigOptionListCreate(const char **options,
                                          int count, int used);
 XConfigOptionPtr xconfigOptionListMerge(XConfigOptionPtr head,
@@ -686,12 +687,16 @@ XConfigOptionPtr xconfigOptionListMerge(XConfigOptionPtr head,
 char *xconfigStrdup(const char *s);
 char *xconfigStrcat(const char *str, ...);
 int xconfigNameCompare(const char *s1, const char *s2);
+int xconfigModelineCompare(XConfigModeLinePtr m1, XConfigModeLinePtr m2);
 char *xconfigULongToString(unsigned long i);
 void xconfigDebugListOptions(XConfigOptionPtr);
 XConfigOptionPtr xconfigParseOption(XConfigOptionPtr head);
 void xconfigPrintOptionList(FILE *fp, XConfigOptionPtr list, int tabs);
 int xconfigParsePciBusString(const char *busID,
                              int *bus, int *device, int *func);
+
+XConfigDisplayPtr
+xconfigAddDisplay(XConfigDisplayPtr head, const int depth);
 
 XConfigModePtr
 xconfigAddMode(XConfigModePtr head, const char *name);

@@ -271,6 +271,26 @@ static void print_server_flags(XConfigPtr config)
 
 
 /*
+ * print_server_extensions()
+ */
+
+static void print_server_extensions(XConfigPtr config)
+{
+    if (!config->extensions || !config->extensions->options) return;
+    
+    printf("\n");
+    printf("    Extensions\n");
+    printf("        |\n");
+    
+    print_options(config->extensions->options, 1);
+    
+    printf("\n");
+
+} /* print_server_extensions() */
+
+
+
+/*
  * print_tree()
  */
 
@@ -304,6 +324,8 @@ int print_tree(Options *op, XConfigPtr config)
     printf("\n");
 
     print_server_flags(config);
+
+    print_server_extensions(config);
 
     return TRUE;
 

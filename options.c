@@ -66,6 +66,7 @@ static const NvidiaXConfigOption __options[] = {
     { EXACT_MODE_TIMINGS_DVI_OPTION,    FALSE, "ExactModeTimingsDVI" },
     { ALLOW_DDCCI_OPTION,               FALSE, "AllowDDCCI" },
     { LOAD_KERNEL_MODULE_OPTION,        FALSE, "LoadKernelModule" },
+    { ADD_ARGB_GLX_VISUALS_OPTION,      FALSE, "AddARGBGLXVisuals" },
     { 0,                                FALSE, NULL },
 };
 
@@ -194,12 +195,13 @@ void update_options(Options *op, XConfigScreenPtr screen)
         if (GET_BOOL_OPTION(op->boolean_options, i)) {
             
             /*
-             * SEPARATE_X_SCREENS_OPTION and XINERAMA_OPTION are
-             * handled separately
+             * SEPARATE_X_SCREENS_OPTION, XINERAMA_OPTION, and
+             * COMPOSITE_OPTION are handled separately
              */
 
             if (i == SEPARATE_X_SCREENS_OPTION) continue;
             if (i == XINERAMA_OPTION) continue;
+            if (i == COMPOSITE_OPTION) continue;
             
             o = get_option(i);
             

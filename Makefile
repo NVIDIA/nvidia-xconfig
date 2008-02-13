@@ -120,7 +120,8 @@ SRC =	util.c			\
 	tree.c			\
 	nvgetopt.c		\
 	options.c		\
-        lscf.c
+	lscf.c			\
+	query_gpu_info.c
 
 ALL_SRC = $(SRC) $(STAMP_C)
 

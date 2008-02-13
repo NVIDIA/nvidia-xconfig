@@ -29,6 +29,7 @@
 #define TRANSPARENT_INDEX_OPTION            17
 #define STEREO_OPTION                       18
 #define ROTATE_OPTION                       19
+#define QUERY_GPU_INFO_OPTION               20
 
 #define XCONFIG_OPTION_START        128
 
@@ -74,6 +75,11 @@ static const NVGetoptOption __options[] = {
 
     /* These options are only printed by "nvidia-xconfig --advanced-help" */
 
+    { "add-argb-glx-visuals",
+      XCONFIG_OPTION_START + ADD_ARGB_GLX_VISUALS_OPTION, NVGETOPT_IS_BOOLEAN,
+      "Enables or disables support for OpenGL rendering into 32-bit ARGB "
+      "windows and pixmaps." },
+
     { "allow-ddcci", XCONFIG_OPTION_START + ALLOW_DDCCI_OPTION,
       NVGETOPT_IS_BOOLEAN, "Enables or disables DDC/CI support in the "
       "NV-CONTROL X extension." },
@@ -91,6 +97,10 @@ static const NVGetoptOption __options[] = {
       XCONFIG_OPTION_START + NO_BANDWIDTH_TEST_OPTION, NVGETOPT_IS_BOOLEAN,
       "Disable or enable the \"NoBandWidthTest\" X configuration option." },
 
+    { "composite",
+      XCONFIG_OPTION_START + COMPOSITE_OPTION, NVGETOPT_IS_BOOLEAN,
+      "Enable or disable the \"Composite\" X extension." },
+
     { "dac-8bit", XCONFIG_OPTION_START + DAC_8BIT_OPTION, NVGETOPT_IS_BOOLEAN,
       "Most Quadro parts by default use a 10 bit color look up table (LUT) "
       "by default; setting this option to TRUE forces these graphics chips "
@@ -101,11 +111,13 @@ static const NVGetoptOption __options[] = {
       "Synonym for \"ignore-edid\"" },
 
     { "depth", 'd', NVGETOPT_HAS_ARGUMENT,
-      "Set the default depth to [DEPTH]; valid values are 8, 15, 16 and 24." },
+      "Set the default depth to [DEPTH]; valid values for [DEPTH] are "
+      "8, 15, 16 and 24." },
 
     { "digital-vibrance", DIGITAL_VIBRANCE_OPTION,
       NVGETOPT_IS_INTEGER | NVGETOPT_HAS_ARGUMENT,
-      "Enables digital vibrance control.  Valid values are 0-255." },
+      "Enables digital vibrance control.  Valid values for "
+      "[DIGITAL-VIBRANCE] are 0-255." },
 
     { "enable-all-gpus", 'a', 0,
       "Configure an X screen on every GPU in the system." },
@@ -234,7 +246,7 @@ static const NVGetoptOption __options[] = {
     { "transparent-index", TRANSPARENT_INDEX_OPTION,
       NVGETOPT_IS_INTEGER | NVGETOPT_HAS_ARGUMENT,
       "Pixel to use as transparent when using color index overlays.  "
-      "Valid values are 0-255."},
+      "Valid values for [TRANSPARENT-INDEX] are 0-255."},
 
     { "overlay-default-visual",
       XCONFIG_OPTION_START + OVERLAY_DEFAULT_VISUAL_OPTION,
@@ -253,6 +265,9 @@ static const NVGetoptOption __options[] = {
       NVGETOPT_IS_BOOLEAN, "Disable or enable the \"NoPowerConnectorCheck\" "
       "X configuration option." },
 
+    { "query-gpu-info", QUERY_GPU_INFO_OPTION, 0,
+      "Print information about all recognized NVIDIA GPUs in the system." },
+    
     { "randr-rotation",
       XCONFIG_OPTION_START + RANDR_ROTATION_OPTION, NVGETOPT_IS_BOOLEAN,
       "Enable or disable the \"RandRRotation\" X configuration option." },
@@ -260,7 +275,7 @@ static const NVGetoptOption __options[] = {
     { "rotate",
       ROTATE_OPTION, NVGETOPT_HAS_ARGUMENT,
       "Enable or disable the \"Rotate\" X configuration option.  Valid values "
-      "are 'normal', 'left', 'inverted', and 'right'." },
+      "for [ROTATE] are 'normal', 'left', 'inverted', and 'right'." },
 
     { "render-accel",
       XCONFIG_OPTION_START + RENDER_ACCEL_OPTION, NVGETOPT_IS_BOOLEAN,
@@ -282,14 +297,14 @@ static const NVGetoptOption __options[] = {
       "details." },
 
     { "sli", SLI_OPTION, NVGETOPT_HAS_ARGUMENT,
-      "Enable or disable SLI.  Valid options are 'Off', 'Auto', 'AFR', 'SFR', "
-      "and 'SLIAA'." },
+      "Enable or disable SLI.  Valid values for [SLI] are 'Off', 'Auto', "
+      "'AFR', 'SFR', and 'SLIAA'." },
 
     { "stereo", STEREO_OPTION, NVGETOPT_IS_INTEGER | NVGETOPT_HAS_ARGUMENT,
-      "Enable/Disable the stereo mode.  Valid options are: 1 (DCC glasses), "
-      "2 (Blueline glasses), 3 (Onboard stereo), 4 (TwinView clone mode "
-      "stereo), 5 (SeeReal digital flat panel), 6 (Sharp3D digital flat "
-      "panel)." },
+      "Enable/Disable the stereo mode.  Valid values for [STEREO] are: 1 "
+      "(DCC glasses), 2 (Blueline glasses), 3 (Onboard stereo), 4 (TwinView "
+      "clone mode stereo), 5 (SeeReal digital flat panel), 6 (Sharp3D "
+      "digital flat panel)." },
 
     { "twinview", XCONFIG_OPTION_START + TWINVIEW_OPTION, NVGETOPT_IS_BOOLEAN,
       "Enable or disable TwinView." },

@@ -736,7 +736,7 @@ const char *xconfigOpenConfigFile(const char *cmdline, const char *projroot)
     if (getuid() == 0) {
         searchpath = __root_configpath;
     } else {
-	searchpath = __user_configpath;
+        searchpath = __user_configpath;
     }
 
     if (!projroot) projroot = PROJECTROOT;
@@ -943,4 +943,33 @@ xconfigNameCompare (const char *s1, const char *s2)
         c2 = (xconfigIsUpper(*s2) ? xconfigToLower(*s2) : *s2);
     }
     return (c1 - c2);
+}
+
+/* 
+ * Compare two modelines.  The modeline identifiers and comments are
+ * ignored in the comparison.
+ */
+int
+xconfigModelineCompare(XConfigModeLinePtr m1, XConfigModeLinePtr m2)
+{
+    if (!m1 && !m2)
+        return (0);
+
+    if (!m1 || !m2)
+        return (1);
+
+    if (m1->clock      != m2->clock &&
+        m1->hdisplay   != m2->hdisplay &&
+        m1->hsyncstart != m2->hsyncstart &&
+        m1->hsyncend   != m2->hsyncend &&
+        m1->htotal     != m2->htotal &&
+        m1->vdisplay   != m2->vdisplay &&
+        m1->vsyncstart != m2->vsyncstart &&
+        m1->vsyncend   != m2->vsyncend &&
+        m1->vtotal     != m2->vtotal &&
+        m1->vscan      != m2->vscan &&
+        m1->flags      != m2->flags &&
+        m1->hskew      != m2->hskew)
+        return (1);
+    return (0);
 }

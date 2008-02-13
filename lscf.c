@@ -32,7 +32,11 @@ static int lscf_setprop_int(scf_handle_t *scf_handle,
                             scf_service_t *current_svc,
                             const char *group, 
                             const char *name, int value);
-
+static int lscf_getprop_int(scf_handle_t *scf_handle, 
+                            scf_scope_t *scf_scope,
+                            scf_service_t *current_svc,
+                            const char *group, 
+                            const char *name, int *value);
 
 /* UPDATE THE DEFAULT DEPTH PROPERTY IN SMF WITH THE LIBSCF FUNCTIONS */
 int update_scf_depth(int depth) 
@@ -72,6 +76,49 @@ done:
     }
     if (!status) {
         fmterr("Unable to set X server default depth through "
+               "Solaris Service Management Facility");
+    }
+    return status;
+}
+
+/* READ THE DEFAULT DEPTH PROPERTY FROM SMF WITH THE LIBSCF FUNCTIONS */
+int read_scf_depth(int *depth) 
+{  
+    static scf_handle_t *scf_handle = NULL;
+    static scf_scope_t *scf_scope  = NULL;
+    scf_service_t       *curren_svc = NULL;
+    int status = 1;
+    
+    // Initialization of the handles
+    lscf_init_handle(&scf_handle, &scf_scope);
+    if (scf_handle == NULL) {
+        status =0;
+        goto done;
+    }
+    
+    // Set the current selection
+    if(!lscf_select(scf_handle, scf_scope, "application/x11/x11-server",
+                    &curren_svc)) {
+        status =0;
+        goto done;
+    }
+    
+    // Get the depth property of the current selection
+    if(!lscf_getprop_int(scf_handle, scf_scope, curren_svc,
+                         "options", "default_depth", depth)) {
+        status =0;
+        goto done;
+    }
+
+done:
+    if(curren_svc)  scf_service_destroy(curren_svc);
+    if(scf_scope)   scf_scope_destroy(scf_scope);    
+    if(scf_handle) {
+                    scf_handle_unbind(scf_handle);
+                    scf_handle_destroy(scf_handle);
+    }
+    if (!status) {
+        fmterr("Unable to get X server default depth from "
                "Solaris Service Management Facility");
     }
     return status;
@@ -270,10 +317,99 @@ done:
     return status;
 }
 
+/* EQUIVALENT TO THE SVCCFG SETPROP COMMAND FOR AN INTEGER TYPED VALUE */
+static int lscf_getprop_int(scf_handle_t *scf_handle, 
+                            scf_scope_t *scf_scope,
+                            scf_service_t *current_svc,
+                            const char *group, 
+                            const char *name, int *value) 
+{
+    scf_transaction_entry_t *entry=NULL;
+    scf_propertygroup_t *pg = NULL;
+    scf_property_t *prop = NULL;
+    scf_value_t *v = NULL;
+    int status = 1;
+    int64_t t;
+    
+    // Allocate a new transaction entry handle
+    entry = scf_entry_create(scf_handle);
+    if (entry == NULL) {
+        status=0;
+        goto done;
+    }
+    
+    // Allocate a property group. 
+    pg = scf_pg_create(scf_handle);
+    if (pg == NULL) {
+        status=0;
+        goto done;
+    }
+    
+    // Allocate a property. A property is a named set
+    // of values.
+    prop = scf_property_create(scf_handle);
+    if (prop == NULL) {
+        status=0;
+        goto done;
+    }
+       
+    // Set the the property group 'pg' to the 
+    // groups specified by 'group' in the service
+    // specified by 'current_svc'
+    if (scf_service_get_pg(current_svc, group, pg) != SCF_SUCCESS) {
+        status=0;
+        goto done;
+    }
+    
+    // Update the property group.
+    if (scf_pg_update(pg) == -1) {
+        status=0;
+        goto done;
+    }
+    
+    // Set the property 'prop' to the property 
+    // specified ny 'name' in the property group 'pg'
+    if (scf_pg_get_property(pg, name, prop) != SCF_SUCCESS) {
+        status=0;
+        goto done;
+    }
 
+    // Allocate a value.
+    v = scf_value_create(scf_handle);
+    if (v == NULL) {
+        status=0;
+        goto done;
+    }
+    
+    // Get the value
+    if (scf_property_get_value(prop, v) != SCF_SUCCESS) {
+        status=0;
+        goto done;
+    }   
+    
+    // Get the integer value
+    if (scf_value_get_integer(v, &t) != SCF_SUCCESS) {
+        status=0;
+        goto done;
+    }
+    
+    *value = (int)t;
+    
+done:
+    if (entry)      scf_entry_destroy(entry);
+    if (pg)         scf_pg_destroy(pg);
+    if (prop)       scf_property_destroy(prop);
+    if (v)          scf_value_destroy(v);
+    return status;
+}
 #else // NOT SOLARIS
 int update_scf_depth(int depth) 
 {
     return 1;
+}
+
+int read_scf_depth(int *depth) 
+{
+    return 0;
 }
 #endif

@@ -305,6 +305,35 @@ xconfigAddListItem (GenericListPtr head, GenericListPtr new)
         return (new);
 }
 
+
+/*
+ * removes an item from the linked list. Any record whose first field
+ * is a GenericListRec can be cast to this type and used with this function.
+ * A pointer to the head of the list is returned to handle the removal of
+ * the first item.
+ */
+GenericListPtr
+xconfigRemoveListItem (GenericListPtr head, GenericListPtr item)
+{
+    GenericListPtr cur = head;
+    GenericListPtr prev = NULL;
+
+    while (cur)
+    {
+        if (cur == item)
+        {
+            if (prev) prev->next = item->next;
+            if (head == item) head = item->next;
+            break;
+        }
+        prev = cur;
+        cur  = cur->next;
+    }
+    
+    return head;
+}
+
+
 /* 
  * Test if one chained list contains the other.
  * In this case both list have the same endpoint (provided they don't loop)

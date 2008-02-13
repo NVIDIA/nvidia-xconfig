@@ -33,6 +33,9 @@
 #include <errno.h>
 #include <libgen.h>
 
+#include <sys/types.h>
+#include <sys/stat.h>
+
 #include "nvidia-xconfig.h"
 #include "nvgetopt.h"
 
@@ -81,6 +84,35 @@ static void print_summary(void)
 
 
 /*
+ * cook_description() - the description string may contain text within
+ * brackets, which is used by the manpage generator to denote text to
+ * be italicized.  We want to omit the bracket characters here.
+ */
+
+static char *cook_description(const char *description)
+{
+    int len;
+    char *s, *dst;
+    const char *src;
+    
+    len = strlen(description);
+    s = nvalloc(len + 1);
+    
+    for (src = description, dst = s; *src; src++) {
+        if (*src != '[' && (*src != ']')) {
+            *dst = *src;
+            dst++;
+        }
+    }
+
+    *dst = '\0';
+
+    return s;
+    
+} /* cook_description() */
+
+
+/*
  * print_help() - loop through the __options[] table, and print the
  * description of each option.
  */
@@ -118,7 +150,7 @@ static void print_help(int advanced)
             len = strlen(o->name);
             for (j = 0; j < len; j++) scratch[j] = toupper(o->name[j]);
             scratch[len] = '\0';
-            tmp = nvstrcat(msg, "=[", scratch, "]", NULL);
+            tmp = nvstrcat(msg, "=", scratch, NULL);
             free(msg);
             msg = tmp;
         }
@@ -130,11 +162,48 @@ static void print_help(int advanced)
         }
 
         fmtoutp(TAB, msg);
-        if (o->description) fmtoutp(BIGTAB, o->description);
+        if (o->description) {
+            tmp = cook_description(o->description);
+            fmtoutp(BIGTAB, tmp);
+            free(tmp);
+        }
         fmtout("");
         free(msg);
     }
 } /* print_help() */
+
+
+
+/*
+ * get_default_project_root() - scan some common directories for the X
+ * project root
+ *
+ * Users of this information should be careful to account for the
+ * modular layout.
+ */
+
+char *get_default_project_root(void)
+{
+    char *paths[] = { "/usr/X11R6", "/usr/X11", NULL };
+    struct stat stat_buf;
+    int i;
+        
+    for (i = 0; paths[i]; i++) {
+        
+        if (stat(paths[i], &stat_buf) == -1) {
+            continue;
+        }
+    
+        if (S_ISDIR(stat_buf.st_mode)) {
+            return paths[i];
+        }
+    }
+    
+    /* default to "/usr/X11R6", I guess */
+
+    return paths[0];
+
+} /* get_default_project_root() */
 
 
 
@@ -153,7 +222,7 @@ Options *parse_commandline(int argc, char *argv[])
 
     op = (Options *) nvalloc(sizeof(Options));
     
-    op->gop.x_project_root = "/usr/X11R6";
+    op->gop.x_project_root = get_default_project_root();
     op->nvagp = -1;
     op->digital_vibrance = -1;
     op->transparent_index = -1;
@@ -348,6 +417,8 @@ Options *parse_commandline(int argc, char *argv[])
 
         case DISABLE_SCF_OPTION: op->disable_scf = TRUE; break;
         
+        case QUERY_GPU_INFO_OPTION: op->query_gpu_info = TRUE; break;
+
         default:
             goto fail;
         }
@@ -527,6 +598,16 @@ int write_xconfig(Options *op, XConfigPtr config)
     fmtmsg("New X configuration file written to '%s'", filename);
     fmtmsg("");
     
+    
+    /* Set the default depth in the Solaris Management Facility 
+     * to the default depth of the first screen 
+     */
+    if (op->disable_scf == FALSE) {
+        if(!update_scf_depth(config->screens[0].defaultdepth)) {
+            goto done;
+        }
+    }
+    
     ret = TRUE;
     
  done:
@@ -679,6 +760,8 @@ int update_xconfig(Options *op, XConfigPtr config)
         }
     }
     
+    update_extensions(op, config);
+
     update_modules(config);
 
     update_banner(config);
@@ -687,6 +770,14 @@ int update_xconfig(Options *op, XConfigPtr config)
 
 } /* update_xconfig() */
 
+
+
+/*
+ * get_xserver_in_use() - try to determine which X server is in use
+ * (XFree86, Xorg)
+ *
+ * XXX need to update for modular layout
+ */
 
 # define NV_LINE_LEN 1024
 static void get_xserver_in_use(Options *op)
@@ -775,6 +866,11 @@ int main(int argc, char *argv[])
         xconfigGeneratePrintPossibleMice();
         return 0;
     }
+
+    if (op->query_gpu_info) {
+        ret = query_gpu_info(op);
+        return (ret ? 0 : 1);
+    }
  
     /*
      * we want to open and parse the system's existing X config file,
@@ -835,14 +931,6 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    /* Set the default depth in the Solaris Management Facility 
-     * to the default depth of the first screen 
-     */
-    if (op->disable_scf == TRUE) {
-        return 0;
-    } else if(!update_scf_depth(config->screens[0].defaultdepth)) {
-        return 1;
-    }
     return 0;
     
 } /* main() */

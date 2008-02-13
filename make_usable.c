@@ -27,6 +27,7 @@
 
 #include <unistd.h>
 #include <string.h>
+#include <stdlib.h>
 #include <sys/types.h>
 
 #include "nvidia-xconfig.h"
@@ -144,6 +145,45 @@ XConfigLayoutPtr get_layout(Options *op, XConfigPtr config)
 
 
 /*
+ * update_extensions() - apply any requested updates to the Extensions
+ * section; currently, this only applies to the Composite option.
+ */
+
+int update_extensions(Options *op, XConfigPtr config)
+{
+    char *value;
+
+    if (GET_BOOL_OPTION(op->boolean_options, COMPOSITE_OPTION)) {
+
+        /* if we don't already have the Extensions section, create it now */
+
+        if (!config->extensions) {
+            config->extensions = calloc(1, sizeof(XConfigExtensionsRec));
+        }
+
+        /* remove any existing composite extension option */
+        
+        remove_option_from_list(&(config->extensions->options), "Composite");
+
+        /* determine the value to set for the Composite option */
+
+        value = GET_BOOL_OPTION(op->boolean_option_values, COMPOSITE_OPTION) ?
+            "Enable" : "Disable";
+        
+        /* add the option */
+
+        config->extensions->options =
+            xconfigAddNewOption(config->extensions->options,
+                                nvstrdup("Composite"), nvstrdup(value));
+    }
+    
+    return TRUE;
+
+} /* update_extensions() */
+
+
+
+/*
  * update_device() - update the device; there is a lot of information
  * in the device that is not relevant to the NVIDIA X driver.  In
  * fact, some options, like "Chipset" can actually prevent XFree86
@@ -215,7 +255,17 @@ static void update_depth(Options *op, XConfigScreenPtr screen)
     if ((op->depth == 8) || (op->depth == 15) ||
         (op->depth == 16) || (op->depth == 24)) {
         screen->defaultdepth = op->depth;
-    }
+    } else {
+        /* read the default depth to SVC and set it as the default depth */
+        int scf_depth;
+        
+        if (read_scf_depth(&scf_depth) && scf_depth != screen->defaultdepth) {
+            fmtwarn("The default depth of %d read from "
+                "the Solaris Management Facility is set as the default "
+                "depth for screen \"%s\"", scf_depth, screen->identifier);
+            screen->defaultdepth = scf_depth;
+        }
+    }         
     
     /*
      * if there is no display at the default depth, force the first

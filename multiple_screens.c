@@ -33,17 +33,6 @@
 #include <dlfcn.h>
 
 
-typedef struct _device_rec {
-    NvCfgDevice dev;
-    NvCfgDisplayDeviceInformation info[2];
-    int edid_valid;
-    int crtcs;
-    char *name;
-    unsigned int display_device_mask;
-} DeviceRec, *DevicePtr;
-
-static DevicePtr find_devices(Options *op, int *num);
-
 static int enable_separate_x_screens(Options *op, XConfigPtr config,
                                      XConfigLayoutPtr layout);
 static int disable_separate_x_screens(Options *op, XConfigPtr config,
@@ -119,9 +108,10 @@ int apply_multi_screen_options(Options *op, XConfigPtr config,
  * available information about the GPUs in the system.
  */
 
-static DevicePtr find_devices(Options *op, int *num)
+DevicesPtr find_devices(Options *op)
 {
-    DevicePtr devices = NULL;
+    DevicesPtr pDevices = NULL;
+    DisplayDevicePtr pDisplayDevice;
     int i, j, n, count = 0;
     unsigned int mask, bit;
     NvCfgDeviceHandle handle;
@@ -140,8 +130,6 @@ static DevicePtr find_devices(Options *op, int *num)
                            NvCfgDisplayDeviceInformation *info);
     NvCfgBool (*__closeDevice)(NvCfgDeviceHandle handle);
     
-    *num = 0;
-
     /* dlopen() the nvidia-cfg library */
     
 #define __LIB_NAME "libnvidia-cfg.so.1"
@@ -184,59 +172,115 @@ static DevicePtr find_devices(Options *op, int *num)
 
     if (count == 0) return NULL;
 
-    devices = nvalloc(sizeof(DeviceRec) * count);
+    pDevices = nvalloc(sizeof(DevicesRec));
+    
+    pDevices->devices = nvalloc(sizeof(DeviceRec) * count);
+
+    pDevices->nDevices = count;
 
     for (i = 0; i < count; i++) {
         
-        devices[i].dev = devs[i];
+        pDevices->devices[i].dev = devs[i];
         
         if (__openDevice(devs[i].bus, devs[i].slot, &handle) != NVCFG_TRUE)
             goto fail;
         
-        if (__getNumCRTCs(handle, &devices[i].crtcs) != NVCFG_TRUE)
+        if (__getNumCRTCs(handle, &pDevices->devices[i].crtcs) != NVCFG_TRUE)
             goto fail;
         
-        if (__getProductName(handle, &devices[i].name) != NVCFG_TRUE)
+        if (__getProductName(handle, &pDevices->devices[i].name) != NVCFG_TRUE)
             goto fail;
         
         if (__getDisplayDevices(handle, &mask) != NVCFG_TRUE)
             goto fail;
         
-        devices[i].display_device_mask = mask;
+        pDevices->devices[i].displayDeviceMask = mask;
 
+        /* count the number of display devices */
+        
         for (n = j = 0; j < 32; j++) {
-            bit = 1 << j;
-            if (!(bit & mask)) continue;
+            if (mask & (1 << j)) n++;
+        }
+        
+        pDevices->devices[i].nDisplayDevices = n;
+
+        if (n) {
+
+            /* allocate the info array of the right size */
             
-            if (__getEDID(handle, bit, &devices[i].info[n]) != NVCFG_TRUE) {
-                devices[i].edid_valid = FALSE;
-            } else {
-                devices[i].edid_valid = TRUE;
+            pDevices->devices[i].displayDevices =
+                nvalloc(sizeof(DisplayDeviceRec) * n);
+            
+            /* fill in the info array */
+            
+            for (n = j = 0; j < 32; j++) {
+                bit = 1 << j;
+                if (!(bit & mask)) continue;
+                
+                pDisplayDevice = &pDevices->devices[i].displayDevices[n];
+                pDisplayDevice->mask = bit;
+
+                if (__getEDID(handle, bit,
+                              &pDisplayDevice->info) != NVCFG_TRUE) {
+                    pDisplayDevice->info_valid = FALSE;
+                } else {
+                    pDisplayDevice->info_valid = TRUE;
+                }
+                n++;
             }
-            
-            n++;
+        } else {
+            pDevices->devices[i].displayDevices = NULL;
         }
 
         if (__closeDevice(handle) != NVCFG_TRUE)
             goto fail;
     }
     
-    *num = count;
-
-    return devices;
-
+    goto done;
+    
  fail:
 
-    *num = 0;
-    if (devices) nvfree((void *) devices);
-    if (devs) free(devs);
-    
     fmtwarn("Unable to use the nvidia-cfg library to query NVIDIA "
             "hardware.");
+
+    free_devices(pDevices);
+    pDevices = NULL;
+
+    /* fall through */
+
+ done:
     
-    return NULL;
+    if (devs) free(devs);
+    
+    return pDevices;
     
 } /* find_devices() */
+
+
+
+/*
+ * free_devices()
+ */
+
+void free_devices(DevicesPtr pDevices)
+{
+    int i;
+    
+    if (!pDevices) return;
+    
+    for (i = 0; i < pDevices->nDevices; i++) {
+        if (pDevices->devices[i].displayDevices) {
+            nvfree(pDevices->devices[i].displayDevices);
+        }
+    }
+    
+    if (pDevices->devices) {
+        nvfree(pDevices->devices);
+    }
+        
+    nvfree(pDevices);
+    
+} /* free_devices() */
 
 
 
@@ -348,11 +392,10 @@ static int enable_separate_x_screens(Options *op, XConfigPtr config,
      */
     
     if (!have_busids) {
-        DevicePtr devs;
-        int ndevs;
+        DevicesPtr pDevices;
         
-        devs = find_devices(op, &ndevs);
-        if (!devs) {
+        pDevices = find_devices(op);
+        if (!pDevices) {
             fmterr("Unable to determine number or location of "
                    "GPUs in system; cannot "
                    "honor '--separate-x-screens' option.");
@@ -360,7 +403,7 @@ static int enable_separate_x_screens(Options *op, XConfigPtr config,
         }
         
         for (i = 0; i < nscreens; i++) {
-            if (i > ndevs) {
+            if (i > pDevices->nDevices) {
                 /*
                  * we have more screens than GPUs, this screen is no
                  * longer a candidate
@@ -371,9 +414,13 @@ static int enable_separate_x_screens(Options *op, XConfigPtr config,
             
             screenlist[i]->device->busid = nvalloc(32);
             snprintf(screenlist[i]->device->busid, 32,
-                     "PCI:%d:%d:0", devs[i].dev.bus, devs[i].dev.slot);
-            screenlist[i]->device->board = nvstrdup(devs[i].name);
+                     "PCI:%d:%d:0",
+                     pDevices->devices[i].dev.bus,
+                     pDevices->devices[i].dev.slot);
+            screenlist[i]->device->board = nvstrdup(pDevices->devices[i].name);
         }
+
+        free_devices(pDevices);
     }
     
     /*
@@ -747,11 +794,11 @@ static void create_adjacencies(Options *op, XConfigPtr config,
 static int enable_all_gpus(Options *op, XConfigPtr config,
                            XConfigLayoutPtr layout)
 {
-    DevicePtr devs;
-    int n, i;
+    DevicesPtr pDevices;
+    int i;
 
-    devs = find_devices(op, &n);
-    if (!devs) {
+    pDevices = find_devices(op);
+    if (!pDevices) {
         fmterr("Unable to determine number of GPUs in system; cannot "
                "honor '--enable-all-gpus' option.");
         return FALSE;
@@ -773,11 +820,15 @@ static int enable_all_gpus(Options *op, XConfigPtr config,
 
     /* add N new screens; this will also add device and monitor sections */
     
-    for (i = 0; i < n; i++) {
-        xconfigGenerateAddScreen(config, devs[i].dev.bus, devs[i].dev.slot,
-                                 devs[i].name, i);
+    for (i = 0; i < pDevices->nDevices; i++) {
+        xconfigGenerateAddScreen(config,
+                                 pDevices->devices[i].dev.bus,
+                                 pDevices->devices[i].dev.slot,
+                                 pDevices->devices[i].name, i);
     }
     
+    free_devices(pDevices);
+
     /* create adjacencies for the layout */
     
     create_adjacencies(op, config, layout);

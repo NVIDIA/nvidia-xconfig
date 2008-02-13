@@ -32,7 +32,7 @@ configuration file to create:
 if the X server
 in use is X.org or 
 .I /etc/X11/XF86Config
-if the X server in use is XFree86."
+if the X server in use is XFree86.
 .TP
 2)
 The configuration in memory is modified to support the NVIDIA driver.

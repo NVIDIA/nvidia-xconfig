@@ -52,35 +52,37 @@ typedef struct {
 
 
 /* Boolean options */
-#define NOLOGO_OPTION                      1
-#define UBB_OPTION                         2
-#define RENDER_ACCEL_OPTION                3
-#define NO_RENDER_EXTENSION_OPTION         4
-#define OVERLAY_OPTION                     5
-#define CIOVERLAY_OPTION                   6
-#define OVERLAY_DEFAULT_VISUAL_OPTION      7
-#define NO_BANDWIDTH_TEST_OPTION           8
-#define NO_POWER_CONNECTOR_CHECK_OPTION    9
-#define ALLOW_DFP_STEREO_OPTION            10
-#define ALLOW_GLX_WITH_COMPOSITE_OPTION    11
-#define RANDR_ROTATION_OPTION              12
-#define TWINVIEW_OPTION                    13
-#define SEPARATE_X_SCREENS_OPTION          14
-#define XINERAMA_OPTION                    15
-#define NO_TWINVIEW_XINERAMA_INFO_OPTION   16
-#define NOFLIP_OPTION                      17
-#define DAC_8BIT_OPTION                    18
-#define USE_EDID_FREQS_OPTION              19
-#define IGNORE_EDID_OPTION                 20
-#define USE_INT10_MODULE_OPTION            21
-#define FORCE_STEREO_FLIPPING_OPTION       22
-#define MULTISAMPLE_COMPATIBILITY_OPTION   23
-#define XVMC_USES_TEXTURES_OPTION          24
-#define EXACT_MODE_TIMINGS_DVI_OPTION      25
-#define ALLOW_DDCCI_OPTION                 26
-#define LOAD_KERNEL_MODULE_OPTION          27
+#define NOLOGO_OPTION                      0
+#define UBB_OPTION                         1
+#define RENDER_ACCEL_OPTION                2
+#define NO_RENDER_EXTENSION_OPTION         3
+#define OVERLAY_OPTION                     4
+#define CIOVERLAY_OPTION                   5
+#define OVERLAY_DEFAULT_VISUAL_OPTION      6
+#define NO_BANDWIDTH_TEST_OPTION           7
+#define NO_POWER_CONNECTOR_CHECK_OPTION    8
+#define ALLOW_DFP_STEREO_OPTION            9
+#define ALLOW_GLX_WITH_COMPOSITE_OPTION    10
+#define RANDR_ROTATION_OPTION              11
+#define TWINVIEW_OPTION                    12
+#define SEPARATE_X_SCREENS_OPTION          13
+#define XINERAMA_OPTION                    14
+#define NO_TWINVIEW_XINERAMA_INFO_OPTION   15
+#define NOFLIP_OPTION                      16
+#define DAC_8BIT_OPTION                    17
+#define USE_EDID_FREQS_OPTION              18
+#define IGNORE_EDID_OPTION                 19
+#define USE_INT10_MODULE_OPTION            20
+#define FORCE_STEREO_FLIPPING_OPTION       21
+#define MULTISAMPLE_COMPATIBILITY_OPTION   22
+#define XVMC_USES_TEXTURES_OPTION          23
+#define EXACT_MODE_TIMINGS_DVI_OPTION      24
+#define ALLOW_DDCCI_OPTION                 25
+#define LOAD_KERNEL_MODULE_OPTION          26
+#define ADD_ARGB_GLX_VISUALS_OPTION        27
+#define COMPOSITE_OPTION                   28
 
-#define XCONFIG_BOOL_OPTION_COUNT LOAD_KERNEL_MODULE_OPTION
+#define XCONFIG_BOOL_OPTION_COUNT (COMPOSITE_OPTION + 1)
 
 /* # of 32-bit variables needed to hold all the boolean options (bits) */
 #define XCONFIG_BOOL_OPTION_SLOTS  \
@@ -111,6 +113,7 @@ typedef struct __options {
     int enable_all_gpus;
     int only_one_screen;
     int disable_scf;
+    int query_gpu_info;
     
     /*
      * the option parser will set bits in boolean_options to indicate
@@ -144,6 +147,28 @@ typedef struct __options {
 
 } Options;
 
+/* data structures for storing queried GPU information */
+
+typedef struct _display_device_rec {
+    NvCfgDisplayDeviceInformation info;
+    int info_valid;
+    unsigned int mask;
+} DisplayDeviceRec, *DisplayDevicePtr;
+
+typedef struct _device_rec {
+    NvCfgDevice dev;
+    int crtcs;
+    char *name;
+    unsigned int displayDeviceMask;
+    int nDisplayDevices;
+    DisplayDevicePtr displayDevices;    
+} DeviceRec, *DevicePtr;
+
+typedef struct {
+    int nDevices;
+    DevicePtr devices;
+} DevicesRec, *DevicesPtr;
+
 
 /* util.c */
 
@@ -151,7 +176,7 @@ void *nvalloc(size_t size);
 char *nvstrcat(const char *str, ...);
 void *nvrealloc(void *ptr, size_t size);
 char *nvstrdup(const char *s);
-void nvfree(char *s);
+void nvfree(void *s);
 int copy_file(const char *srcfile, const char *dstfile, mode_t mode);
 
 int directory_exists(const char *dir);
@@ -180,8 +205,12 @@ void fmtwarn(const char *fmt, ...);
 int update_modules(XConfigPtr config);
 int update_screen(Options *op, XConfigPtr config, XConfigScreenPtr screen);
 XConfigLayoutPtr get_layout(Options *op, XConfigPtr config);
+int update_extensions(Options *op, XConfigPtr config);
 
 /* multiple_screens.c */
+
+DevicesPtr find_devices(Options *op);
+void free_devices(DevicesPtr devs);
 
 int apply_multi_screen_options(Options *op, XConfigPtr config,
                                XConfigLayoutPtr layout);
@@ -197,5 +226,11 @@ void update_options(Options *op, XConfigScreenPtr screen);
 
 /* lscf.c */
 int update_scf_depth(int depth);
+int read_scf_depth(int *depth);
+
+/* query_gpu_info.c */
+
+int query_gpu_info(Options *op);
+
 
 #endif /* __NVIDIA_XCONFIG_H__ */

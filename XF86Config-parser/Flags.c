@@ -368,6 +368,30 @@ xconfigFindOptionValue (XConfigOptionPtr list, const char *name)
     return (NULL);
 }
 
+/*
+ * this function searches the given option list for the named option. If
+ * found and the the value of the option is set to "1", "ON", "YES" or
+ * "TRUE", 1 is returned.  Otherwise, 0 is returned.
+ */
+
+int
+xconfigFindOptionBoolean (XConfigOptionPtr list, const char *name)
+{
+    XConfigOptionPtr p = xconfigFindOption (list, name);
+
+    if (p && p->val)
+    {
+        if ( strcasecmp(p->val, "1")    == 0 ||
+             strcasecmp(p->val, "ON")   == 0 ||
+             strcasecmp(p->val, "YES")  == 0 ||
+             strcasecmp(p->val, "TRUE") == 0 )
+        {
+            return 1;
+        }
+    }
+    return 0;
+}
+
 XConfigOptionPtr
 xconfigOptionListCreate( const char **options, int count, int used )
 {

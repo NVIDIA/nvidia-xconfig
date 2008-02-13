@@ -58,7 +58,6 @@ add_monitor(XConfigPtr config, int count);
 static XConfigDevicePtr
 add_device(XConfigPtr config, int bus, int slot, char *boardname, int count);
 
-static XConfigDisplayPtr add_display(int depth);
 static void add_layout(GenerateOptions *gop, XConfigPtr config);
 
 static void add_inputref(XConfigPtr config, XConfigLayoutPtr layout,
@@ -130,7 +129,8 @@ XConfigScreenPtr xconfigGenerateAddScreen(XConfigPtr config,
         
     screen->defaultdepth = 24;
     
-    screen->displays = add_display(screen->defaultdepth);
+    screen->displays = xconfigAddDisplay(screen->displays,
+                                         screen->defaultdepth);
 
     /* append to the end of the screen list */
     
@@ -199,6 +199,66 @@ static int is_file(const char *filename)
 } /* is_file() */
 
 
+/*
+ * find_libdir() - attempt to find the X server library path; this is
+ * either
+ *
+ *     `pkg-config --variable=libdir xorg-server`
+ *
+ * or
+ *
+ *     [X PROJECT ROOT]/lib
+ */
+
+static char *find_libdir(GenerateOptions *gop)
+{
+    struct stat stat_buf;
+    FILE *stream = NULL;
+    char *s, *libdir = NULL;
+    
+    /*
+     * run the pkg-config command and read the output; if the output
+     * is a directory, then return that as the libdir
+     */
+    
+    stream = popen("pkg-config --variable=libdir xorg-server", "r");
+    
+    if (stream) {
+        char buf[256];
+
+        buf[0] = '\0';
+
+        while (1) {
+            if (fgets(buf, 255, stream) == NULL) break;
+            
+            if (buf[0] != '\0') {
+
+                /* truncate any newline */
+                
+                s = strchr(buf, '\n');
+                if (s) *s = '\0';
+
+                if ((stat(buf, &stat_buf) == 0) &&
+                    (S_ISDIR(stat_buf.st_mode))) {
+                
+                    libdir = xconfigStrdup(buf);
+                    break;
+                }
+            }
+        }
+        
+        pclose(stream);
+
+        if (libdir) return libdir;
+    }
+
+    /* otherwise, just fallback to [X PROJECT ROOT]/lib */
+
+    return xconfigStrcat(gop->x_project_root, "/lib", NULL);
+    
+} /* find_libdir() */
+
+
 
 /*
  * add_files() - 
@@ -206,9 +266,13 @@ static int is_file(const char *filename)
 
 static void add_files(GenerateOptions *gop, XConfigPtr config)
 {
+    char *libdir = find_libdir(gop);
+
     config->files = xconfigAlloc(sizeof(XConfigFilesRec));
-    config->files->rgbpath = xconfigStrcat(gop->x_project_root,
-                                      "/lib/X11/rgb", NULL);
+    config->files->rgbpath = xconfigStrcat(libdir, "/X11/rgb", NULL);
+    
+    free(libdir);
+
 } /* add_files() */
 
 
@@ -222,7 +286,7 @@ static void add_files(GenerateOptions *gop, XConfigPtr config)
 static void add_font_path(GenerateOptions *gop, XConfigPtr config)
 {
     int i, ret;
-    char *path, *p, *orig, *fonts_dir;
+    char *path, *p, *orig, *fonts_dir, *libdir;
     
     /*
      * The below font path has been constructed from various examples
@@ -230,19 +294,22 @@ static void add_font_path(GenerateOptions *gop, XConfigPtr config)
      */
     
     static const char *__font_paths[] = {
-        "ROOT/lib/X11/fonts/local/",
-        "ROOT/lib/X11/fonts/misc/:unscaled",
-        "ROOT/lib/X11/fonts/100dpi/:unscaled",
-        "ROOT/lib/X11/fonts/75dpi/:unscaled",
-        "ROOT/lib/X11/fonts/misc/",
-        "ROOT/lib/X11/fonts/Type1/",
-        "ROOT/lib/X11/fonts/CID/",
-        "ROOT/lib/X11/fonts/Speedo/",
-        "ROOT/lib/X11/fonts/100dpi/",
-        "ROOT/lib/X11/fonts/75dpi/",
-        "ROOT/lib/X11/fonts/cyrillic/",
-        "ROOT/lib/X11/fonts/TTF/",
-        "ROOT/lib/X11/fonts/truetype/",
+        "LIBDIR/X11/fonts/local/",
+        "LIBDIR/X11/fonts/misc/:unscaled",
+        "LIBDIR/X11/fonts/100dpi/:unscaled",
+        "LIBDIR/X11/fonts/75dpi/:unscaled",
+        "LIBDIR/X11/fonts/misc/",
+        "LIBDIR/X11/fonts/Type1/",
+        "LIBDIR/X11/fonts/CID/",
+        "LIBDIR/X11/fonts/Speedo/",
+        "LIBDIR/X11/fonts/100dpi/",
+        "LIBDIR/X11/fonts/75dpi/",
+        "LIBDIR/X11/fonts/cyrillic/",
+        "LIBDIR/X11/fonts/TTF/",
+        "LIBDIR/X11/fonts/truetype/",
+        "LIBDIR/X11/fonts/TrueType/",
+        "LIBDIR/X11/fonts/Type1/sun/",
+        "LIBDIR/X11/fonts/F3bitmaps/",
         "/usr/local/share/fonts/ttfonts",
         "/usr/share/fonts/default/Type1",
         "/usr/lib/openoffice/share/fonts/truetype",
@@ -264,13 +331,18 @@ static void add_font_path(GenerateOptions *gop, XConfigPtr config)
     if (WEXITSTATUS(ret) == 0) {
         config->files->fontpath = "unix/:7100";
     } else {
+
+        /* get the X server libdir */
+
+        libdir = find_libdir(gop);
+        
         for (i = 0; __font_paths[i]; i++) {
             path = xconfigStrdup(__font_paths[i]);
 
-            /* replace ROOT with the project root */
+            /* replace LIBDIR with libdir */
 
-            if (strncmp(path, "ROOT", 4) == 0) {
-                p = xconfigStrcat(gop->x_project_root, path + 4, NULL);
+            if (strncmp(path, "LIBDIR", 6) == 0) {
+                p = xconfigStrcat(libdir, path + 6, NULL);
                 free(path);
                 path = p;
             }
@@ -309,6 +381,10 @@ static void add_font_path(GenerateOptions *gop, XConfigPtr config)
                 config->files->fontpath = path;
             }
         }
+
+        /* free the libdir string */
+
+        free(libdir);
     }
 } /* add_font_path() */
 
@@ -443,7 +519,7 @@ add_device(XConfigPtr config, int bus, int slot, char *boardname, int count)
 
 
 
-static XConfigDisplayPtr add_display(int depth)
+XConfigDisplayPtr xconfigAddDisplay(XConfigDisplayPtr head, const int depth)
 {
     XConfigDisplayPtr display;
     XConfigModePtr mode = NULL;
@@ -461,6 +537,8 @@ static XConfigDisplayPtr add_display(int depth)
     display->frameY0 = -1;
     display->black.red = -1;
     display->white.red = -1;
+
+    display->next = head;
     
     return display;
 }
@@ -744,6 +822,7 @@ static char *find_config_entry(const char *filename, const char *keyword)
     int fd = -1;
     char *data = NULL;
     char *value = NULL;
+    char *buf = NULL;
     char *tmp, *start, *c, *end;
     struct stat stat_buf;
     size_t len;
@@ -755,9 +834,21 @@ static char *find_config_entry(const char *filename, const char *keyword)
     if ((data = mmap(0, stat_buf.st_size, PROT_READ, MAP_SHARED,
                      fd, 0)) == (void *) -1) goto done;
     
+    /*
+     * create a sysmem copy of the buffer, so that we can explicitly
+     * NULL terminate it
+     */
+
+    buf = malloc(stat_buf.st_size + 1);
+
+    if (!buf) goto done;
+
+    memcpy(buf, data, stat_buf.st_size);
+    buf[stat_buf.st_size] = '\0';
+    
     /* search for the keyword */
     
-    start = data;
+    start = buf;
 
     while (TRUE) {
         tmp = strstr(start, keyword);
@@ -808,6 +899,7 @@ static char *find_config_entry(const char *filename, const char *keyword)
     
  done:
 
+    if (buf) free(buf);
     if (data) munmap(data, stat_buf.st_size);
     if (fd != -1) close(fd);
 

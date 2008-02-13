@@ -210,7 +210,7 @@ char *nvstrdup(const char *s)
 /*
  * nvfree() - 
  */
-void nvfree(char *s)
+void nvfree(void *s)
 {
     if (s) free(s);
 
