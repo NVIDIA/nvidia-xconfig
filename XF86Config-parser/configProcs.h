@@ -54,7 +54,9 @@ XConfigInputPtr xconfigParseKeyboardSection(void);
 /* Layout.c */
 XConfigLayoutPtr xconfigParseLayoutSection(void);
 void xconfigPrintLayoutSection(FILE *cf, XConfigLayoutPtr ptr);
-int xconfigValidateLayout(XConfigPtr p, const char *screenName);
+int xconfigValidateLayout(XConfigPtr p);
+int xconfigSanitizeLayout(XConfigPtr p, const char *screenName,
+                          GenerateOptions *gop);
 
 /* Module.c */
 XConfigLoadPtr xconfigParseModuleSubSection(XConfigLoadPtr head, char *name);
@@ -78,6 +80,7 @@ XConfigDisplayPtr xconfigParseDisplaySubSection(void);
 XConfigScreenPtr xconfigParseScreenSection(void);
 void xconfigPrintScreenSection(FILE *cf, XConfigScreenPtr ptr);
 int xconfigValidateScreen(XConfigPtr p);
+int xconfigSanitizeScreen(XConfigPtr p);
 
 /* Vendor.c */
 XConfigVendorPtr xconfigParseVendorSection(void);
@@ -90,7 +93,7 @@ XConfigVideoAdaptorPtr xconfigParseVideoAdaptorSection(void);
 void xconfigPrintVideoAdaptorSection(FILE *cf, XConfigVideoAdaptorPtr ptr);
 
 /* Read.c */
-int xconfigValidateConfig(XConfigPtr p, const char *);
+int xconfigValidateConfig(XConfigPtr p);
 
 /* Scan.c */
 int xconfigGetToken(XConfigSymTabRec *tab);
@@ -116,3 +119,8 @@ void xconfigErrorMsg(MsgType, char *fmt, ...);
 /* Extensions.c */
 XConfigExtensionsPtr xconfigParseExtensionsSection (void);
 void xconfigPrintExtensionsSection (FILE * cf, XConfigExtensionsPtr ptr);
+
+/* Generate.c */
+XConfigMonitorPtr xconfigAddMonitor(XConfigPtr config, int count);
+int xconfigAddMouse(GenerateOptions *gop, XConfigPtr config);
+int xconfigAddKeyboard(GenerateOptions *gop, XConfigPtr config);

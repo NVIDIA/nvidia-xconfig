@@ -106,10 +106,6 @@ xconfigParseVendorSubSection (void)
         }
     }
 
-#ifdef DEBUG
-    xconfigErrorMsg(DebugMsg, "Vendor subsection parsed\n");
-#endif
-
     return ptr;
 }
 
@@ -171,10 +167,6 @@ xconfigParseVendorSection (void)
 
     if (!has_ident)
         Error (NO_IDENT_MSG, NULL);
-
-#ifdef DEBUG
-    xconfigErrorMsg(DebugMsg, "Vendor section parsed\n");
-#endif
 
     return ptr;
 }

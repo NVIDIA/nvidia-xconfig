@@ -77,9 +77,9 @@ int apply_multi_screen_options(Options *op, XConfigPtr config,
     
 
     if (GET_BOOL_OPTION(op->boolean_options,
-                        SEPARATE_X_SCREENS_OPTION)) {
+                        SEPARATE_X_SCREENS_BOOL_OPTION)) {
         if (GET_BOOL_OPTION(op->boolean_option_values,
-                            SEPARATE_X_SCREENS_OPTION)) {
+                            SEPARATE_X_SCREENS_BOOL_OPTION)) {
             if (!enable_separate_x_screens(op, config, layout)) return FALSE;
         } else {
             if (!disable_separate_x_screens(op, config, layout)) return FALSE;
@@ -87,9 +87,9 @@ int apply_multi_screen_options(Options *op, XConfigPtr config,
     }
     
     if (GET_BOOL_OPTION(op->boolean_options,
-                        XINERAMA_OPTION)) {
+                        XINERAMA_BOOL_OPTION)) {
         if (!set_xinerama(GET_BOOL_OPTION(op->boolean_option_values,
-                                          XINERAMA_OPTION),
+                                          XINERAMA_BOOL_OPTION),
                           config)) return FALSE;
     }
     
@@ -403,7 +403,7 @@ static int enable_separate_x_screens(Options *op, XConfigPtr config,
         }
         
         for (i = 0; i < nscreens; i++) {
-            if (i > pDevices->nDevices) {
+            if (i >= pDevices->nDevices) {
                 /*
                  * we have more screens than GPUs, this screen is no
                  * longer a candidate
@@ -457,6 +457,7 @@ static int enable_separate_x_screens(Options *op, XConfigPtr config,
                                           &bus1, &slot1, &scratch)) continue;
             if ((bus0 == bus1) && (slot0 == slot1)) {
                 screenlist[i] = NULL; /* no longer a candidate */
+                break;
             }
         }
     }
@@ -468,7 +469,13 @@ static int enable_separate_x_screens(Options *op, XConfigPtr config,
         clone_screen(screenlist[i]);
     }
     
-    /* wipe the existing adjacencies and recreate them */
+    /*
+     * wipe the existing adjacencies and recreate them
+     * 
+     * XXX we should really only use the screens in the current
+     * adjacency list, plus the new cloned screens, when building the
+     * new adjacencies
+     */
     
     xconfigFreeAdjacencyList(layout->adjacencies);
     layout->adjacencies = NULL;

@@ -55,6 +55,8 @@
 
 /* View/edit this file with tab stops set to 4 */
 
+#include <strings.h>
+
 #include "xf86Parser.h"
 #include "xf86tokens.h"
 #include "Configint.h"
@@ -195,10 +197,6 @@ xconfigParseFilesSection (void)
             break;
         }
     }
-
-#ifdef DEBUG
-    xconfigErrorMsg(DebugMsg, "File section parsed\n");
-#endif
 
     return ptr;
 }

@@ -52,37 +52,44 @@ typedef struct {
 
 
 /* Boolean options */
-#define NOLOGO_OPTION                      0
-#define UBB_OPTION                         1
-#define RENDER_ACCEL_OPTION                2
-#define NO_RENDER_EXTENSION_OPTION         3
-#define OVERLAY_OPTION                     4
-#define CIOVERLAY_OPTION                   5
-#define OVERLAY_DEFAULT_VISUAL_OPTION      6
-#define NO_BANDWIDTH_TEST_OPTION           7
-#define NO_POWER_CONNECTOR_CHECK_OPTION    8
-#define ALLOW_DFP_STEREO_OPTION            9
-#define ALLOW_GLX_WITH_COMPOSITE_OPTION    10
-#define RANDR_ROTATION_OPTION              11
-#define TWINVIEW_OPTION                    12
-#define SEPARATE_X_SCREENS_OPTION          13
-#define XINERAMA_OPTION                    14
-#define NO_TWINVIEW_XINERAMA_INFO_OPTION   15
-#define NOFLIP_OPTION                      16
-#define DAC_8BIT_OPTION                    17
-#define USE_EDID_FREQS_OPTION              18
-#define IGNORE_EDID_OPTION                 19
-#define USE_INT10_MODULE_OPTION            20
-#define FORCE_STEREO_FLIPPING_OPTION       21
-#define MULTISAMPLE_COMPATIBILITY_OPTION   22
-#define XVMC_USES_TEXTURES_OPTION          23
-#define EXACT_MODE_TIMINGS_DVI_OPTION      24
-#define ALLOW_DDCCI_OPTION                 25
-#define LOAD_KERNEL_MODULE_OPTION          26
-#define ADD_ARGB_GLX_VISUALS_OPTION        27
-#define COMPOSITE_OPTION                   28
+#define NOLOGO_BOOL_OPTION                      0
+#define UBB_BOOL_OPTION                         1
+#define RENDER_ACCEL_BOOL_OPTION                2
+#define NO_RENDER_EXTENSION_BOOL_OPTION         3
+#define OVERLAY_BOOL_OPTION                     4
+#define CIOVERLAY_BOOL_OPTION                   5
+#define OVERLAY_DEFAULT_VISUAL_BOOL_OPTION      6
+#define NO_BANDWIDTH_TEST_BOOL_OPTION           7
+#define NO_POWER_CONNECTOR_CHECK_BOOL_OPTION    8
+#define ALLOW_DFP_STEREO_BOOL_OPTION            9
+#define ALLOW_GLX_WITH_COMPOSITE_BOOL_OPTION    10
+#define RANDR_ROTATION_BOOL_OPTION              11
+#define TWINVIEW_BOOL_OPTION                    12
+#define SEPARATE_X_SCREENS_BOOL_OPTION          13
+#define XINERAMA_BOOL_OPTION                    14
+#define NO_TWINVIEW_XINERAMA_INFO_BOOL_OPTION   15
+#define NOFLIP_BOOL_OPTION                      16
+#define DAC_8BIT_BOOL_OPTION                    17
+#define USE_EDID_FREQS_BOOL_OPTION              18
+#define USE_EDID_BOOL_OPTION                    19
+#define USE_INT10_MODULE_BOOL_OPTION            20
+#define FORCE_STEREO_FLIPPING_BOOL_OPTION       21
+#define MULTISAMPLE_COMPATIBILITY_BOOL_OPTION   22
+#define XVMC_USES_TEXTURES_BOOL_OPTION          23
+#define EXACT_MODE_TIMINGS_DVI_BOOL_OPTION      24
+#define ALLOW_DDCCI_BOOL_OPTION                 25
+#define LOAD_KERNEL_MODULE_BOOL_OPTION          26
+#define ADD_ARGB_GLX_VISUALS_BOOL_OPTION        27
+#define COMPOSITE_BOOL_OPTION                   28
+#define DISABLE_GLX_ROOT_CLIPPING_BOOL_OPTION   29
+#define USE_EDID_DPI_BOOL_OPTION                30
+#define DAMAGE_EVENTS_BOOL_OPTION               31
+#define CONSTANT_DPI_BOOL_OPTION                32
+#define PROBE_ALL_GPUS_BOOL_OPTION              33
+#define DYNAMIC_TWINVIEW_BOOL_OPTION            34
+#define INCLUDE_IMPLICIT_METAMODES_BOOL_OPTION  35
 
-#define XCONFIG_BOOL_OPTION_COUNT (COMPOSITE_OPTION + 1)
+#define XCONFIG_BOOL_OPTION_COUNT (INCLUDE_IMPLICIT_METAMODES_BOOL_OPTION + 1)
 
 /* # of 32-bit variables needed to hold all the boolean options (bits) */
 #define XCONFIG_BOOL_OPTION_SLOTS  \
@@ -98,6 +105,10 @@ typedef struct {
 #define GET_BOOL_OPTION(BLOCKS, VAR)        \
   (GET_BOOL_OPTION_SLOT((BLOCKS), (VAR)) &  \
    GET_BOOL_OPTION_BIT(VAR))
+
+
+/* define to store in string options */
+#define NV_DISABLE_STRING_OPTION ((void *) -1)
 
 /* 32 bit unsigned variable (used to pack booleans) */
 typedef unsigned int u32;
@@ -127,7 +138,6 @@ typedef struct __options {
 
     int depth;
     int nvagp;
-    int digital_vibrance;
     int transparent_index;
     int stereo;
 
@@ -135,10 +145,20 @@ typedef struct __options {
     char *output_xconfig;
     char *layout;
     char *screen;
+    char *multigpu;
     char *sli;
     char *rotate;
 
     char *nvidia_cfg_path;
+    char *extract_edids_from_log;
+    char *extract_edids_output_file;
+    char *twinview_xinerama_info_order;
+    char *twinview_orientation;
+
+    struct {
+        int x;
+        int y;
+    } virtual;
 
     TextRows add_modes;
     TextRows remove_modes;
@@ -231,6 +251,11 @@ int read_scf_depth(int *depth);
 /* query_gpu_info.c */
 
 int query_gpu_info(Options *op);
+
+/* extract_edids.c */
+
+int extract_edids(Options *op);
+
 
 
 #endif /* __NVIDIA_XCONFIG_H__ */

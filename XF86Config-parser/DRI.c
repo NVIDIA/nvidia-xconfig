@@ -65,10 +65,6 @@ xconfigParseBuffers (void)
         xconfigUnGetToken(token);
     }
 
-#ifdef DEBUG
-    xconfigErrorMsg(DebugMsg, "Buffers parsed\n");
-#endif
-
     return ptr;
 }
 
@@ -115,11 +111,7 @@ xconfigParseDRISection (void)
         break;
         }
     }
-    
-#ifdef DEBUG
-    ErrorF("DRI section parsed\n");
-#endif
-    
+
     return ptr;
 }
 

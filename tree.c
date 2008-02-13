@@ -179,6 +179,28 @@ static void print_modes(XConfigScreenPtr screen)
 
 
 /*
+ * print_virtual()
+ */
+
+static void print_virtual(XConfigScreenPtr screen)
+{
+    XConfigDisplayPtr display;
+
+    for (display = screen->displays; display; display = display->next) {
+        if (display->depth == screen->defaultdepth) {
+            if (display->virtualX || display->virtualY) {
+                printf("        |       |--> Virtual %d %d\n",
+                       display->virtualX, display->virtualY);
+            }
+            break;
+        }
+    }
+    
+} /* print_virtual() */
+
+
+
+/*
  * print_screen()
  */
 
@@ -195,7 +217,8 @@ static void print_screen(XConfigScreenPtr screen)
     printf("        |       |--> DefaultColorDepth %d\n",
            screen->defaultdepth);
     print_modes(screen);
-
+    print_virtual(screen);
+    
     printf("        |\n");
     
 } /* print_screen() */

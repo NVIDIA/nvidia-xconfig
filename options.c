@@ -40,34 +40,41 @@ typedef struct {
 
 static const NvidiaXConfigOption __options[] = {
     
-    { NOLOGO_OPTION,                    TRUE,  "NoLogo" },
-    { UBB_OPTION,                       FALSE, "UBB" },
-    { RENDER_ACCEL_OPTION,              FALSE, "RenderAccel" },
-    { NO_RENDER_EXTENSION_OPTION,       TRUE,  "NoRenderExtension" },
-    { OVERLAY_OPTION,                   FALSE, "Overlay" },
-    { CIOVERLAY_OPTION,                 FALSE, "CIOverlay" },
-    { OVERLAY_DEFAULT_VISUAL_OPTION,    FALSE, "OverlayDefaultVisual" },
-    { NO_BANDWIDTH_TEST_OPTION,         TRUE,  "NoBandWidthTest" },
-    { NO_POWER_CONNECTOR_CHECK_OPTION,  TRUE,  "NoPowerConnectorCheck" },
-    { ALLOW_DFP_STEREO_OPTION,          FALSE, "AllowDFPStereo" },
-    { ALLOW_GLX_WITH_COMPOSITE_OPTION,  FALSE, "AllowGLXWithComposite" },
-    { RANDR_ROTATION_OPTION,            FALSE, "RandRRotation" },
-    { TWINVIEW_OPTION,                  FALSE, "TwinView" },
-    { XINERAMA_OPTION,                  FALSE, "Xinerama" },
-    { NO_TWINVIEW_XINERAMA_INFO_OPTION, TRUE,  "NoTwinViewXineramaInfo" },
-    { NOFLIP_OPTION,                    TRUE,  "NoFlip" },
-    { DAC_8BIT_OPTION,                  FALSE, "Dac8Bit" },
-    { USE_EDID_FREQS_OPTION,            FALSE, "UseEdidFreqs" },
-    { IGNORE_EDID_OPTION,               FALSE, "IgnoreEDID" },
-    { USE_INT10_MODULE_OPTION,          FALSE, "UseInt10Module" },
-    { FORCE_STEREO_FLIPPING_OPTION,     FALSE, "ForceStereoFlipping" },
-    { MULTISAMPLE_COMPATIBILITY_OPTION, FALSE, "MultisampleCompatibility" },
-    { XVMC_USES_TEXTURES_OPTION,        FALSE, "XvmcUsesTextures" },
-    { EXACT_MODE_TIMINGS_DVI_OPTION,    FALSE, "ExactModeTimingsDVI" },
-    { ALLOW_DDCCI_OPTION,               FALSE, "AllowDDCCI" },
-    { LOAD_KERNEL_MODULE_OPTION,        FALSE, "LoadKernelModule" },
-    { ADD_ARGB_GLX_VISUALS_OPTION,      FALSE, "AddARGBGLXVisuals" },
-    { 0,                                FALSE, NULL },
+    { NOLOGO_BOOL_OPTION,                    TRUE,  "NoLogo" },
+    { UBB_BOOL_OPTION,                       FALSE, "UBB" },
+    { RENDER_ACCEL_BOOL_OPTION,              FALSE, "RenderAccel" },
+    { NO_RENDER_EXTENSION_BOOL_OPTION,       TRUE,  "NoRenderExtension" },
+    { OVERLAY_BOOL_OPTION,                   FALSE, "Overlay" },
+    { CIOVERLAY_BOOL_OPTION,                 FALSE, "CIOverlay" },
+    { OVERLAY_DEFAULT_VISUAL_BOOL_OPTION,    FALSE, "OverlayDefaultVisual" },
+    { NO_BANDWIDTH_TEST_BOOL_OPTION,         TRUE,  "NoBandWidthTest" },
+    { NO_POWER_CONNECTOR_CHECK_BOOL_OPTION,  TRUE,  "NoPowerConnectorCheck" },
+    { ALLOW_DFP_STEREO_BOOL_OPTION,          FALSE, "AllowDFPStereo" },
+    { ALLOW_GLX_WITH_COMPOSITE_BOOL_OPTION,  FALSE, "AllowGLXWithComposite" },
+    { RANDR_ROTATION_BOOL_OPTION,            FALSE, "RandRRotation" },
+    { TWINVIEW_BOOL_OPTION,                  FALSE, "TwinView" },
+    { XINERAMA_BOOL_OPTION,                  FALSE, "Xinerama" },
+    { NO_TWINVIEW_XINERAMA_INFO_BOOL_OPTION, TRUE,  "NoTwinViewXineramaInfo" },
+    { NOFLIP_BOOL_OPTION,                    TRUE,  "NoFlip" },
+    { DAC_8BIT_BOOL_OPTION,                  FALSE, "Dac8Bit" },
+    { USE_EDID_FREQS_BOOL_OPTION,            FALSE, "UseEdidFreqs" },
+    { USE_EDID_BOOL_OPTION,                  FALSE, "UseEdid" },
+    { USE_INT10_MODULE_BOOL_OPTION,          FALSE, "UseInt10Module" },
+    { FORCE_STEREO_FLIPPING_BOOL_OPTION,     FALSE, "ForceStereoFlipping" },
+    { MULTISAMPLE_COMPATIBILITY_BOOL_OPTION, FALSE, "MultisampleCompatibility" },
+    { XVMC_USES_TEXTURES_BOOL_OPTION,        FALSE, "XvmcUsesTextures" },
+    { EXACT_MODE_TIMINGS_DVI_BOOL_OPTION,    FALSE, "ExactModeTimingsDVI" },
+    { ALLOW_DDCCI_BOOL_OPTION,               FALSE, "AllowDDCCI" },
+    { LOAD_KERNEL_MODULE_BOOL_OPTION,        FALSE, "LoadKernelModule" },
+    { ADD_ARGB_GLX_VISUALS_BOOL_OPTION,      FALSE, "AddARGBGLXVisuals" },
+    { DISABLE_GLX_ROOT_CLIPPING_BOOL_OPTION, FALSE, "DisableGLXRootClipping" },
+    { USE_EDID_DPI_BOOL_OPTION,              FALSE, "UseEdidDpi" },
+    { DAMAGE_EVENTS_BOOL_OPTION,             FALSE, "DamageEvents" },
+    { CONSTANT_DPI_BOOL_OPTION,              FALSE, "ConstantDPI" },
+    { PROBE_ALL_GPUS_BOOL_OPTION,            FALSE, "ProbeAllGpus" },
+    { DYNAMIC_TWINVIEW_BOOL_OPTION,          FALSE, "DynamicTwinView" },
+    { INCLUDE_IMPLICIT_METAMODES_BOOL_OPTION,FALSE, "IncludeImplicitMetaModes" },
+    { 0,                                     FALSE, NULL },
 };
 
 
@@ -118,8 +125,14 @@ static void remove_option(XConfigScreenPtr screen, const char *name)
 {
     XConfigDisplayPtr display;
 
-    remove_option_from_list(&screen->device->options, name);
-    remove_option_from_list(&screen->monitor->options, name);
+    if (!screen) return;
+
+    if (screen->device) {
+        remove_option_from_list(&screen->device->options, name);
+    }
+    if (screen->monitor) {
+        remove_option_from_list(&screen->monitor->options, name);
+    }
     remove_option_from_list(&screen->options, name);
     
     for (display = screen->displays; display; display = display->next) {
@@ -160,19 +173,66 @@ static void update_twinview_options(Options *op, XConfigScreenPtr screen)
      * options, too
      */
 
-    if (GET_BOOL_OPTION(op->boolean_options, TWINVIEW_OPTION)) {
-        if (GET_BOOL_OPTION(op->boolean_option_values, TWINVIEW_OPTION)) {
-            set_option_value(screen, "TwinViewOrientation", "RightOf");
-            set_option_value(screen, "UseEdidFreqs", "True"); /* XXX */
-            set_option_value(screen, "MetaModes", "1024x768, 1024x768");
-        } else {
-            remove_option(screen, "TwinViewOrientation");
-            remove_option(screen, "SecondMonitorHorizSync");
-            remove_option(screen, "SecondMonitorVertRefresh");
-            remove_option(screen, "MetaModes");
+    if (GET_BOOL_OPTION(op->boolean_options, TWINVIEW_BOOL_OPTION)) {
+        remove_option(screen, "TwinViewOrientation");
+        remove_option(screen, "SecondMonitorHorizSync");
+        remove_option(screen, "SecondMonitorVertRefresh");
+        remove_option(screen, "MetaModes");
+        
+        if (GET_BOOL_OPTION(op->boolean_option_values, TWINVIEW_BOOL_OPTION)) {
+            set_option_value(screen, "MetaModes",
+                             "nvidia-auto-select, nvidia-auto-select");
         }
     }
 } /* update_twinview_options() */
+
+
+
+/*
+ * update_display_options() - update the Display SubSection options
+ */
+
+static void update_display_options(Options *op, XConfigScreenPtr screen)
+{
+    XConfigDisplayPtr display;
+    int i;
+    
+    /* update the mode list, based on what we have on the commandline */
+    
+    for (display = screen->displays; display; display = display->next) {
+
+        /*
+         * if virtual.[xy] are less than 0, then clear the virtual
+         * screen size; if they are greater than 0, assign the virtual
+         * screen size; if they are 0, leave the virtual screen size
+         * alone
+         */
+
+        if ((op->virtual.x < 0) || (op->virtual.y < 0)) {
+            display->virtualX = display->virtualY = 0;
+        } else if (op->virtual.x || op->virtual.y) {
+            display->virtualX = op->virtual.x;
+            display->virtualY = op->virtual.y;
+        }
+        
+        for (i = 0; i < op->remove_modes.n; i++) {
+            display->modes = xconfigRemoveMode(display->modes,
+                                               op->remove_modes.t[i]);
+        }
+        for (i = 0; i < op->add_modes.n; i++) {
+            display->modes = xconfigAddMode(display->modes,
+                                            op->add_modes.t[i]);
+        }
+
+        /* XXX should we sort the mode list? */
+
+        /*
+         * XXX should we update the mode list with what we can get
+         * through libnvidia-cfg?
+         */
+    }
+    
+} /* update_display_options() */
 
 
 
@@ -184,7 +244,6 @@ static void update_twinview_options(Options *op, XConfigScreenPtr screen)
 void update_options(Options *op, XConfigScreenPtr screen)
 {
     int i;
-    XConfigDisplayPtr display;    
     const NvidiaXConfigOption *o;
     char *val;
     char scratch[8];
@@ -195,13 +254,13 @@ void update_options(Options *op, XConfigScreenPtr screen)
         if (GET_BOOL_OPTION(op->boolean_options, i)) {
             
             /*
-             * SEPARATE_X_SCREENS_OPTION, XINERAMA_OPTION, and
-             * COMPOSITE_OPTION are handled separately
+             * SEPARATE_X_SCREENS_BOOL_OPTION, XINERAMA_BOOL_OPTION,
+             * and COMPOSITE_BOOL_OPTION are handled separately
              */
 
-            if (i == SEPARATE_X_SCREENS_OPTION) continue;
-            if (i == XINERAMA_OPTION) continue;
-            if (i == COMPOSITE_OPTION) continue;
+            if (i == SEPARATE_X_SCREENS_BOOL_OPTION) continue;
+            if (i == XINERAMA_BOOL_OPTION) continue;
+            if (i == COMPOSITE_BOOL_OPTION) continue;
             
             o = get_option(i);
             
@@ -226,26 +285,10 @@ void update_options(Options *op, XConfigScreenPtr screen)
 
     update_twinview_options(op, screen);
     
-    /* update the mode list, based on what we have on the commandline */
+    /* update the Display SubSection options */
     
-    for (display = screen->displays; display; display = display->next) {
-        for (i = 0; i < op->remove_modes.n; i++) {
-            display->modes = xconfigRemoveMode(display->modes,
-                                               op->remove_modes.t[i]);
-        }
-        for (i = 0; i < op->add_modes.n; i++) {
-            display->modes = xconfigAddMode(display->modes,
-                                            op->add_modes.t[i]);
-        }
+    update_display_options(op, screen);
 
-        /* XXX should we sort the mode list? */
-
-        /*
-         * XXX should we update the mode list with what we can get
-         * through libnvidia-cfg?
-         */
-    }
-    
     /* add the nvagp option */
     
     if (op->nvagp != -1) {
@@ -253,16 +296,6 @@ void update_options(Options *op, XConfigScreenPtr screen)
         if (op->nvagp != -2) {
             snprintf(scratch, 8, "%d", op->nvagp);
             set_option_value(screen, "NvAGP", scratch);
-        }
-    }
-
-    /* add the digital vibrance option */
-    
-    if (op->digital_vibrance != -1) {
-        remove_option(screen, "digitalvibrance");
-        if (op->digital_vibrance != -2) {
-            snprintf(scratch, 8, "%d", op->digital_vibrance);        
-            set_option_value(screen, "DigitalVibrance", scratch);
         }
     }
 
@@ -286,17 +319,51 @@ void update_options(Options *op, XConfigScreenPtr screen)
         }
     }
 
+    /* add the MultiGPU option */
+
+    if (op->multigpu) {
+        remove_option(screen, "MultiGPU");
+        if (op->multigpu != NV_DISABLE_STRING_OPTION) {
+            set_option_value(screen, "MultiGPU", op->multigpu);
+        }
+    }
+
     /* add the SLI option */
 
     if (op->sli) {
         remove_option(screen, "SLI");
-        set_option_value(screen, "SLI", op->sli);
+        if (op->sli != NV_DISABLE_STRING_OPTION) {
+            set_option_value(screen, "SLI", op->sli);
+        }
     }
 
     /* add the rotate option */
 
     if (op->rotate) {
         remove_option(screen, "Rotate");
-        set_option_value(screen, "Rotate", op->rotate);
+        if (op->rotate != NV_DISABLE_STRING_OPTION) {
+            set_option_value(screen, "Rotate", op->rotate);
+        }
     }
+
+    /* add the twinview xinerama info order option */
+    
+    if (op->twinview_xinerama_info_order) {
+        remove_option(screen, "TwinViewXineramaInfoOrder");
+        if (op->twinview_xinerama_info_order != NV_DISABLE_STRING_OPTION) {
+            set_option_value(screen, "TwinViewXineramaInfoOrder",
+                             op->twinview_xinerama_info_order);
+        }
+    }
+
+    /* add the twinview orientation option */
+    
+    if (op->twinview_orientation) {
+        remove_option(screen, "TwinViewOrientation");
+        if (op->twinview_orientation != NV_DISABLE_STRING_OPTION) {
+            set_option_value(screen, "TwinViewOrientation",
+                             op->twinview_orientation);
+        }
+    }
+    
 } /* update_options() */

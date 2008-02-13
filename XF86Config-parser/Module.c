@@ -160,10 +160,6 @@ xconfigParseModuleSection (void)
         }
     }
 
-#ifdef DEBUG
-    xconfigErrorMsg(DebugMsg, "Module section parsed\n");
-#endif
-
     return ptr;
 }
 

@@ -121,7 +121,8 @@ SRC =	util.c			\
 	nvgetopt.c		\
 	options.c		\
 	lscf.c			\
-	query_gpu_info.c
+	query_gpu_info.c        \
+	extract_edids.c
 
 ALL_SRC = $(SRC) $(STAMP_C)
 

@@ -190,10 +190,6 @@ xconfigParseDisplaySubSection (void)
         }
     }
 
-#ifdef DEBUG
-    xconfigErrorMsg(DebugMsg, "Display subsection parsed\n");
-#endif
-
     return ptr;
 }
 
@@ -322,10 +318,6 @@ xconfigParseScreenSection (void)
 
     if (!has_ident && !has_driver)
         Error (NO_IDENT_MSG, NULL);
-
-#ifdef DEBUG
-    xconfigErrorMsg(DebugMsg, "Screen section parsed\n");
-#endif
 
     return ptr;
 }
@@ -563,6 +555,64 @@ xconfigValidateScreen (XConfigPtr p)
     return (TRUE);
 }
 
+int xconfigSanitizeScreen(XConfigPtr p)
+{
+    XConfigScreenPtr screen = p->screens;
+    XConfigMonitorPtr monitor;
+   
+    while (screen) {
+        
+        /*
+         * if no monitor for this screen (either the monitor name, or
+         * the actual monitor pointer), find a monitor: resolve
+         * discrepancies between screen->monitor_name and
+         * screen->monitor; otherwise use the first monitor in the
+         * config; if we still don't have a monitor, add a new one
+         */
+
+        if (!screen->monitor_name || !screen->monitor) {
+        
+            monitor = NULL;
+
+            if (!monitor && screen->monitor) {
+                monitor = screen->monitor;
+            }
+
+            if (!monitor && screen->monitor_name) {
+                monitor = xconfigFindMonitor(screen->monitor_name,
+                                             p->monitors);
+            }
+            
+            if (!monitor && p->monitors) {
+                monitor = p->monitors;
+            }
+
+            if (!monitor) {
+                monitor = xconfigAddMonitor(p, 0);
+            }
+            
+            if (monitor) {
+                screen->monitor = monitor;
+                
+                if (screen->monitor_name) {
+                    free(screen->monitor_name);
+                }
+                
+                screen->monitor_name = xconfigStrdup(monitor->identifier);
+                
+                if (!xconfigValidateMonitor(p, screen))
+                    return (FALSE);
+            }
+        }
+        
+        screen = screen->next;        
+    }
+    
+    return TRUE;
+}
+
+
+
 XConfigScreenPtr
 xconfigFindScreen (const char *ident, XConfigScreenPtr p)
 {
@@ -576,6 +626,18 @@ xconfigFindScreen (const char *ident, XConfigScreenPtr p)
     return (NULL);
 }
 
+XConfigModePtr
+xconfigFindMode (const char *name, XConfigModePtr p)
+{
+    while (p)
+    {
+        if (xconfigNameCompare (name, p->mode_name) == 0)
+            return (p);
+
+        p = p->next;
+    }
+    return (NULL);
+}
 
 XConfigModePtr
 xconfigAddMode(XConfigModePtr head, const char *name)

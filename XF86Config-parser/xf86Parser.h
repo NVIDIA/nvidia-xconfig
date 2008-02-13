@@ -578,12 +578,30 @@ typedef struct {
 } XConfigSymTabRec, *XConfigSymTabPtr;
 
 
+/*
+ * data structure containing options; used during generation of X
+ * config, and when sanitizing an existing config
+ */
+
+#define X_IS_XF86 0
+#define X_IS_XORG 1
+
+typedef struct {
+    int   xserver;
+    char *x_project_root;
+    char *keyboard;
+    char *mouse;
+    char *keyboard_driver;
+} GenerateOptions;
+
 
 /*
  * Functions for open, reading, and writing XConfig files.
  */
 const char *xconfigOpenConfigFile(const char *, const char *);
-XConfigError xconfigReadConfigFile(const char *, XConfigPtr *);
+XConfigError xconfigReadConfigFile(XConfigPtr *);
+int xconfigSanitizeConfig(XConfigPtr p, const char *screenName,
+                          GenerateOptions *gop);
 void xconfigCloseConfigFile(void);
 int xconfigWriteConfigFile(const char *, XConfigPtr);
 
@@ -600,6 +618,7 @@ XConfigModesPtr    xconfigFindModes(const char *ident, XConfigModesPtr p);
 XConfigModeLinePtr xconfigFindModeLine(const char *ident,
                                        XConfigModeLinePtr p);
 XConfigScreenPtr   xconfigFindScreen(const char *ident, XConfigScreenPtr p);
+XConfigModePtr     xconfigFindMode(const char *name, XConfigModePtr p);
 XConfigInputPtr    xconfigFindInput(const char *ident, XConfigInputPtr p);
 XConfigInputPtr    xconfigFindInputByDriver(const char *driver,
                                             XConfigInputPtr p);
@@ -634,13 +653,6 @@ void xconfigFreeBuffersList (XConfigBuffersPtr ptr);
 void xconfigFreeDRI(XConfigDRIPtr ptr);
 void xconfigFreeExtensions(XConfigExtensionsPtr ptr);
 
-
-/*
- * check (and update, if necessary) the inputs in the specified layout
- * section
- */
-
-int xconfigCheckCoreInputDevices(XConfigPtr config, XConfigLayoutPtr layout);
 
 /*
  * item/list manipulation
@@ -689,7 +701,6 @@ char *xconfigStrcat(const char *str, ...);
 int xconfigNameCompare(const char *s1, const char *s2);
 int xconfigModelineCompare(XConfigModeLinePtr m1, XConfigModeLinePtr m2);
 char *xconfigULongToString(unsigned long i);
-void xconfigDebugListOptions(XConfigOptionPtr);
 XConfigOptionPtr xconfigParseOption(XConfigOptionPtr head);
 void xconfigPrintOptionList(FILE *fp, XConfigOptionPtr list, int tabs);
 int xconfigParsePciBusString(const char *busID,
@@ -705,17 +716,6 @@ XConfigModePtr
 xconfigRemoveMode(XConfigModePtr head, const char *name);
 
 
-#define X_IS_XF86 0
-#define X_IS_XORG 1
-
-typedef struct {
-    int   xserver;
-    char *x_project_root;
-    char *keyboard;
-    char *mouse;
-    char *keyboard_driver;
-} GenerateOptions;
-
 XConfigPtr xconfigGenerate(GenerateOptions *gop);
 
 XConfigScreenPtr xconfigGenerateAddScreen(XConfigPtr config, int bus, int slot,
@@ -725,5 +725,13 @@ void xconfigGenerateAssignScreenAdjacencies(XConfigLayoutPtr layout);
 
 void xconfigGeneratePrintPossibleMice(void);
 void xconfigGeneratePrintPossibleKeyboards(void);
+
+/*
+ * check (and update, if necessary) the inputs in the specified layout
+ * section
+ */
+
+int xconfigCheckCoreInputDevices(GenerateOptions *gop,
+                                 XConfigPtr config, XConfigLayoutPtr layout);
 
 #endif /* _xf86Parser_h_ */

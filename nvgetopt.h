@@ -31,18 +31,61 @@
 #define NVGETOPT_FALSE 0
 #define NVGETOPT_TRUE 1
 
-#define NVGETOPT_HAS_ARGUMENT 0x1
-#define NVGETOPT_IS_BOOLEAN   0x2
-#define NVGETOPT_IS_INTEGER   0x4
+
+/*
+ * indicates that the option is a boolean value; the presence of the
+ * option will be interpretted as a TRUE value; if the option is
+ * prepended with '--no-', the option will be interpretted as a FALSE
+ * value.  On success, nvgetopt will return the parsed boolean value
+ * through 'boolval'.
+ */
+
+#define NVGETOPT_IS_BOOLEAN       0x1
+
+
+/*
+ * indicates that the option takes an argument to be interpretted as a
+ * string; on success, nvgetopt will return the parsed string argument
+ * through 'strval'.
+ */
+
+#define NVGETOPT_STRING_ARGUMENT  0x2
+
+
+/*
+ * indicates that the option takes an argument to be interpretted as
+ * an integer; on success, nvgetopt will return the parsed integer
+ * argument through 'intval'.
+ */
+
+#define NVGETOPT_INTEGER_ARGUMENT 0x4
+
+
+/*
+ * indicates that the option, which normally takes an argument, can be
+ * disabled if the option is prepended with '--no-', in which case,
+ * the option does not take an argument.  If the option is disabled,
+ * nvgetopt will return TRUE through 'disable_val'.
+ *
+ * Note that NVGETOPT_ALLOW_DISABLE can only be used with options that
+ * take arguments.
+ */
+
+#define NVGETOPT_ALLOW_DISABLE    0x8
+
+
+#define NVGETOPT_HAS_ARGUMENT (NVGETOPT_STRING_ARGUMENT | \
+                               NVGETOPT_INTEGER_ARGUMENT)
 
 typedef struct {
     const char *name;
     int val;
     unsigned int flags;
+    char *arg_name; /* not used by nvgetopt() */
     char *description; /* not used by nvgetopt() */
 } NVGetoptOption;
 
 int nvgetopt(int argc, char *argv[], const NVGetoptOption *options,
-             char **strval, int *boolval, int *intval);
+             char **strval, int *boolval, int *intval, int *disable_val);
 
 #endif /* __NVGETOPT_H__ */

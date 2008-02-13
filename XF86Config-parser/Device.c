@@ -255,10 +255,6 @@ xconfigParseDeviceSection (void)
     if (!has_ident)
         Error (NO_IDENT_MSG, NULL);
 
-#ifdef DEBUG
-    xconfigErrorMsg(DebugMsg, "Device section parsed\n");
-#endif
-
     return ptr;
 }
 

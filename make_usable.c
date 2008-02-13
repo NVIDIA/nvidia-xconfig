@@ -32,6 +32,7 @@
 
 #include "nvidia-xconfig.h"
 #include "xf86Parser.h"
+#include "configProcs.h"
 
 
 static int update_device(XConfigPtr config, XConfigDevicePtr device);
@@ -48,6 +49,10 @@ int update_modules(XConfigPtr config)
 {
     XConfigLoadPtr load, next;
     int found;
+
+    if (config->modules == NULL) {
+        config->modules = xconfigAlloc(sizeof(XConfigModuleRec));
+    }
 
     /* make sure glx is loaded */
 
@@ -153,7 +158,7 @@ int update_extensions(Options *op, XConfigPtr config)
 {
     char *value;
 
-    if (GET_BOOL_OPTION(op->boolean_options, COMPOSITE_OPTION)) {
+    if (GET_BOOL_OPTION(op->boolean_options, COMPOSITE_BOOL_OPTION)) {
 
         /* if we don't already have the Extensions section, create it now */
 
@@ -167,7 +172,8 @@ int update_extensions(Options *op, XConfigPtr config)
 
         /* determine the value to set for the Composite option */
 
-        value = GET_BOOL_OPTION(op->boolean_option_values, COMPOSITE_OPTION) ?
+        value = GET_BOOL_OPTION(op->boolean_option_values,
+                                COMPOSITE_BOOL_OPTION) ?
             "Enable" : "Disable";
         
         /* add the option */
@@ -300,11 +306,7 @@ static void update_display(Options *op, XConfigScreenPtr screen)
         XConfigDisplayPtr display;
         XConfigModePtr mode = NULL;
         
-        mode = xconfigAddMode(mode, "640x480");
-        mode = xconfigAddMode(mode, "800x600");
-        mode = xconfigAddMode(mode, "1024x768");
-        mode = xconfigAddMode(mode, "1280x1024");
-        mode = xconfigAddMode(mode, "1600x1200");
+        mode = xconfigAddMode(mode, "nvidia-auto-select");
         
         display = nvalloc(sizeof(XConfigDisplayRec));
         display->depth = screen->defaultdepth;

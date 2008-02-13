@@ -229,10 +229,6 @@ xconfigParsePointerSection (void)
     ptr->options = xconfigAddNewOption(ptr->options,
                                        xconfigStrdup("CorePointer"), NULL);
 
-#ifdef DEBUG
-    xconfigErrorMsg(DebugMsg, "Pointer section parsed\n");
-#endif
-
     return ptr;
 }
 

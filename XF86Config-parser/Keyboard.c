@@ -299,10 +299,6 @@ xconfigParseKeyboardSection (void)
     ptr->options = xconfigAddNewOption(ptr->options,
                                        xconfigStrdup("CoreKeyboard"), NULL);
     
-#ifdef DEBUG
-    xconfigErrorMsg(DebugMsg, "Keyboard section parsed\n");
-#endif
-    
     return ptr;
 }
 

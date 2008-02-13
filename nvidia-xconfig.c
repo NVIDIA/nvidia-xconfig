@@ -120,7 +120,7 @@ static char *cook_description(const char *description)
 static void print_help(int advanced)
 {
     int i, j, len;
-    char *msg, *tmp, scratch[64];
+    char *msg, *tmp, scratch[8], arg[64];
     const NVGetoptOption *o;
     
     print_version();
@@ -140,23 +140,41 @@ static void print_help(int advanced)
 
         if (!advanced && !(o->flags & OPTION_HELP_ALWAYS)) continue;
 
+        /* if we are going to need the argument, process it now */
+
+        if (o->flags & NVGETOPT_HAS_ARGUMENT) {
+            if (o->arg_name) {
+                strcpy(arg, o->arg_name);
+            } else {
+                len = strlen(o->name);
+                for (j = 0; j < len; j++) arg[j] = toupper(o->name[j]);
+                arg[len] = '\0';
+            }
+        }
+        
+        msg = nvstrcat("--", o->name, NULL);
+
         if (isalpha(o->val)) {
             sprintf(scratch, "%c", o->val);
-            msg = nvstrcat("-", scratch, ", --", o->name, NULL);
-        } else {
-            msg = nvstrcat("--", o->name, NULL);
-        }
-        if (o->flags & NVGETOPT_HAS_ARGUMENT) {
-            len = strlen(o->name);
-            for (j = 0; j < len; j++) scratch[j] = toupper(o->name[j]);
-            scratch[len] = '\0';
-            tmp = nvstrcat(msg, "=", scratch, NULL);
+
+            if (o->flags & NVGETOPT_HAS_ARGUMENT) {
+                tmp = nvstrcat("-", scratch, " ", arg, ", ", msg, NULL);
+            } else {
+                tmp = nvstrcat("-", scratch, ", ", msg, NULL);
+            }
             free(msg);
             msg = tmp;
         }
-        if (o->flags & NVGETOPT_IS_BOOLEAN ||
-            o->flags & NVGETOPT_IS_INTEGER) {
-            tmp = nvstrcat(msg, "/--no-", o->name, NULL);
+        
+        if (o->flags & NVGETOPT_HAS_ARGUMENT) {
+            tmp = nvstrcat(msg, "=", arg, NULL);
+            free(msg);
+            msg = tmp;
+        }
+        if (((o->flags & NVGETOPT_IS_BOOLEAN) &&
+             !(o->flags & NVGETOPT_HAS_ARGUMENT)) ||
+            (o->flags & NVGETOPT_ALLOW_DISABLE)) {
+            tmp = nvstrcat(msg, ", --no-", o->name, NULL);
             free(msg);
             msg = tmp;
         }
@@ -218,37 +236,37 @@ Options *parse_commandline(int argc, char *argv[])
     int c, boolval;
     u32 bit;
     char *strval;
-    int intval;
+    int intval, disable;
 
     op = (Options *) nvalloc(sizeof(Options));
     
     op->gop.x_project_root = get_default_project_root();
     op->nvagp = -1;
-    op->digital_vibrance = -1;
     op->transparent_index = -1;
     op->stereo = -1;
     
     while (1) {
         
-        c = nvgetopt(argc, argv, __options, &strval, &boolval, &intval);
+        c = nvgetopt(argc, argv, __options, &strval,
+                     &boolval, &intval, &disable);
 
         if (c == -1)
             break;
 
         /* catch the boolean options */
 
-        if ((c >= XCONFIG_OPTION_START) &&
-            (c <= (XCONFIG_OPTION_START + XCONFIG_BOOL_OPTION_COUNT))) {
+        if ((c >= XCONFIG_BOOL_OPTION_START) &&
+            (c <= (XCONFIG_BOOL_OPTION_START + XCONFIG_BOOL_OPTION_COUNT))) {
             
-            bit = GET_BOOL_OPTION_BIT(c - XCONFIG_OPTION_START);
+            bit = GET_BOOL_OPTION_BIT(c - XCONFIG_BOOL_OPTION_START);
             GET_BOOL_OPTION_SLOT(op->boolean_options,
-                                 c - XCONFIG_OPTION_START) |= bit;
+                                 c - XCONFIG_BOOL_OPTION_START) |= bit;
             if (boolval) {
                 GET_BOOL_OPTION_SLOT(op->boolean_option_values,
-                                     c - XCONFIG_OPTION_START) |= bit;
+                                     c - XCONFIG_BOOL_OPTION_START) |= bit;
             } else {
                 GET_BOOL_OPTION_SLOT(op->boolean_option_values,
-                                     c - XCONFIG_OPTION_START) &= ~bit;
+                                     c - XCONFIG_BOOL_OPTION_START) &= ~bit;
             }
             continue;
         }
@@ -266,7 +284,7 @@ Options *parse_commandline(int argc, char *argv[])
         case 'a': op->enable_all_gpus = TRUE; break;
         case '1': op->only_one_screen = TRUE; break;
         
-        case 'd': op->depth = atoi(strval);
+        case 'd': op->depth = intval;
             if ((op->depth != 8) &&
                 (op->depth != 15) &&
                 (op->depth != 16) &&
@@ -295,6 +313,14 @@ Options *parse_commandline(int argc, char *argv[])
         case FORCE_GENERATE_OPTION: op->force_generate = TRUE; break;
 
         case NVAGP_OPTION:
+
+            /* mark as disabled, so we can remove the option later */
+            
+            if (disable) {
+                op->nvagp = -2;
+                break;
+            }
+
             if      (strcasecmp(strval, "none")    == 0) op->nvagp = 0;
             else if (strcasecmp(strval, "nvagp")   == 0) op->nvagp = 1;
             else if (strcasecmp(strval, "agpgart") == 0) op->nvagp = 2;
@@ -311,18 +337,16 @@ Options *parse_commandline(int argc, char *argv[])
             }
             break;
 
-        case DIGITAL_VIBRANCE_OPTION:
-            if ( intval != -2 && (intval < 0 || intval > 255) ) {
-                fprintf(stderr, "\n");
-                fprintf(stderr, "Invalid digital vibrance: %d.\n", intval);
-                fprintf(stderr, "\n");
-                goto fail;
-            }
-            op->digital_vibrance = intval;
-            break;
-
         case TRANSPARENT_INDEX_OPTION:
-            if ( intval != -2 && (intval < 0 || intval > 255) ) {
+
+            /* mark as disabled, so we can remove the option later */
+            
+            if (disable) {
+                op->transparent_index = -2;
+                break;
+            }
+
+            if (intval < 0 || intval > 255) {
                 fprintf(stderr, "\n");
                 fprintf(stderr, "Invalid transparent index: %d.\n", intval);
                 fprintf(stderr, "\n");
@@ -332,7 +356,15 @@ Options *parse_commandline(int argc, char *argv[])
             break;
 
         case STEREO_OPTION:
-            if ( intval != -2 && (intval < 1 || intval > 6) ) {
+
+            /* mark as disabled, so we can remove the option later */
+            
+            if (disable) {
+                op->stereo = -2;
+                break;
+            }
+
+            if (intval < 1 || intval > 6) {
                 fprintf(stderr, "\n");
                 fprintf(stderr, "Invalid stereo: %d.\n", intval);
                 fprintf(stderr, "\n");
@@ -351,6 +383,51 @@ Options *parse_commandline(int argc, char *argv[])
             }
             break;
 
+        case REMOVE_MODE_OPTION:
+            nv_text_rows_append(&op->remove_modes, strval);
+            break;
+
+        case MULTI_GPU_OPTION:
+            {
+                const char* valid_values[] = {
+                    "0",
+                    "no",
+                    "off",
+                    "false",
+                    "single",
+                    "1",
+                    "yes",
+                    "on",
+                    "true",
+                    "auto",
+                    "afr",
+                    "sfr",
+                    "aa",
+                    NULL
+                };
+                int i;
+
+                /* mark as disabled, so we can remove the option later */
+                
+                if (disable) {
+                    op->multigpu = NV_DISABLE_STRING_OPTION;
+                    break;
+                }
+
+                for (i = 0; valid_values[i]; i++) {
+                    if (!strcasecmp(strval, valid_values[i]))
+                        break;
+                }
+
+                if (valid_values[i]) {
+                    op->multigpu = strval;
+                } else {
+                    fprintf(stderr, "Invalid MultiGPU option: %s.\n", strval);
+                    goto fail;
+                }
+            }
+            break;
+
         case SLI_OPTION:
             {
                 const char* valid_values[] = {
@@ -366,10 +443,18 @@ Options *parse_commandline(int argc, char *argv[])
                     "auto",
                     "afr",
                     "sfr",
-                    "sliaa",
+                    "aa",
+                    "afrofaa",
                     NULL
                 };
                 int i;
+
+                /* mark as disabled, so we can remove the option later */
+                
+                if (disable) {
+                    op->sli = NV_DISABLE_STRING_OPTION;
+                    break;
+                }
 
                 for (i = 0; valid_values[i]; i++) {
                     if (!strcasecmp(strval, valid_values[i]))
@@ -401,6 +486,13 @@ Options *parse_commandline(int argc, char *argv[])
                 };
                 int i;
 
+                /* mark as disabled, so we can remove the option later */
+
+                if (disable) {
+                    op->rotate = NV_DISABLE_STRING_OPTION;
+                    break;
+                }
+
                 for (i = 0; valid_values[i]; i++) {
                     if (!strcasecmp(strval, valid_values[i]))
                         break;
@@ -418,6 +510,74 @@ Options *parse_commandline(int argc, char *argv[])
         case DISABLE_SCF_OPTION: op->disable_scf = TRUE; break;
         
         case QUERY_GPU_INFO_OPTION: op->query_gpu_info = TRUE; break;
+
+        case 'E':
+            op->extract_edids_from_log = strval;
+            break;
+
+        case EXTRACT_EDIDS_OUTPUT_FILE_OPTION:
+            op->extract_edids_output_file = strval;
+            break;
+
+        case TWINVIEW_XINERAMA_INFO_ORDER_OPTION:
+            op->twinview_xinerama_info_order =
+                disable ? NV_DISABLE_STRING_OPTION : strval;
+            break;
+
+        case TWINVIEW_ORIENTATION_OPTION:
+            {
+                const char* valid_values[] = {
+                    "RightOf",
+                    "LeftOf",
+                    "Above",
+                    "Below",
+                    "Clone",
+                    NULL
+                };
+                int i;
+
+                if (disable) {
+                    op->twinview_orientation = NV_DISABLE_STRING_OPTION;
+                    break;
+                }
+                
+                for (i = 0; valid_values[i]; i++) {
+                    if (!strcasecmp(strval, valid_values[i]))
+                        break;
+                }
+
+                if (!valid_values[i]) {
+                    fprintf(stderr, "Invalid TwinViewOrientation option: "
+                            "\"%s\".\n", strval);
+                    goto fail;
+                }
+                
+                op->twinview_orientation = strval;
+            }
+            break;
+
+        case VIRTUAL_OPTION:
+            {
+                int ret, x, y;
+
+                if (disable) {
+                    op->virtual.x = op->virtual.y = -1;
+                    break;
+                }
+
+                ret = sscanf(strval, "%dx%d", &x, &y);
+                
+                if (ret != 2) {
+                    fprintf(stderr, "Invalid Virtual option: \"%s\".\n",
+                            strval);
+                    goto fail;
+                }
+                
+                op->virtual.x = x;
+                op->virtual.y = y;
+                
+                break;
+            }
 
         default:
             goto fail;
@@ -701,7 +861,7 @@ static XConfigPtr find_system_xconfig(Options *op)
     
     /* Read the opened X config file */
     
-    error = xconfigReadConfigFile(op->screen, &config);
+    error = xconfigReadConfigFile(&config);
     if (error != XCONFIG_RETURN_SUCCESS) {
         xconfigCloseConfigFile();
         return NULL;;
@@ -711,6 +871,13 @@ static XConfigPtr find_system_xconfig(Options *op)
     
     xconfigCloseConfigFile();
     
+    /* Sanitize the X config file */
+    
+    if (!xconfigSanitizeConfig(config, op->screen, &(op->gop))) {
+        xconfigFreeConfig(config);
+        return NULL;
+    }
+
     return config;
 
 } /* find_system_xconfig() */
@@ -727,12 +894,6 @@ int update_xconfig(Options *op, XConfigPtr config)
     
     layout = get_layout(op, config);
     if (!layout) {
-        return FALSE;
-    }
-
-    /* make sure the layout has the needed input devices */
-    
-    if (!xconfigCheckCoreInputDevices(config, layout)) {
         return FALSE;
     }
 
@@ -872,6 +1033,11 @@ int main(int argc, char *argv[])
         return (ret ? 0 : 1);
     }
  
+    if (op->extract_edids_from_log) {
+        ret = extract_edids(op);
+        return (ret ? 0 : 1);
+    }
+
     /*
      * we want to open and parse the system's existing X config file,
      * if possible

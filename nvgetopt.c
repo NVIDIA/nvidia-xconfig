@@ -23,8 +23,7 @@
  *
  *
  * nvgetopt.c - portable getopt_long() replacement; removes the need
- * for the stupid optstring argument.  Also adds support for the
- * "-feature"/"+feature" syntax.
+ * for the stupid optstring argument.
  */
 
 #include <stdio.h>
@@ -50,10 +49,11 @@
  */
 
 int nvgetopt(int argc, char *argv[], const NVGetoptOption *options,
-             char **strval, int *boolval, int *intval)
+             char **strval, int *boolval, int *intval, int *disable_val)
 {
     char *c, *a, *arg, *name = NULL, *argument=NULL;
     int i, found = NVGETOPT_FALSE, ret = 0, val = NVGETOPT_FALSE;
+    int disable = NVGETOPT_FALSE;
     const NVGetoptOption *o = NULL;
     static int argv_index = 0;
     
@@ -183,81 +183,72 @@ int nvgetopt(int argc, char *argv[], const NVGetoptOption *options,
         fprintf(stderr, "%s: unrecognized option: \"%s\"\n", argv[0], arg);
         goto done;
     }
-
+    
+    
+    /* if the option is boolean, record 'val' as the boolean value */
+    
     if (o->flags & NVGETOPT_IS_BOOLEAN) {
-
-        /* assign boolval */
-        
         if (boolval) *boolval = val;
     }
-
-
+    
+    
     /*
-     * if this option takes an integer argument, then let the "--no-"
-     * prefix set the integer argument to -2 (remove option from  x config).
-     * Otherwise, get the string argument and interpret it as an integer.
+     * if this option is flagged as "disable-able", then let the
+     * "--no-" prefix get interpreted to mean that the option should
+     * be disabled
      */
     
-    if (o->flags & NVGETOPT_IS_INTEGER) {
-        
-        if (val == NVGETOPT_FALSE) {
-            if (intval) {
-                *intval = -2;
-            }
-        } else {
-            if (argument) {
-                if (!argument[0]) {
-                    fprintf(stderr, "%s: option \"%s\" requires an "
-                            "argument.\n", argv[0], arg);
-                    goto done;
-                }
-            } else {
-                argv_index++;
-                if (argv_index >= argc) {
-                    fprintf(stderr, "%s: option \"%s\" requires an "
-                            "argument.\n", argv[0], arg);
-                    goto done;
-                }
-                argument = argv[argv_index];
-            }
-            
-            /* argument is now a valid string: parse it */
-
-            if (intval) {
-                char *endptr;
-                *intval = (int) strtol(argument, &endptr, 0);
-                if (*endptr) {
-                    fprintf(stderr, "%s: \"%s\" is not a valid argument for "
-                            "option \"%s\".\n", argv[0], argument, arg);
-                    goto done;
-                }
-            }
-        }
-
+    if ((o->flags & NVGETOPT_ALLOW_DISABLE) && (val == NVGETOPT_FALSE)) {
+        disable = NVGETOPT_TRUE;
+    }
+    
+    
     /*
-     * if this option takes an argument, then we either need to use
-     * what was after the "=" in this argv[] entry, or we need to pull
-     * the next entry off of argv[]
+     * if the option takes an argument (either string or integer), and
+     * we haven't already decided to disable the option, then we
+     * either need to use what was after the "=" in this argv[] entry,
+     * or we need to pull the next entry off of argv[]
      */
-
-    } else if (o->flags & NVGETOPT_HAS_ARGUMENT) {
+    
+    if ((o->flags & NVGETOPT_HAS_ARGUMENT) && !disable) {
         if (argument) {
             if (!argument[0]) {
-                fprintf(stderr, "%s: option \"%s\" requires an argument.\n",
-                        argv[0], arg);
+                fprintf(stderr, "%s: option \"%s\" requires an "
+                        "argument.\n", argv[0], arg);
                 goto done;
             }
-            if (strval) *strval = strdup(argument);
         } else {
             argv_index++;
             if (argv_index >= argc) {
-                fprintf(stderr, "%s: option \"%s\" requires an argument.\n",
-                        argv[0], arg);
+                fprintf(stderr, "%s: option \"%s\" requires an "
+                        "argument.\n", argv[0], arg);
                 goto done;
             }
-            if (strval) *strval = argv[argv_index];
-        } 
+            argument = argv[argv_index];
+        }
+        
+        /* argument is now a valid string: parse it */
+        
+        if ((o->flags & NVGETOPT_INTEGER_ARGUMENT) && (intval)) {
+            char *endptr;
+            *intval = (int) strtol(argument, &endptr, 0);
+            if (*endptr) {
+                fprintf(stderr, "%s: \"%s\" is not a valid argument for "
+                        "option \"%s\".\n", argv[0], argument, arg);
+                goto done;
+            }
+        } else if ((o->flags & NVGETOPT_STRING_ARGUMENT) && (strval)) {
+            *strval = strdup(argument);
+        } else {
+            fprintf(stderr, "%s: error while assigning argument for "
+                    "option \"%s\".\n", argv[0], arg);
+            goto done;
+        }
+        
     } else {
+
+        /* if we have an argument when we shouldn't; complain */
+        
         if (argument) {
             fprintf(stderr, "%s: option \"%s\" does not take an argument, but "
                     "was given an argument of \"%s\".\n",
@@ -269,6 +260,8 @@ int nvgetopt(int argc, char *argv[], const NVGetoptOption *options,
     ret = o->val;
 
  done:
+
+    if (disable_val) *disable_val = disable;
 
     free(arg);
     return ret;

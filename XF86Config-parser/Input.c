@@ -115,10 +115,6 @@ xconfigParseInputSection (void)
     if (!has_ident)
         Error (NO_IDENT_MSG, NULL);
 
-#ifdef DEBUG
-    xconfigErrorMsg(DebugMsg, "InputDevice section parsed\n");
-#endif
-
     return ptr;
 }
 
@@ -212,8 +208,10 @@ xconfigFindInputByDriver (const char *driver, XConfigInputPtr p)
 
 
 
-static int getCoreInputDevice(XConfigPtr config,
+static int getCoreInputDevice(GenerateOptions *gop,
+                              XConfigPtr config,
                               XConfigLayoutPtr layout,
+                              const int mouse,
                               const char *coreKeyword,
                               const char *implicitDriverName,
                               const char *defaultDriver0,
@@ -223,7 +221,7 @@ static int getCoreInputDevice(XConfigPtr config,
 {
     XConfigInputPtr input, core = NULL;
     XConfigInputrefPtr inputRef;
-    int found;
+    int found, firstTry;
     const char *found_msg = NULL;
     
     /*
@@ -281,18 +279,44 @@ static int getCoreInputDevice(XConfigPtr config,
      * first input with the correct driver
      */
     
+    firstTry = TRUE;
+
+ tryAgain:
+    
     if (!core) {
         input = xconfigFindInput(implicitDriverName, config->inputs);
 	if (!input && defaultDriver0) {
 	    input = xconfigFindInputByDriver(defaultDriver0, config->inputs);
 	}
         if (!input && defaultDriver1) {
-	    input = xconfigFindInputByDriver(defaultDriver0, config->inputs);
+	    input = xconfigFindInputByDriver(defaultDriver1, config->inputs);
         }
 	if (input) {
 	    core = input;
 	    found_msg = foundMsg1;
 	}
+    }
+
+    /*
+     * if we didn't find a core input device above, then that means we
+     * don't have any input devices of this type; try to add a new
+     * input device of this type, and then try again to find a core
+     * input device
+     */
+
+    if (!core && firstTry) {
+        firstTry = FALSE;
+        
+        xconfigErrorMsg(WarnMsg, "Unable to find %s in X configuration; "
+                        "attempting to add new %s section.",
+                        coreKeyword, coreKeyword);
+        
+        if (mouse) {
+            xconfigAddMouse(gop, config);
+        } else {
+            xconfigAddKeyboard(gop, config);
+        }
+        goto tryAgain;
     }
     
     /*
@@ -367,13 +391,16 @@ static int getCoreInputDevice(XConfigPtr config,
  * be added from the current list of input devices.
  */
 
-int xconfigCheckCoreInputDevices(XConfigPtr config,
+int xconfigCheckCoreInputDevices(GenerateOptions *gop,
+                                 XConfigPtr config,
                                  XConfigLayoutPtr layout)
 {
     int ret;
 
-    ret = getCoreInputDevice(config,
+    ret = getCoreInputDevice(gop,
+                             config,
                              layout,
+                             TRUE,
                              "CorePointer",
                              CONF_IMPLICIT_POINTER,
                              "mouse", NULL,
@@ -382,8 +409,10 @@ int xconfigCheckCoreInputDevices(XConfigPtr config,
     
     if (!ret) return FALSE;
 
-    ret = getCoreInputDevice(config,
+    ret = getCoreInputDevice(gop,
+                             config,
                              layout,
+                             FALSE,
                              "CoreKeyboard",
                              CONF_IMPLICIT_KEYBOARD,
                              "keyboard", "kbd",

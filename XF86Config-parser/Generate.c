@@ -52,9 +52,6 @@ static void add_files(GenerateOptions *gop, XConfigPtr config);
 static void add_font_path(GenerateOptions *gop, XConfigPtr config);
 static void add_modules(GenerateOptions *gop, XConfigPtr config);
 
-static XConfigMonitorPtr
-add_monitor(XConfigPtr config, int count);
-
 static XConfigDevicePtr
 add_device(XConfigPtr config, int bus, int slot, char *boardname, int count);
 
@@ -62,9 +59,6 @@ static void add_layout(GenerateOptions *gop, XConfigPtr config);
 
 static void add_inputref(XConfigPtr config, XConfigLayoutPtr layout,
                          char *name, char *coreKeyword);
-
-static int add_keyboard(GenerateOptions *gop, XConfigPtr config);
-static int add_mouse(GenerateOptions *gop, XConfigPtr config);
 
 /*
  * xconfigGenerate() - generate a new XConfig from scratch
@@ -84,8 +78,8 @@ XConfigPtr xconfigGenerate(GenerateOptions *gop)
 
     /* add the keyboard and mouse */
 
-    add_keyboard(gop, config);
-    add_mouse(gop, config);
+    xconfigAddKeyboard(gop, config);
+    xconfigAddMouse(gop, config);
 
     /* add the layout */
 
@@ -113,7 +107,7 @@ XConfigScreenPtr xconfigGenerateAddScreen(XConfigPtr config,
     XConfigDevicePtr device;
     XConfigMonitorPtr monitor;
     
-    monitor = add_monitor(config, count);
+    monitor = xconfigAddMonitor(config, count);
     device = add_device(config, bus, slot, boardname, count);
     
     screen = xconfigAlloc(sizeof(XConfigScreenRec));
@@ -329,7 +323,7 @@ static void add_font_path(GenerateOptions *gop, XConfigPtr config)
     ret = system("ps -C xfs 2>&1 > /dev/null");
 #endif
     if (WEXITSTATUS(ret) == 0) {
-        config->files->fontpath = "unix/:7100";
+        config->files->fontpath = xconfigStrdup("unix/:7100");
     } else {
 
         /* get the X server libdir */
@@ -400,25 +394,23 @@ static void add_modules(GenerateOptions *gop, XConfigPtr config)
 
     config->modules = xconfigAlloc(sizeof(XConfigModuleRec));
     
-    l = xconfigAddNewLoadDirective(l, "dbe", XCONFIG_LOAD_MODULE,
-                                   NULL, FALSE);
-    l = xconfigAddNewLoadDirective(l, "extmod", XCONFIG_LOAD_MODULE,
-                                   NULL, FALSE);
-    l = xconfigAddNewLoadDirective(l, "type1", XCONFIG_LOAD_MODULE,
-                                   NULL, FALSE);
+    l = xconfigAddNewLoadDirective(l, xconfigStrdup("dbe"),
+                                   XCONFIG_LOAD_MODULE, NULL, FALSE);
+    l = xconfigAddNewLoadDirective(l, xconfigStrdup("extmod"),
+                                   XCONFIG_LOAD_MODULE, NULL, FALSE);
+    l = xconfigAddNewLoadDirective(l, xconfigStrdup("type1"),
+                                   XCONFIG_LOAD_MODULE, NULL, FALSE);
 #if defined(NV_SUNOS)
-    l = xconfigAddNewLoadDirective(l, "IA", XCONFIG_LOAD_MODULE,
-                                   NULL, FALSE);
-    l = xconfigAddNewLoadDirective(l, "Xst", XCONFIG_LOAD_MODULE,
-                                   NULL, FALSE);
-    l = xconfigAddNewLoadDirective(l, "bitstream", XCONFIG_LOAD_MODULE,
-                                   NULL, FALSE);
+    l = xconfigAddNewLoadDirective(l, xconfigStrdup("IA"),
+                                   XCONFIG_LOAD_MODULE, NULL, FALSE);
+    l = xconfigAddNewLoadDirective(l, xconfigStrdup("bitstream"),
+                                   XCONFIG_LOAD_MODULE, NULL, FALSE);
 #else
-    l = xconfigAddNewLoadDirective(l, "freetype", XCONFIG_LOAD_MODULE,
-                                   NULL, FALSE);
+    l = xconfigAddNewLoadDirective(l, xconfigStrdup("freetype"),
+                                   XCONFIG_LOAD_MODULE, NULL, FALSE);
 #endif
-    l = xconfigAddNewLoadDirective(l, "glx", XCONFIG_LOAD_MODULE,
-                                   NULL, FALSE);
+    l = xconfigAddNewLoadDirective(l, xconfigStrdup("glx"),
+                                   XCONFIG_LOAD_MODULE, NULL, FALSE);
     
     config->modules->loads = l;
     
@@ -427,13 +419,12 @@ static void add_modules(GenerateOptions *gop, XConfigPtr config)
 
 
 /*
- * add_monitor() -
+ * xconfigAddMonitor() -
  *
  * XXX pass EDID values into this...
  */
 
-static XConfigMonitorPtr
-add_monitor(XConfigPtr config, int count)
+XConfigMonitorPtr xconfigAddMonitor(XConfigPtr config, int count)
 {
     XConfigMonitorPtr monitor, m;
     XConfigOptionPtr opt = NULL;
@@ -444,8 +435,8 @@ add_monitor(XConfigPtr config, int count)
     
     monitor->identifier = xconfigAlloc(32);
     snprintf(monitor->identifier, 32, MONITOR_IDENTIFIER, count);
-    monitor->vendor = "Unknown";  /* XXX */
-    monitor->modelname = "Unknown"; /* XXX */
+    monitor->vendor = xconfigStrdup("Unknown");  /* XXX */
+    monitor->modelname = xconfigStrdup("Unknown"); /* XXX */
     
     /* XXX check EDID for freq ranges */
 
@@ -472,7 +463,7 @@ add_monitor(XConfigPtr config, int count)
     
     return monitor;
    
-} /* add_monitor() */
+} /* xconfigAddMonitor() */
 
 
 
@@ -563,7 +554,7 @@ static void add_layout(GenerateOptions *gop, XConfigPtr config)
 
     layout = xconfigAlloc(sizeof(XConfigLayoutRec));
     
-    layout->identifier = "Layout0";
+    layout->identifier = xconfigStrdup("Layout0");
     
     adj = xconfigAlloc(sizeof(XConfigAdjacencyRec));
 
@@ -595,7 +586,7 @@ static void add_inputref(XConfigPtr config, XConfigLayoutPtr layout,
     XConfigInputrefPtr inputRef;
 
     inputRef = xconfigAlloc(sizeof(XConfigInputrefRec));
-    inputRef->input_name = name;
+    inputRef->input_name = xconfigStrdup(name);
     inputRef->input = xconfigFindInput(inputRef->input_name, config->inputs);
     inputRef->options =
         xconfigAddNewOption(NULL, xconfigStrdup(coreKeyword), NULL);
@@ -930,7 +921,7 @@ void xconfigGeneratePrintPossibleMice(void)
 
 
 /*
- * add_mouse() - determine the mouse type, and then add an
+ * xconfigAddMouse() - determine the mouse type, and then add an
  * XConfigInputRec with the appropriate options.
  *
  * - if the user specified on the commandline, use that
@@ -945,7 +936,7 @@ void xconfigGeneratePrintPossibleMice(void)
  * - default to "auto" on /dev/mouse
  */
 
-static int add_mouse(GenerateOptions *gop, XConfigPtr config)
+int xconfigAddMouse(GenerateOptions *gop, XConfigPtr config)
 {
     const MouseEntry *entry = NULL;
     XConfigInputPtr input;
@@ -1020,6 +1011,9 @@ static int add_mouse(GenerateOptions *gop, XConfigPtr config)
         MouseEntry *e = xconfigAlloc(sizeof(MouseEntry));
         e->Xproto = "auto";
 
+#if defined(NV_BSD)
+        e->device = "sysmouse";
+#else
         if (access("/dev/psaux", F_OK) == 0) {
             e->device = "psaux";
         } else if (access("/dev/input/mice", F_OK) == 0) {
@@ -1027,7 +1021,7 @@ static int add_mouse(GenerateOptions *gop, XConfigPtr config)
         } else {
             e->device = "mouse";
         }
-        
+#endif
         e->emulate3 = FALSE;
         entry = e;
     }
@@ -1038,12 +1032,13 @@ static int add_mouse(GenerateOptions *gop, XConfigPtr config)
     
     input->comment = xconfigStrcat("    # generated from ",
                                    comment, "\n", NULL);
-    input->identifier = "Mouse0";
-    input->driver = "mouse";
+    input->identifier = xconfigStrdup("Mouse0");
+    input->driver = xconfigStrdup("mouse");
 
     device_path = xconfigStrcat("/dev/", entry->device, NULL);
 
-    opt = xconfigAddNewOption(opt, xconfigStrdup("Protocol"), entry->Xproto);
+    opt = xconfigAddNewOption(opt, xconfigStrdup("Protocol"),
+                              xconfigStrdup(entry->Xproto));
     opt = xconfigAddNewOption(opt, xconfigStrdup("Device"), device_path);
     opt = xconfigAddNewOption(opt, xconfigStrdup("Emulate3Buttons"),
                               entry->emulate3 ?
@@ -1054,7 +1049,8 @@ static int add_mouse(GenerateOptions *gop, XConfigPtr config)
      * ignore ZAxisMapping
      */
 
-    opt = xconfigAddNewOption(opt, "ZAxisMapping", "4 5");
+    opt = xconfigAddNewOption(opt, xconfigStrdup("ZAxisMapping"),
+                              xconfigStrdup("4 5"));
     
     input->options = opt;
     
@@ -1063,7 +1059,7 @@ static int add_mouse(GenerateOptions *gop, XConfigPtr config)
     
     return TRUE;
     
-} /* add_mouse() */
+} /* xconfigAddMouse() */
 
 
 
@@ -1223,7 +1219,7 @@ void xconfigGeneratePrintPossibleKeyboards(void)
 
 
 /*
- * add_keyboard() - determine the keyboard type, and then add an
+ * xconfigAddKeyboard() - determine the keyboard type, and then add an
  * XConfigInputRec with the appropriate options.
  *
  * How to detect the keyboard:
@@ -1234,7 +1230,7 @@ void xconfigGeneratePrintPossibleKeyboards(void)
  *   KEYTABLE entry, use that
  */
 
-static int add_keyboard(GenerateOptions *gop, XConfigPtr config)
+int xconfigAddKeyboard(GenerateOptions *gop, XConfigPtr config)
 {
     char *value, *comment = "default";
     const KeyboardEntry *entry = NULL;
@@ -1245,7 +1241,7 @@ static int add_keyboard(GenerateOptions *gop, XConfigPtr config)
     /*
      * if the user specified on the command line, use that
      */
-
+    
     if (gop->keyboard) {
         entry = find_keyboard_entry(gop->keyboard);
         if (entry) {
@@ -1278,7 +1274,7 @@ static int add_keyboard(GenerateOptions *gop, XConfigPtr config)
     
     input->comment = xconfigStrcat("    # generated from ",
                                    comment, "\n", NULL);
-    input->identifier = "Keyboard0";
+    input->identifier = xconfigStrdup("Keyboard0");
 
     /*
      * determine which keyboard driver should be used (either "kbd" or
@@ -1292,12 +1288,12 @@ static int add_keyboard(GenerateOptions *gop, XConfigPtr config)
         input->driver = gop->keyboard_driver;
     } else {
 #if defined(NV_SUNOS) || defined(NV_BSD)
-        input->driver = "keyboard";
+        input->driver = xconfigStrdup("keyboard");
 #else
         if (gop->xserver == X_IS_XORG) {
-            input->driver = "kbd";
+            input->driver = xconfigStrdup("kbd");
         } else {
-            input->driver = "keyboard";
+            input->driver = xconfigStrdup("keyboard");
         }
 #endif
     }
@@ -1309,16 +1305,20 @@ static int add_keyboard(GenerateOptions *gop, XConfigPtr config)
 
     if (entry && entry->layout)
         opt = xconfigAddNewOption(opt,
-                                  xconfigStrdup("XkbLayout"), entry->layout);
+                                  xconfigStrdup("XkbLayout"),
+                                  xconfigStrdup(entry->layout));
     if (entry && entry->model)
         opt = xconfigAddNewOption(opt,
-                                  xconfigStrdup("XkbModel"), entry->model);
+                                  xconfigStrdup("XkbModel"),
+                                  xconfigStrdup(entry->model));
     if (entry && entry->variant)
         opt = xconfigAddNewOption(opt,
-                                  xconfigStrdup("XkbVariant"), entry->variant);
+                                  xconfigStrdup("XkbVariant"),
+                                  xconfigStrdup(entry->variant));
     if (entry && entry->options)
         opt = xconfigAddNewOption(opt,
-                                  xconfigStrdup("XkbOptions"), entry->options);
+                                  xconfigStrdup("XkbOptions"),
+                                  xconfigStrdup(entry->options));
 
     input->options = opt;
     
@@ -1327,4 +1327,4 @@ static int add_keyboard(GenerateOptions *gop, XConfigPtr config)
 
     return TRUE;
     
-} /* add_keyboard() */
+} /* xconfigAddKeyboard() */

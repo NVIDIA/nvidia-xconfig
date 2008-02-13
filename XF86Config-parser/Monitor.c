@@ -243,9 +243,6 @@ xconfigParseModeLine (void)
     }
     xconfigUnGetToken (token);
 
-#ifdef DEBUG
-    xconfigErrorMsg(DebugMsg, "ModeLine parsed\n");
-#endif
     return (ptr);
 }
 
@@ -392,9 +389,6 @@ xconfigParseVerboseMode (void)
     if (!had_vtimings)
         Error ("the vertical timings are missing", NULL);
 
-#ifdef DEBUG
-    xconfigErrorMsg(DebugMsg, "Verbose Mode parsed\n");
-#endif
     return (ptr);
 }
 
@@ -586,9 +580,6 @@ VertDone:
     if (!has_ident)
         Error (NO_IDENT_MSG, NULL);
 
-#ifdef DEBUG
-    xconfigErrorMsg(DebugMsg, "Monitor section parsed\n");
-#endif
     return ptr;
 }
 
@@ -637,9 +628,6 @@ xconfigParseModesSection (void)
     if (!has_ident)
         Error (NO_IDENT_MSG, NULL);
 
-#ifdef DEBUG
-    xconfigErrorMsg(DebugMsg, "Modes section parsed\n");
-#endif
     return ptr;
 }
 

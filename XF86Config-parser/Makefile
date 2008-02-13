@@ -1,24 +1,30 @@
-SRC =	DRI.c 		\
-	Device.c 	\
-	Files.c		\
-	Flags.c		\
-	Input.c		\
-	Keyboard.c	\
-	Layout.c	\
-	Module.c	\
-	Monitor.c	\
-	Pointer.c	\
-	Screen.c	\
-	Vendor.c	\
-	Video.c		\
-	Read.c		\
-	Scan.c		\
-	Write.c		\
-	Util.c		\
-	Extensions.c	\
+SRC = \
+	DRI.c \
+	Device.c \
+	Files.c \
+	Flags.c \
+	Input.c \
+	Keyboard.c \
+	Layout.c \
+	Module.c \
+	Monitor.c \
+	Pointer.c \
+	Screen.c \
+	Vendor.c \
+	Video.c \
+	Read.c \
+	Scan.c \
+	Write.c \
+	Util.c \
+	Extensions.c \
 	Generate.c
 
-OBJS = $(SRC:.c=.o)
+OBJS = $(SRC:%.c=%.o)
+DEPS = $(SRC:%.c=%.d)
+
+ifndef CC
+  CC = gcc
+endif
 
 CFLAGS = -Wall -g
 
@@ -26,13 +32,21 @@ ifdef NV_CFLAGS
   CFLAGS += $(NV_CFLAGS)
 endif
 
+ifndef RANLIB
+  RANLIB = ranlib
+endif
+
 LIB = libXF86Config-parser.a
-LIB_O = $(LIB:.a=.o)
+LIB_O = $(LIB:%.a=%.o)
+
+default all: $(LIB)
+
+.PHONY: clean clobber
 
 $(LIB): $(OBJS)
 	$(LD) -r -o $(LIB_O) $(OBJS)
 	$(AR) ruv $(LIB) $(LIB_O)
-	ranlib $(LIB)
+	$(RANLIB) $(LIB)
 
 %.o: %.c
 	$(CC) -c $(CFLAGS) $< -o $@
@@ -45,4 +59,4 @@ $(LIB): $(OBJS)
 clean clobber:
 	rm -rf *.o *~ *.d $(LIB) $(LIB_O)
 
--include $(SRC:.c=.d)
+-include $(DEPS)

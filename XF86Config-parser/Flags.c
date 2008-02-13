@@ -165,10 +165,6 @@ xconfigParseFlagsSection (void)
         }
     }
 
-#ifdef DEBUG
-    xconfigErrorMsg(DebugMsg, "Flags section parsed\n");
-#endif
-
     return ptr;
 }
 
@@ -487,16 +483,6 @@ xconfigULongToString(unsigned long i)
         return NULL;
     sprintf(s, "%lu", i);
     return s;
-}
-
-void
-xconfigDebugListOptions(XConfigOptionPtr Options)
-{
-    while (Options) {
-        xconfigErrorMsg(DebugMsg, "Option: %s Value: %s\n",
-                     Options->name, Options->val);
-        Options = Options->next;
-    }
 }
 
 XConfigOptionPtr

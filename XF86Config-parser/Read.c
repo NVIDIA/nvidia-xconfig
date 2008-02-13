@@ -98,12 +98,10 @@ static XConfigSymTabRec TopLevelTab[] =
 
 /*
  * xconfigReadConfigFile() - read the open XConfig file, returning the
- * parsed data as XConfigPtr.  The screenName argument is used
- * during validation in the case that no layout was specified and we
- * have to build an implicit layout and need to choose a screen.
+ * parsed data as XConfigPtr.
  */
 
-XConfigError xconfigReadConfigFile(const char *screenName, XConfigPtr *configPtr)
+XConfigError xconfigReadConfigFile(XConfigPtr *configPtr)
 {
     int token;
     XConfigPtr ptr = NULL;
@@ -245,7 +243,7 @@ XConfigError xconfigReadConfigFile(const char *screenName, XConfigPtr *configPtr
         }
     }
 
-    if (xconfigValidateConfig(ptr, screenName)) {
+    if (xconfigValidateConfig(ptr)) {
         ptr->filename = strdup(xconfigGetConfigFileName());
         *configPtr = ptr;
         return XCONFIG_RETURN_SUCCESS;
@@ -263,7 +261,7 @@ XConfigError xconfigReadConfigFile(const char *screenName, XConfigPtr *configPtr
  * objects cannot be found.
  */
 
-int xconfigValidateConfig(XConfigPtr p, const char *screenName)
+int xconfigValidateConfig(XConfigPtr p)
 {
     if (!xconfigValidateDevice(p))
         return FALSE;
@@ -271,11 +269,32 @@ int xconfigValidateConfig(XConfigPtr p, const char *screenName)
         return FALSE;
     if (!xconfigValidateInput(p))
         return FALSE;
-    if (!xconfigValidateLayout(p, screenName))
+    if (!xconfigValidateLayout(p))
         return FALSE;
     
     return(TRUE);
 }
+
+
+
+/*
+ * This function fixes up any problems that it finds in the config,
+ * when possible.
+ */
+
+int xconfigSanitizeConfig(XConfigPtr p,
+                          const char *screenName,
+                          GenerateOptions *gop)
+{
+    if (!xconfigSanitizeScreen(p))
+        return FALSE;
+    
+    if (!xconfigSanitizeLayout(p, screenName, gop))
+        return FALSE;
+    
+    return TRUE;
+}
+
 
 
 /* 

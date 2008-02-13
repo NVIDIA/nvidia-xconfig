@@ -105,10 +105,6 @@ xconfigParseVideoPortSubSection (void)
         }
     }
 
-#ifdef DEBUG
-    xconfigErrorMsg(DebugMsg, "VideoPort subsection parsed\n");
-#endif
-
     return ptr;
 }
 
@@ -195,10 +191,6 @@ xconfigParseVideoAdaptorSection (void)
 
     if (!has_ident)
         Error (NO_IDENT_MSG, NULL);
-
-#ifdef DEBUG
-    xconfigErrorMsg(DebugMsg, "VideoAdaptor section parsed\n");
-#endif
 
     return ptr;
 }

@@ -281,10 +281,6 @@ xconfigParseLayoutSection (void)
     if (!has_ident)
         Error (NO_IDENT_MSG, NULL);
 
-#ifdef DEBUG
-    xconfigErrorMsg(DebugMsg, "Layout section parsed\n");
-#endif
-
     return ptr;
 }
 
@@ -431,19 +427,22 @@ else \
 }
 
 int
-xconfigValidateLayout (XConfigPtr p, const char *screenName)
+xconfigValidateLayout (XConfigPtr p)
 {
     XConfigLayoutPtr layout = p->layouts;
     XConfigAdjacencyPtr adj;
     XConfigInactivePtr iptr;
-    XConfigInputrefPtr inptr;
+    XConfigInputrefPtr inputRef;
     XConfigScreenPtr screen;
     XConfigDevicePtr device;
     XConfigInputPtr input;
 
-    if (!layout) {
-        if (!addImpliedLayout(p, screenName)) return FALSE;
-    }
+    /*
+     * if we do not have a layout, just return TRUE; we'll add a
+     * layout later during the Sanitize step
+     */
+
+    if (!layout) return TRUE;
 
     while (layout)
     {
@@ -470,6 +469,9 @@ xconfigValidateLayout (XConfigPtr p, const char *screenName)
 
             adj = adj->next;
         }
+
+        /* I not believe the "inactives" list is used for anything */
+        
         iptr = layout->inactives;
         while (iptr)
         {
@@ -485,25 +487,58 @@ xconfigValidateLayout (XConfigPtr p, const char *screenName)
                 iptr->device = device;
             iptr = iptr->next;
         }
-        inptr = layout->inputs;
-        while (inptr)
+
+        /*
+         * the layout->inputs list is also updated in
+         * getCoreInputDevice() when no core input device is found in
+         * the layout's input list
+         */
+
+        inputRef = layout->inputs;
+        while (inputRef)
         {
-            input = xconfigFindInput (inptr->input_name,
+            input = xconfigFindInput (inputRef->input_name,
                                    p->inputs);
             if (!input)
             {
                 xconfigErrorMsg(ValidationErrorMsg, UNDEFINED_INPUT_MSG,
-                             inptr->input_name, layout->identifier);
+                             inputRef->input_name, layout->identifier);
                 return (FALSE);
             }
             else {
-                inptr->input = input;
+                inputRef->input = input;
             }
-            inptr = inptr->next;
+            inputRef = inputRef->next;
         }
         layout = layout->next;
     }
     return (TRUE);
+}
+
+int
+xconfigSanitizeLayout(XConfigPtr p,
+                      const char *screenName,
+                      GenerateOptions *gop)
+{
+    XConfigLayoutPtr layout = p->layouts;
+    
+    /* add an implicit layout if none exist */
+
+    if (!p->layouts) {
+        if (!addImpliedLayout(p, screenName)) {
+            return FALSE;
+        }
+    }
+
+    /* check that input devices are assigned for each layout */
+    
+    for (layout = p->layouts; layout; layout = layout->next) {
+        if (!xconfigCheckCoreInputDevices(gop, p, layout)) {
+            return FALSE;
+        }
+    }
+
+    return TRUE;
 }
 
 XConfigLayoutPtr
@@ -535,12 +570,12 @@ static int addImpliedLayout(XConfigPtr config, const char *screenName)
      */
     
     if (screenName) {
-	screen = xconfigFindScreen(screenName, config->screens);
+        screen = xconfigFindScreen(screenName, config->screens);
         if (!screen) {
             xconfigErrorMsg(ErrorMsg, "No Screen section called \"%s\"\n",
                             screenName);
-	    return FALSE;
-	}
+            return FALSE;
+        }
     } else {
         screen = config->screens;
     }
@@ -553,28 +588,20 @@ static int addImpliedLayout(XConfigPtr config, const char *screenName)
     
     layout = calloc(1, sizeof(XConfigLayoutRec));
     
-    layout->identifier = "Default Layout";
+    layout->identifier = xconfigStrdup("Default Layout");
     
     adj = calloc(1, sizeof(XConfigAdjacencyRec));
     adj->scrnum = -1;
     adj->screen = screen;
-    adj->screen_name = strdup(screen->identifier);
+    adj->screen_name = xconfigStrdup(screen->identifier);
     
     layout->adjacencies = adj;
 
     config->layouts = layout;
-
-    /*
-     * xconfigCheckCoreInputDevices() will add a keyboard and mouse to
-     * the layout.
-     */
-
-    if (!xconfigCheckCoreInputDevices(config, layout)) {
-        free(adj);
-        free(layout);
-        config->layouts = NULL;
-        return FALSE;
-    }
     
+    /* validate the Layout here to setup all the pointers */
+
+    if (!xconfigValidateLayout(config)) return FALSE;
+
     return TRUE;
 }

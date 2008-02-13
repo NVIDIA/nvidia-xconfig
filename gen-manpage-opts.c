@@ -16,30 +16,57 @@ static void print_option(const NVGetoptOption *o)
     int j, len;
 
     int omitWhiteSpace;
-
-    printf(".TP\n.BI ");
+    
+    /* if we are going to need the argument, process it now */
+    if (o->flags & NVGETOPT_HAS_ARGUMENT) {
+        if (o->arg_name) {
+            strcpy(scratch, o->arg_name);
+        } else {
+            len = strlen(o->name);
+            for (j = 0; j < len; j++) scratch[j] = toupper(o->name[j]);
+            scratch[len] = '\0';
+        }
+    }
+    
+    printf(".TP\n.BI \"");
     /* Print the name of the option */
     /* XXX We should backslashify the '-' characters in o->name. */
-    if (o->flags & NVGETOPT_IS_BOOLEAN) {
-        /* "\-\-name, \-\-no\-name */
-        printf("\"\\-\\-%s, \\-\\-no\\-%s", o->name, o->name);
-    } else if (isalpha(o->val)) {
-        /* "\-c, \-\-name */
-        printf("\"\\-%c, \\-\\-%s", o->val, o->name);
-    } else {
-        /* "\-\-name */
-        printf("\"\\-\\-%s", o->name);
-    }
+    
+    if (isalpha(o->val)) {
+        /* '\-c' */
+        printf("\\-%c", o->val);
 
+        if (o->flags & NVGETOPT_HAS_ARGUMENT) {
+            /* ' " "ARG" "' */
+            printf(" \" \"%s\" \"", scratch);
+        }
+        /* ', ' */
+        printf(", ");
+    }
+    
+    /* '\-\-name' */
+    printf("\\-\\-%s", o->name);
+    
+    /* '=" "ARG' */
     if (o->flags & NVGETOPT_HAS_ARGUMENT) {
-        len = strlen(o->name);
-        for (j = 0; j < len; j++) scratch[j] = toupper(o->name[j]);
-        scratch[len] = '\0';
         printf("=\" \"%s", scratch);
+        
+        /* '" "' */
+        if ((o->flags & NVGETOPT_IS_BOOLEAN) ||
+            (o->flags & NVGETOPT_ALLOW_DISABLE)) {
+            printf("\" \"");
+        }
     }
-
+    
+    /* ', \-\-no\-name' */
+    if (((o->flags & NVGETOPT_IS_BOOLEAN) &&
+         !(o->flags & NVGETOPT_HAS_ARGUMENT)) ||
+        (o->flags & NVGETOPT_ALLOW_DISABLE)) {
+        printf(", \\-\\-no\\-%s", o->name);
+    }
+    
     printf("\"\n");
-
+    
     /* Print the option description */
     /* XXX Each sentence should be on its own line! */
     
