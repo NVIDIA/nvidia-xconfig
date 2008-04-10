@@ -211,6 +211,40 @@ int update_extensions(Options *op, XConfigPtr config)
 } /* update_extensions() */
 
 
+/*
+ * update_server_flags() - update the server flags section with any
+ * server flag options; the only option so far is "HandleSpecialKeys"
+ */
+
+int update_server_flags(Options *op, XConfigPtr config)
+{
+    if (!op->handle_special_keys) return TRUE;
+
+    if (!config->flags) {
+        config->flags = nvalloc(sizeof(XConfigFlagsRec));
+        if ( !config->flags ) {
+            return FALSE;
+        }
+    }
+
+    if (config->flags->options) {
+        remove_option_from_list(&(config->flags->options),
+                                "HandleSpecialKeys");
+    }
+
+    if (op->handle_special_keys != NV_DISABLE_STRING_OPTION) {
+        config->flags->options =
+            xconfigAddNewOption(config->flags->options,
+                                "HandleSpecialKeys",
+                                op->handle_special_keys);
+    }
+
+    return TRUE;
+
+} /* update_server_flags() */
+
+
+
 
 /*
  * update_device() - update the device; there is a lot of information

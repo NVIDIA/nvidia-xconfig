@@ -42,6 +42,8 @@
 #define TV_OUT_FORMAT_OPTION                31
 #define TV_OVER_SCAN_OPTION                 32
 #define COOL_BITS_OPTION                    33
+#define ACPID_SOCKET_PATH_OPTION            34
+#define HANDLE_SPECIAL_KEYS_OPTION          35
 
 /*
  * To add a boolean option to nvidia-xconfig:
@@ -119,6 +121,13 @@ static const NVGetoptOption __options[] = {
 
     /* These options are only printed by "nvidia-xconfig --advanced-help" */
 
+    { "acpid-socket-path", 
+      ACPID_SOCKET_PATH_OPTION, 
+      NVGETOPT_STRING_ARGUMENT | NVGETOPT_ALLOW_DISABLE, NULL,
+      "Set this option to specify an alternate path to the Linux ACPI daemon "
+      "(acpid)'s socket, which the NVIDIA X driver will use to connect to "
+      "acpid." },
+
     { "add-argb-glx-visuals",
       XCONFIG_BOOL_VAL(ADD_ARGB_GLX_VISUALS_BOOL_OPTION),
       NVGETOPT_IS_BOOLEAN,  NULL,
@@ -153,6 +162,13 @@ static const NVGetoptOption __options[] = {
     { "composite",
       XCONFIG_BOOL_VAL(COMPOSITE_BOOL_OPTION), NVGETOPT_IS_BOOLEAN, NULL,
       "Enable or disable the \"Composite\" X extension." },
+
+    { "connect-to-acpid",
+      XCONFIG_BOOL_VAL(CONNECT_TO_ACPID_BOOL_OPTION), NVGETOPT_IS_BOOLEAN, NULL,
+      "Enable or disable the \"ConnectToAcpid\" X configuration option.  "
+      "If this option is set, the NVIDIA X driver will attempt to connect "
+      "to the Linux ACPI daemon (acpid).  Set this option to off to prevent "
+      "the X driver from attempting to connect to acpid." },
 
     { "constant-dpi",
       XCONFIG_BOOL_VAL(CONSTANT_DPI_BOOL_OPTION), NVGETOPT_IS_BOOLEAN, NULL,
@@ -208,6 +224,13 @@ static const NVGetoptOption __options[] = {
       NVGETOPT_IS_BOOLEAN, NULL,
       "Enable or disable support for dynamically configuring TwinView." },
     
+    { "enable-acpi-hotkeys",
+      XCONFIG_BOOL_VAL(ENABLE_ACPI_HOTKEYS_BOOL_OPTION), 
+      NVGETOPT_IS_BOOLEAN, NULL,
+      "The \"EnableACPIHotkeys\" option can be specified to override the "
+      "NVIDIA X driver's default decision to enable or disable ACPI "
+      "display change hotkey events." },
+
     { "enable-all-gpus", 'a', 0, NULL,
       "Configure an X screen on every GPU in the system." },
     
@@ -252,6 +275,13 @@ static const NVGetoptOption __options[] = {
       "Normally, stereo flipping is only performed when a stereo drawable is "
       "visible. This option forces stereo flipping even when no stereo "
       "drawables are visible." },
+
+    { "handle-special-keys", HANDLE_SPECIAL_KEYS_OPTION,
+      NVGETOPT_STRING_ARGUMENT | NVGETOPT_ALLOW_DISABLE, "WHEN",
+      "Specify when the X server should use the builtin keyboard handler to "
+      "process special key combinations (such as Ctrl+Alt+Backspace); see "
+      "the X configuration man page for details.  The value of [WHEN] can be "
+      "'Always', 'Never', or 'WhenNeeded'." },
 
     { "include-implicit-metamodes",
       XCONFIG_BOOL_VAL(INCLUDE_IMPLICIT_METAMODES_BOOL_OPTION),

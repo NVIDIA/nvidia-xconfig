@@ -307,6 +307,45 @@ Options *parse_commandline(int argc, char *argv[])
 
         case FORCE_GENERATE_OPTION: op->force_generate = TRUE; break;
 
+        case ACPID_SOCKET_PATH_OPTION: 
+            if (disable) {
+                op->acpid_socket_path = NV_DISABLE_STRING_OPTION;
+            } else {
+                op->acpid_socket_path = strval; 
+            }
+            break;
+
+        case HANDLE_SPECIAL_KEYS_OPTION:
+            {
+                const char *valid_values[] = {
+                    "Always",
+                    "Never",
+                    "WhenNeeded",
+                    NULL,
+                };
+
+                int i;
+
+                if (disable) {
+                    op->handle_special_keys = NV_DISABLE_STRING_OPTION;
+                    break;
+                }
+
+                for (i = 0; valid_values[i]; i++) {
+                    if (!strcasecmp(strval, valid_values[i])) {
+                        break;
+                    }
+                }
+
+                if (valid_values[i]) {
+                    op->handle_special_keys = strval;
+                } else {
+                    fprintf(stderr, "Invalid HandleSpecialKeys option: %s.\n", strval);
+                    goto fail;
+                }
+                break;
+            }
+
         case NVAGP_OPTION:
 
             /* mark as disabled, so we can remove the option later */
@@ -1045,6 +1084,8 @@ int update_xconfig(Options *op, XConfigPtr config)
     update_extensions(op, config);
 
     update_modules(config);
+
+    update_server_flags(op, config);
 
     update_banner(config);
     

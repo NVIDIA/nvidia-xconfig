@@ -98,6 +98,7 @@ NVIDIA_XCONFIG_VERSION = 1.0
 NVIDIA_XCONFIG_DISTDIR = $(NVIDIA_XCONFIG)-$(NVIDIA_XCONFIG_VERSION)
 
 EXTRA_DIST = \
+	COPYING \
 	nvgetopt.h \
 	nvidia-xconfig.h \
 	nvidia-cfg.h \

@@ -89,8 +89,11 @@ typedef struct {
 #define DYNAMIC_TWINVIEW_BOOL_OPTION            34
 #define INCLUDE_IMPLICIT_METAMODES_BOOL_OPTION  35
 #define USE_EVENTS_BOOL_OPTION                  36
+#define CONNECT_TO_ACPID_BOOL_OPTION            37
+#define ENABLE_ACPI_HOTKEYS_BOOL_OPTION         38
 
-#define XCONFIG_BOOL_OPTION_COUNT (USE_EVENTS_BOOL_OPTION + 1)
+
+#define XCONFIG_BOOL_OPTION_COUNT (ENABLE_ACPI_HOTKEYS_BOOL_OPTION + 1)
 
 /* # of 32-bit variables needed to hold all the boolean options (bits) */
 #define XCONFIG_BOOL_OPTION_SLOTS  \
@@ -161,6 +164,8 @@ typedef struct __options {
     char *custom_edid;
     char *tv_standard;
     char *tv_out_format;
+    char *acpid_socket_path;
+    char *handle_special_keys;
 
     double tv_over_scan;
 
@@ -238,6 +243,7 @@ int update_modules(XConfigPtr config);
 int update_screen(Options *op, XConfigPtr config, XConfigScreenPtr screen);
 XConfigLayoutPtr get_layout(Options *op, XConfigPtr config);
 int update_extensions(Options *op, XConfigPtr config);
+int update_server_flags(Options *op, XConfigPtr config);
 
 /* multiple_screens.c */
 

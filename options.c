@@ -27,6 +27,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 #include "nvidia-xconfig.h"
 #include "xf86Parser.h"
@@ -75,6 +76,8 @@ static const NvidiaXConfigOption __options[] = {
     { DYNAMIC_TWINVIEW_BOOL_OPTION,          FALSE, "DynamicTwinView" },
     { INCLUDE_IMPLICIT_METAMODES_BOOL_OPTION,FALSE, "IncludeImplicitMetaModes" },
     { USE_EVENTS_BOOL_OPTION,                FALSE, "UseEvents" },
+    { CONNECT_TO_ACPID_BOOL_OPTION,          FALSE, "ConnectToAcpid" },
+    { ENABLE_ACPI_HOTKEYS_BOOL_OPTION,       FALSE, "EnableACPIHotkeys" },
     { 0,                                     FALSE, NULL },
 };
 
@@ -264,6 +267,41 @@ static void remove_option(XConfigScreenPtr screen, const char *name)
 
 
 /*
+ * get_screen_option() - get the option structure with the specified
+ * name, searching all the option lists associated with this screen
+ */
+
+XConfigOptionPtr get_screen_option(XConfigScreenPtr screen, const char *name)
+{
+    XConfigDisplayPtr display;
+    XConfigOptionPtr opt;
+
+    if (!screen) return NULL;
+
+    if (screen->device) {
+        opt = xconfigFindOption(screen->device->options, name);
+        if (opt) return opt;
+    }
+    if (screen->monitor) {
+        opt = xconfigFindOption(screen->monitor->options, name);
+        if (opt) return opt;
+    }
+
+    opt = xconfigFindOption(screen->options, name);
+    if (opt) return opt;
+
+    for (display = screen->displays; display; display = display->next) {
+        opt = xconfigFindOption(display->options, name);
+        if (opt) return opt;
+    }
+
+    return NULL;
+
+} /* get_screen_option() */
+
+
+
+/*
  * set_option_value() - set the given option to the specified value
  */
 
@@ -305,6 +343,137 @@ static void update_twinview_options(Options *op, XConfigScreenPtr screen)
         }
     }
 } /* update_twinview_options() */
+
+
+
+/*
+ * find_metamode_offset() - find the first metamode offset in
+ * 'string'; returns a pointer to the start of the offset
+ * specification and assigns 'end' (if non-NULL) to the first character
+ * beyond the offset specification.
+ */
+
+static char *find_metamode_offset(char *string, char **end)
+{
+    enum {
+        StateBeforeOffset,
+        StateInFirstPlus,
+        StateInFirstNumber,
+        StateInSecondPlus,
+        StateInSecondNumber
+    } state = StateBeforeOffset;
+
+    char *s, *start = NULL, c;
+
+    for (s = string; s && *s; s++) {
+        c = *s;
+        switch (state) {
+
+        case StateBeforeOffset:
+            if ((c == '-') || (c == '+')) {
+                start = s;
+                state = StateInFirstPlus;
+            }
+            break;
+
+        case StateInFirstPlus:
+            if (isspace(c)) state = StateInFirstPlus;
+            else if (isdigit(c)) state = StateInFirstNumber;
+            else state = StateBeforeOffset;
+            break;
+
+        case StateInFirstNumber:
+            if (isdigit(c) || isspace(c)) state = StateInFirstNumber;
+            else if ((c == '-') || (c == '+')) state = StateInSecondPlus;
+            else state = StateBeforeOffset;
+            break;
+
+        case StateInSecondPlus:
+            if (isspace(c)) state = StateInSecondPlus;
+            else if (isdigit(c)) state = StateInSecondNumber;
+            else state = StateBeforeOffset;
+            break;
+
+        case StateInSecondNumber:
+            if (isdigit(c)) state = StateInSecondNumber;
+            else goto done;
+            break;
+        }
+    }
+
+ done:
+    if (state == StateInSecondNumber) {
+        if (end) *end = s;
+        return start;
+    }
+
+    return NULL;
+
+} /* find_metamode_offset() */
+
+
+
+/*
+ * remove_metamode_offsets() - remove any offset specifications from
+ * the MetaMode option for this screen; if we find any offsets, return
+ * TRUE and assign old_metamodes and new_metamodes to copies of the
+ * MetaModes string before and after removing the offsets.  If no
+ * offsets appear in the MetaModes string, return FALSE.
+ */
+
+static int remove_metamode_offsets(XConfigScreenPtr screen,
+                                   char **old_metamodes, char **new_metamodes)
+{
+    char *start, *end;
+    char *new_string;
+    char *n, *o, *tmp;
+
+    XConfigOptionPtr opt = get_screen_option(screen, "MetaModes");
+
+    /* return if no MetaModes option */
+
+    if (!opt || !opt->val) return FALSE;
+
+    /* return if no explicit offsets in the MetaModes option */
+
+    if (!find_metamode_offset(opt->val, NULL)) return FALSE;
+
+    if (old_metamodes) *old_metamodes = nvstrdup(opt->val);
+
+    /*
+     * if we get this far, there are offsets in the MetaModes string;
+     * build a new string without the offsets
+     */
+
+    new_string = nvstrdup(opt->val);
+
+    o = start = opt->val;
+    n = new_string;
+
+    while (1) {
+
+        tmp = find_metamode_offset(start, &end);
+
+        if (tmp) *tmp = '\0';
+
+        while (*o) *n++ = *o++;
+
+        *n = '\0';
+
+        if (!tmp) break;
+
+        o = start = end;
+    }
+
+    nvfree(opt->val);
+
+    opt->val = new_string;
+
+    if (new_metamodes) *new_metamodes = nvstrdup(opt->val);
+
+    return TRUE;
+
+} /* remove_metamode_offsets() */
 
 
 
@@ -482,6 +651,16 @@ void update_options(Options *op, XConfigScreenPtr screen)
         }
     }
 
+    /* add acpid socket path option*/
+ 
+    if (op->acpid_socket_path) {
+        remove_option(screen, "AcpidSocketPath");
+        if (op->acpid_socket_path != NV_DISABLE_STRING_OPTION) {
+            set_option_value(screen, "AcpidSocketPath", op->acpid_socket_path);
+        }
+    }
+        
+
     /* add the twinview xinerama info order option */
     
     if (op->twinview_xinerama_info_order) {
@@ -497,8 +676,24 @@ void update_options(Options *op, XConfigScreenPtr screen)
     if (op->twinview_orientation) {
         remove_option(screen, "TwinViewOrientation");
         if (op->twinview_orientation != NV_DISABLE_STRING_OPTION) {
+            char *old_metamodes, *new_metamodes;
             set_option_value(screen, "TwinViewOrientation",
                              op->twinview_orientation);
+            if (remove_metamode_offsets(screen,
+                                        &old_metamodes, &new_metamodes)) {
+                fmtmsg("");
+                fmtwarn("The MetaModes option contained explicit offsets, "
+                        "which would have overridden the specified "
+                        "TwinViewOrientation; in order to honor the "
+                        "requested TwinViewOrientation, the explicit offsets "
+                        "have been removed from the MetaModes option.\n\n"
+                        "Old MetaModes option: \"%s\"\n"
+                        "New MetaModes option: \"%s\".",
+                        old_metamodes, new_metamodes);
+                fmtmsg("");
+                nvfree(old_metamodes);
+                nvfree(new_metamodes);
+            }
         }
     }
     
