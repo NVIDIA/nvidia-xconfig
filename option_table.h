@@ -192,7 +192,7 @@ static const NVGetoptOption __options[] = {
       "Most Quadro parts by default use a 10 bit color look up table (LUT) "
       "by default; setting this option to TRUE forces these graphics chips "
       "to use an 8 bit (LUT)." },
-    
+
     { "depth", 'd', NVGETOPT_INTEGER_ARGUMENT, NULL,
       "Set the default depth to [DEPTH]; valid values for [DEPTH] are "
       "8, 15, 16, 24, and 30." },
@@ -209,7 +209,7 @@ static const NVGetoptOption __options[] = {
       "when a direct-rendering client has performed rendering that needs to be "
       "composited to the screen.  Improves performance when using GLX with the "
       "composite extension." },
-    
+
 #if defined(NV_SUNOS)
     { "disable-scf", DISABLE_SCF_OPTION, 0, NULL,
       "On Solaris, nvidia-xconfig updates the service configuration "
@@ -233,7 +233,7 @@ static const NVGetoptOption __options[] = {
 
     { "enable-all-gpus", 'a', 0, NULL,
       "Configure an X screen on every GPU in the system." },
-    
+
     { "exact-mode-timings-dvi",
       XCONFIG_BOOL_VAL(EXACT_MODE_TIMINGS_DVI_BOOL_OPTION),
       NVGETOPT_IS_BOOLEAN, NULL,
@@ -248,8 +248,8 @@ static const NVGetoptOption __options[] = {
       "are then written as binary data to individual files.  These files "
       "can later be used by the NVIDIA X driver through the \"CustomEDID\" "
       "X configuration option." },
-    
-    { "extract-edids-output-file", 
+
+    { "extract-edids-output-file",
       EXTRACT_EDIDS_OUTPUT_FILE_OPTION, NVGETOPT_STRING_ARGUMENT, "FILENAME",
       "When the '--extract-edids-from-log' option is used, nvidia-xconfig "
       "writes any extracted EDID to a file, typically \"edid.bin\" in the "
@@ -321,7 +321,7 @@ static const NVGetoptOption __options[] = {
       NVGETOPT_IS_BOOLEAN, NULL,
       "Allow or disallow NVIDIA Linux X driver module to load the NVIDIA "
       "Linux kernel module automatically."},
-    
+
     { "logo",
       XCONFIG_BOOL_VAL(NOLOGO_BOOL_OPTION), NVGETOPT_IS_BOOLEAN, NULL,
       "Disable or enable the \"NoLogo\" X configuration option." },
@@ -418,11 +418,10 @@ static const NVGetoptOption __options[] = {
     { "probe-all-gpus", XCONFIG_BOOL_VAL(PROBE_ALL_GPUS_BOOL_OPTION),
       NVGETOPT_IS_BOOLEAN, NULL,
       "Disable or enable the \"ProbeAllGpus\" X configuration option." },
-      
-      
+
     { "query-gpu-info", QUERY_GPU_INFO_OPTION, 0, NULL,
       "Print information about all recognized NVIDIA GPUs in the system." },
-    
+
     { "randr-rotation",
       XCONFIG_BOOL_VAL(RANDR_ROTATION_BOOL_OPTION), NVGETOPT_IS_BOOLEAN, NULL,
       "Enable or disable the \"RandRRotation\" X configuration option." },
@@ -441,7 +440,7 @@ static const NVGetoptOption __options[] = {
       "Enable or disable the \"Rotate\" X configuration option.  Valid values "
       "for [ROTATE] are 'normal', 'left', 'CCW', 'inverted', "
       "'right', and 'CW'.  Rotation can be disabled " },
- 
+
     { "screen", SCREEN_OPTION, NVGETOPT_STRING_ARGUMENT, NULL,
       "The nvidia-xconfig utility operates on one or more screens within a "
       "Server Layout in the X configuration file.  If this option is "
@@ -476,22 +475,22 @@ static const NVGetoptOption __options[] = {
 
     { "tv-standard", TV_STANDARD_OPTION,
       NVGETOPT_STRING_ARGUMENT | NVGETOPT_ALLOW_DISABLE, "TV-STANDARD",
-      "Enable or disable the \"TVStandard\" X configuration option. Valid " 
+      "Enable or disable the \"TVStandard\" X configuration option. Valid "
       "values for \"TVStandard\" are: \"PAL-B\", \"PAL-D\", \"PAL-G\", "
-      "\"PAL-H\", \"PAL-I\", \"PAL-K1\", \"PAL-M\", \"PAL-N\", \"PAL-NC\", " 
+      "\"PAL-H\", \"PAL-I\", \"PAL-K1\", \"PAL-M\", \"PAL-N\", \"PAL-NC\", "
       "\"NTSC-J\", \"NTSC-M\", \"HD480i\", \"HD480p\", \"HD720p\", "
       "\"HD1080i\", \"HD1080p\", \"HD576i\", \"HD576p\"." },
-    
+
     { "tv-out-format", TV_OUT_FORMAT_OPTION,
       NVGETOPT_STRING_ARGUMENT | NVGETOPT_ALLOW_DISABLE, "TV-OUT-FORMAT",
       "Enable or disable the \"TVOutFormat\" X configuration option. Valid "
       "values for \"TVOutFormat\" are: \"SVIDEO\" and \"COMPOSITE\"." },
-  
+
     { "tv-over-scan", TV_OVER_SCAN_OPTION,
       NVGETOPT_DOUBLE_ARGUMENT | NVGETOPT_ALLOW_DISABLE, NULL,
       "Enable or disable the \"TVOverScan\" X configuration option. Valid "
-      "values are decimal values in the range 1.0 and 0.0." }, 
-          
+      "values are decimal values in the range 1.0 and 0.0." },
+
     { "twinview", XCONFIG_BOOL_VAL(TWINVIEW_BOOL_OPTION),
       NVGETOPT_IS_BOOLEAN, NULL, "Enable or disable TwinView." },
 
@@ -500,7 +499,7 @@ static const NVGetoptOption __options[] = {
       "Specify the TwinViewOrientation.  Valid values for [ORIENTATION] are: "
       "\"RightOf\" (the default), \"LeftOf\", \"Above\", \"Below\", or "
       "\"Clone\"." },
-    
+
     { "twinview-xinerama-info",
       XCONFIG_BOOL_VAL(NO_TWINVIEW_XINERAMA_INFO_BOOL_OPTION),
       NVGETOPT_IS_BOOLEAN, NULL,
@@ -535,7 +534,7 @@ static const NVGetoptOption __options[] = {
       "device's EDID, if any, to compute the DPI (Dots Per Inch) of the X "
       "screen.  This option defaults to TRUE (the NVIDIA X driver uses the "
       "EDID's physical size, when available, to compute the DPI)." },
-      
+
     { "use-edid-freqs",
       XCONFIG_BOOL_VAL(USE_EDID_FREQS_BOOL_OPTION), NVGETOPT_IS_BOOLEAN, NULL,
       "Enable or disable use of the HorizSync and VertRefresh "
@@ -555,18 +554,18 @@ static const NVGetoptOption __options[] = {
       NVGETOPT_STRING_ARGUMENT | NVGETOPT_ALLOW_DISABLE, "DISPLAY-DEVICE",
       "Force the X driver to use the display device specified." },
 
-    { "use-events", 
+    { "use-events",
       XCONFIG_BOOL_VAL(USE_EVENTS_BOOL_OPTION), NVGETOPT_IS_BOOLEAN, NULL,
-      "Enable or disable \"UseEvents\" X configuration option. Setting this " 
+      "Enable or disable \"UseEvents\" X configuration option. Setting this "
       "option will enable the X driver to use the system events in some cases "
       "when it is waiting for the hardware. With this option X driver sets an "
       "event handler and waits for the hardware through the poll() system "
       "call. This option defaults to FALSE." },
-     
+
     { "virtual", VIRTUAL_OPTION,
       NVGETOPT_STRING_ARGUMENT | NVGETOPT_ALLOW_DISABLE, "WIDTHxHEIGHT",
       "Specify the virtual screen resolution." },
-      
+
     { "x-prefix", X_PREFIX_OPTION, NVGETOPT_STRING_ARGUMENT, NULL,
       "The X installation prefix; the default is /usr/X11R6/.  Only "
       "under rare circumstances should this option be needed." },
@@ -579,6 +578,6 @@ static const NVGetoptOption __options[] = {
       NVGETOPT_IS_BOOLEAN, NULL,
       "Forces XvMC to use the 3D engine for XvMCPutSurface requests rather "
       "than the video overlay." },
-      
+
     { NULL, 0, 0, NULL, NULL },
 };
