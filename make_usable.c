@@ -50,9 +50,17 @@ int update_modules(XConfigPtr config)
     XConfigLoadPtr load, next;
     int found;
 
-    if (config->modules == NULL) {
-        config->modules = xconfigAlloc(sizeof(XConfigModuleRec));
-    }
+    /*
+     * Return early if the original X configuration file lacked a
+     * "Module" section, and rely on the server's builtin list
+     * of modules to load, instead. We can safely do this if the
+     * X server is an X.Org server or XFree86 release >= 4.4.0. On
+     * installations with older XFree86 servers, the vendor's X
+     * configuration utility should have added a "Module" section
+     * we can extend, if necessary.
+     */
+    if (config->modules == NULL)
+        return FALSE;
 
     /* make sure glx is loaded */
 
