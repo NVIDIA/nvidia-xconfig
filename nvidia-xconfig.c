@@ -59,7 +59,7 @@ static void print_version(void)
     fmtoutp(TAB, "This program is used to manipulate X configuration files, "
             "specifically to enable NVIDIA X driver functionality.");
     fmtout("");
-    fmtoutp(TAB, "Copyright (C) 2005 NVIDIA Corporation.");
+    fmtoutp(TAB, "Copyright (C) 2005 - 2008 NVIDIA Corporation.");
     fmtout("");
     
 } /* print_version() */
