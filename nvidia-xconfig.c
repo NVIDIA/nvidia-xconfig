@@ -1153,7 +1153,7 @@ static void get_xserver_in_use(Options *op)
         if (strstr(buf, "XFree86 Version") != NULL) {
             xserver = X_IS_XF86;
             op->supports_extension_section = FALSE;
-        } else if (strstr(buf, "X Window System") != NULL) {
+        } else {
             xserver = X_IS_XORG;
             if ((ptr = strstr(buf, "X Protocol Version")) != NULL &&
                 sscanf(ptr, VERSION_FORMAT, &dummy, &dummy,
