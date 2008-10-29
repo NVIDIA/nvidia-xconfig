@@ -164,6 +164,8 @@ typedef struct __options {
     TextRows add_modes;
     TextRows remove_modes;
 
+    int supports_extension_section;
+
     GenerateOptions gop;
 
 } Options;
@@ -243,6 +245,8 @@ int print_tree(Options *op, XConfigPtr config);
 /* options.c */
 
 void remove_option_from_list(XConfigOptionPtr *list, const char *name);
+void set_boolean_option(Options *op, const int c, const int boolval);
+void validate_composite(Options *op, XConfigPtr config);
 void update_options(Options *op, XConfigScreenPtr screen);
 
 /* lscf.c */

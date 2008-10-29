@@ -166,6 +166,10 @@ int update_extensions(Options *op, XConfigPtr config)
 {
     char *value;
 
+    /* validate the composite option against any other options specified */
+
+    validate_composite(op, config);
+
     if (GET_BOOL_OPTION(op->boolean_options, COMPOSITE_BOOL_OPTION)) {
 
         /* if we don't already have the Extensions section, create it now */

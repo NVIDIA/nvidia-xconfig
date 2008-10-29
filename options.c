@@ -113,6 +113,126 @@ void remove_option_from_list(XConfigOptionPtr *list, const char *name)
 
 
 /*
+ * set_boolean_option() - set boolean option 'c' to the given 'boolval'
+ */
+
+void set_boolean_option(Options *op, const int c, const int boolval)
+{
+    u32 bit;
+    
+    bit = GET_BOOL_OPTION_BIT(c);
+    
+    GET_BOOL_OPTION_SLOT(op->boolean_options, c) |= bit;
+    
+    if (boolval) {
+        GET_BOOL_OPTION_SLOT(op->boolean_option_values, c) |= bit;
+    } else {
+        GET_BOOL_OPTION_SLOT(op->boolean_option_values, c) &= ~bit;
+    }
+} /* set_boolean_option() */
+
+
+
+/*
+ * validate_composite() - check whether any options conflict with the
+ * Composite extension; update the composite option value, if
+ * appropriate.
+ */
+
+void validate_composite(Options *op, XConfigPtr config)
+{
+    int i, n, opt, disable_composite;
+    char scratch[256], *s;
+    
+    
+    /*
+     * the composite_incompatible_options[] array lists all the
+     * options that are incompatible with the composite extension; we
+     * list boolean options and then special-case any non-boolean options
+     */
+
+    static int composite_incompatible_options[] = {
+        XINERAMA_BOOL_OPTION,
+        OVERLAY_BOOL_OPTION,
+        CIOVERLAY_BOOL_OPTION,
+        UBB_BOOL_OPTION,
+        -1, /* stereo */
+        -2 /* end */
+    };
+    
+    disable_composite = FALSE;
+    s = scratch;
+    n = 0;
+    
+    /*
+     * loop through all the incompatible options, and check if the
+     * user specified any of them
+     */
+
+    for (i = 0; composite_incompatible_options[i] != -2; i++) {
+
+        int present = 0;
+        const char *name;
+        
+        opt = composite_incompatible_options[i];
+     
+        if (opt == -1) { /* special case stereo */
+            
+            present = (op->stereo > 0);
+            name = "Stereo";
+            
+        } else {
+            const NvidiaXConfigOption *o;
+            
+            present = (GET_BOOL_OPTION(op->boolean_options, opt) &&
+                       GET_BOOL_OPTION(op->boolean_option_values, opt));
+            
+            o = get_option(opt);
+            name = o->name;
+        }
+        
+        /*
+         * if the option is present, then we have to disable
+         * composite; append to the scratch string that lists all the
+         * present conflicting options
+         */
+        
+        if (present) {
+            disable_composite = TRUE;
+            n++;
+            s += sprintf(s, "%s%s", (n > 1) ? " or " : "", name);
+        }
+    }
+    
+    /*
+     * if we have to disable the composite extension, print a warning
+     * and set the option value.
+     *
+     * We need to be careful to only set the option value if the X
+     * server is going to recognize the Extension section and the
+     * composite option.  We guess whether the server will recognize
+     * the option: if get_xserver_in_use() thinks the X server
+     * supports the "Composite" extension, or the current config
+     * already has an extension section, or the user specified the
+     * composite option.
+     */
+    
+    if (disable_composite &&
+        (op->supports_extension_section ||
+         config->extensions ||
+         GET_BOOL_OPTION(op->boolean_options, COMPOSITE_BOOL_OPTION))) {
+        
+        fmtwarn("The Composite X extension does not currently interact well "
+                "with the %s option%s; the Composite X extension will be "
+                "disabled.", scratch, (n > 1) ? "s": "");
+        
+        set_boolean_option(op, COMPOSITE_BOOL_OPTION, FALSE);
+    }
+} /* validate_composite() */
+
+
+
+/*
  * remove_option() - make sure the named option does not exist in any
  * of the possible option lists:
  *
