@@ -654,6 +654,8 @@ Options *parse_commandline(int argc, char *argv[])
             }
             break;
 
+        case PRESERVE_DRIVER_NAME_OPTION: op->preserve_driver = TRUE; break;
+        
         case DISABLE_SCF_OPTION: op->disable_scf = TRUE; break;
         
         case QUERY_GPU_INFO_OPTION: op->query_gpu_info = TRUE; break;
@@ -1034,7 +1036,7 @@ static XConfigPtr find_system_xconfig(Options *op)
     /* Sanitize the X config file */
     
     if (!xconfigSanitizeConfig(config, op->screen, &(op->gop))) {
-        xconfigFreeConfig(config);
+        xconfigFreeConfig(&config);
         return NULL;
     }
 

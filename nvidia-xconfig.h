@@ -77,7 +77,6 @@ typedef struct {
 #define MULTISAMPLE_COMPATIBILITY_BOOL_OPTION   22
 #define XVMC_USES_TEXTURES_BOOL_OPTION          23
 #define EXACT_MODE_TIMINGS_DVI_BOOL_OPTION      24
-#define ALLOW_DDCCI_BOOL_OPTION                 25
 #define LOAD_KERNEL_MODULE_BOOL_OPTION          26
 #define ADD_ARGB_GLX_VISUALS_BOOL_OPTION        27
 #define COMPOSITE_BOOL_OPTION                   28
@@ -91,9 +90,9 @@ typedef struct {
 #define USE_EVENTS_BOOL_OPTION                  36
 #define CONNECT_TO_ACPID_BOOL_OPTION            37
 #define ENABLE_ACPI_HOTKEYS_BOOL_OPTION         38
+#define MODE_DEBUG_BOOL_OPTION                  39
 
-
-#define XCONFIG_BOOL_OPTION_COUNT (ENABLE_ACPI_HOTKEYS_BOOL_OPTION + 1)
+#define XCONFIG_BOOL_OPTION_COUNT (MODE_DEBUG_BOOL_OPTION + 1)
 
 /* # of 32-bit variables needed to hold all the boolean options (bits) */
 #define XCONFIG_BOOL_OPTION_SLOTS  \
@@ -129,6 +128,7 @@ typedef struct __options {
     int only_one_screen;
     int disable_scf;
     int query_gpu_info;
+    int preserve_driver;
     
     /*
      * the option parser will set bits in boolean_options to indicate
@@ -259,7 +259,6 @@ int print_tree(Options *op, XConfigPtr config);
 
 /* options.c */
 
-void remove_option_from_list(XConfigOptionPtr *list, const char *name);
 void set_boolean_option(Options *op, const int c, const int boolval);
 void validate_composite(Options *op, XConfigPtr config);
 void update_options(Options *op, XConfigScreenPtr screen);

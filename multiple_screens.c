@@ -315,13 +315,12 @@ static int set_xinerama(int xinerama_enabled, XConfigPtr config)
     }
 
     if (config->flags->options) {
-        remove_option_from_list(&(config->flags->options), "Xinerama");
+        xconfigRemoveNamedOption(&(config->flags->options), "Xinerama", NULL);
     }
 
-    config->flags->options =
-        xconfigAddNewOption(config->flags->options,
-                            "Xinerama",
-                            (xinerama_enabled ? "1" : "0"));
+    xconfigAddNewOption(&config->flags->options,
+                        "Xinerama",
+                        (xinerama_enabled ? "1" : "0"));
 
     return TRUE;
 
@@ -493,8 +492,7 @@ static int enable_separate_x_screens(Options *op, XConfigPtr config,
      * new adjacencies
      */
     
-    xconfigFreeAdjacencyList(layout->adjacencies);
-    layout->adjacencies = NULL;
+    xconfigFreeAdjacencyList(&layout->adjacencies);
     
     create_adjacencies(op, config, layout);
 
@@ -620,7 +618,7 @@ static int disable_separate_x_screens(Options *op, XConfigPtr config,
                 }
                 next = screen->next;
                 screen->next = NULL;
-                xconfigFreeScreenList(screen);
+                xconfigFreeScreenList(&screen);
                 screen = next;
             } else {
                 
@@ -636,8 +634,7 @@ static int disable_separate_x_screens(Options *op, XConfigPtr config,
     
     /* wipe the existing adjacencies and recreate them */
     
-    xconfigFreeAdjacencyList(layout->adjacencies);
-    layout->adjacencies = NULL;
+    xconfigFreeAdjacencyList(&layout->adjacencies);
     
     create_adjacencies(op, config, layout);
 
@@ -829,17 +826,10 @@ static int enable_all_gpus(Options *op, XConfigPtr config,
     
     /* free all existing X screens, monitors, devices, and adjacencies */
     
-    xconfigFreeScreenList(config->screens);
-    config->screens = NULL;
-    
-    xconfigFreeDeviceList(config->devices);
-    config->devices = NULL;
-    
-    xconfigFreeMonitorList(config->monitors);
-    config->monitors = NULL;
-
-    xconfigFreeAdjacencyList(layout->adjacencies);
-    layout->adjacencies = NULL;
+    xconfigFreeScreenList(&config->screens);
+    xconfigFreeDeviceList(&config->devices);
+    xconfigFreeMonitorList(&config->monitors);
+    xconfigFreeAdjacencyList(&layout->adjacencies);
 
     /* add N new screens; this will also add device and monitor sections */
     
@@ -895,7 +885,7 @@ static void free_unused_devices(Options *op, XConfigPtr config)
             }
             next = device->next;
             device->next = NULL;
-            xconfigFreeDeviceList(device);
+            xconfigFreeDeviceList(&device);
             device = next;
         } else {
             prev = device;
@@ -939,7 +929,7 @@ static void free_unused_monitors(Options *op, XConfigPtr config)
             }
             next = monitor->next;
             monitor->next = NULL;
-            xconfigFreeMonitorList(monitor);
+            xconfigFreeMonitorList(&monitor);
             monitor = next;
         } else {
             prev = monitor;
@@ -961,13 +951,11 @@ static int only_one_screen(Options *op, XConfigPtr config,
     
     /* free all existing X screens after the first */
     
-    xconfigFreeScreenList(config->screens->next);
-    config->screens->next = NULL;
+    xconfigFreeScreenList(&config->screens->next);
     
     /* free all adjacencies */
     
-    xconfigFreeAdjacencyList(layout->adjacencies);
-    layout->adjacencies = NULL;
+    xconfigFreeAdjacencyList(&layout->adjacencies);
     
     /* add new adjacency */
     

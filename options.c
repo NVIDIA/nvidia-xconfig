@@ -65,7 +65,6 @@ static const NvidiaXConfigOption __options[] = {
     { MULTISAMPLE_COMPATIBILITY_BOOL_OPTION, FALSE, "MultisampleCompatibility" },
     { XVMC_USES_TEXTURES_BOOL_OPTION,        FALSE, "XvmcUsesTextures" },
     { EXACT_MODE_TIMINGS_DVI_BOOL_OPTION,    FALSE, "ExactModeTimingsDVI" },
-    { ALLOW_DDCCI_BOOL_OPTION,               FALSE, "AllowDDCCI" },
     { LOAD_KERNEL_MODULE_BOOL_OPTION,        FALSE, "LoadKernelModule" },
     { ADD_ARGB_GLX_VISUALS_BOOL_OPTION,      FALSE, "AddARGBGLXVisuals" },
     { DISABLE_GLX_ROOT_CLIPPING_BOOL_OPTION, FALSE, "DisableGLXRootClipping" },
@@ -78,6 +77,7 @@ static const NvidiaXConfigOption __options[] = {
     { USE_EVENTS_BOOL_OPTION,                FALSE, "UseEvents" },
     { CONNECT_TO_ACPID_BOOL_OPTION,          FALSE, "ConnectToAcpid" },
     { ENABLE_ACPI_HOTKEYS_BOOL_OPTION,       FALSE, "EnableACPIHotkeys" },
+    { MODE_DEBUG_BOOL_OPTION,                FALSE, "ModeDebug" },
     { 0,                                     FALSE, NULL },
 };
 
@@ -98,21 +98,6 @@ static const NvidiaXConfigOption *get_option(const int n)
     return NULL;
     
 } /* get_option() */
-
-
-
-/*
- * remove_option_from_list() - remove the option with the given name
- * from the list
- */
-
-void remove_option_from_list(XConfigOptionPtr *list, const char *name)
-{
-    XConfigOptionPtr opt = xconfigFindOption(*list, name);
-    if (opt) {
-        *list = xconfigRemoveOption(*list, opt);
-    }
-} /* remove_option_from_list() */
 
 
 
@@ -252,15 +237,15 @@ static void remove_option(XConfigScreenPtr screen, const char *name)
     if (!screen) return;
 
     if (screen->device) {
-        remove_option_from_list(&screen->device->options, name);
+        xconfigRemoveNamedOption(&screen->device->options, name, NULL);
     }
     if (screen->monitor) {
-        remove_option_from_list(&screen->monitor->options, name);
+        xconfigRemoveNamedOption(&screen->monitor->options, name, NULL);
     }
-    remove_option_from_list(&screen->options, name);
+    xconfigRemoveNamedOption(&screen->options, name, NULL);
     
     for (display = screen->displays; display; display = display->next) {
-        remove_option_from_list(&display->options, name);
+        xconfigRemoveNamedOption(&display->options, name, NULL);
     }
 } /* remove_option() */
 
@@ -315,7 +300,8 @@ static void set_option_value(XConfigScreenPtr screen,
 
     /* then, add the option to the screen's option list */
 
-    screen->options = xconfigAddNewOption(screen->options, name, val);
+    xconfigAddNewOption(&screen->options, name, val);
+
 } /* set_option_value() */
 
 
@@ -505,12 +491,10 @@ static void update_display_options(Options *op, XConfigScreenPtr screen)
         }
         
         for (i = 0; i < op->remove_modes.n; i++) {
-            display->modes = xconfigRemoveMode(display->modes,
-                                               op->remove_modes.t[i]);
+            xconfigRemoveMode(&display->modes, op->remove_modes.t[i]);
         }
         for (i = 0; i < op->add_modes.n; i++) {
-            display->modes = xconfigAddMode(display->modes,
-                                            op->add_modes.t[i]);
+            xconfigAddMode(&display->modes, op->add_modes.t[i]);
         }
         if (op->add_modes_list.n) {
             int mode_list_size = op->add_modes_list.n;
@@ -524,8 +508,8 @@ static void update_display_options(Options *op, XConfigScreenPtr screen)
              */
 
             for (i = 0; i < op->add_modes_list.n; i++) {
-                display->modes = xconfigAddMode(display->modes,
-                                      op->add_modes_list.t[mode_list_size-i-1]);
+                xconfigAddMode(&display->modes,
+                               op->add_modes_list.t[mode_list_size-i-1]);
             }
         }
         

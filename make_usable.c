@@ -36,7 +36,7 @@
 
 
 static void ensure_module_loaded(XConfigPtr config, char *name);
-static int update_device(XConfigPtr config, XConfigDevicePtr device);
+static int update_device(Options *op, XConfigPtr config, XConfigDevicePtr device);
 static void update_depth(Options *op, XConfigScreenPtr screen);
 static void update_display(Options *op, XConfigScreenPtr screen);
 
@@ -53,10 +53,9 @@ static void ensure_module_loaded(XConfigPtr config, char *name) {
     }
 
     if (!found) {
-        config->modules->loads =
-            xconfigAddNewLoadDirective(config->modules->loads,
-                                       name, XCONFIG_LOAD_MODULE,
-                                       NULL, FALSE);
+        xconfigAddNewLoadDirective(&config->modules->loads,
+                                   name, XCONFIG_LOAD_MODULE,
+                                   NULL, FALSE);
     }
 } /* ensure_module_loaded */
 
@@ -93,11 +92,9 @@ int update_modules(XConfigPtr config)
     while (load) {
         next = load->next;
         if (xconfigNameCompare("GLcore", load->name) == 0) {
-            config->modules->loads =
-                xconfigRemoveLoadDirective(config->modules->loads, load);
+            xconfigRemoveLoadDirective(&config->modules->loads, load);
         } else if (xconfigNameCompare("dri", load->name) == 0) {
-            config->modules->loads =
-                xconfigRemoveLoadDirective(config->modules->loads, load);
+            xconfigRemoveLoadDirective(&config->modules->loads, load);
         }
         load = next;
     }
@@ -121,7 +118,7 @@ int update_screen(Options *op, XConfigPtr config, XConfigScreenPtr screen)
     
     update_display(op, screen);
     update_depth(op, screen);
-    update_device(config, screen->device);
+    update_device(op, config, screen->device);
     update_options(op, screen);
     
     return TRUE;
@@ -191,7 +188,8 @@ int update_extensions(Options *op, XConfigPtr config)
 
         /* remove any existing composite extension option */
         
-        remove_option_from_list(&(config->extensions->options), "Composite");
+        xconfigRemoveNamedOption(&(config->extensions->options), "Composite",
+                                 NULL);
 
         /* determine the value to set for the Composite option */
 
@@ -201,9 +199,7 @@ int update_extensions(Options *op, XConfigPtr config)
         
         /* add the option */
 
-        config->extensions->options =
-            xconfigAddNewOption(config->extensions->options,
-                                "Composite", value);
+        xconfigAddNewOption(&config->extensions->options, "Composite", value);
     }
     
     return TRUE;
@@ -228,15 +224,13 @@ int update_server_flags(Options *op, XConfigPtr config)
     }
 
     if (config->flags->options) {
-        remove_option_from_list(&(config->flags->options),
-                                "HandleSpecialKeys");
+        xconfigRemoveNamedOption(&(config->flags->options),
+                                 "HandleSpecialKeys", NULL);
     }
 
     if (op->handle_special_keys != NV_DISABLE_STRING_OPTION) {
-        config->flags->options =
-            xconfigAddNewOption(config->flags->options,
-                                "HandleSpecialKeys",
-                                op->handle_special_keys);
+        xconfigAddNewOption(&config->flags->options, "HandleSpecialKeys",
+                            op->handle_special_keys);
     }
 
     return TRUE;
@@ -255,9 +249,9 @@ int update_server_flags(Options *op, XConfigPtr config)
  * the NVIDIA X driver.
  */
 
-static int update_device(XConfigPtr config, XConfigDevicePtr device)
+static int update_device(Options *op, XConfigPtr config, XConfigDevicePtr device)
 {
-    char *identifier, *vendor, *comment, *board, *busid;
+    char *identifier, *vendor, *comment, *board, *busid, *driver;
     int screen;
     XConfigDevicePtr next;
     XConfigOptionPtr options;
@@ -270,6 +264,7 @@ static int update_device(XConfigPtr config, XConfigDevicePtr device)
     screen = device->screen;
     board = device->board;
     busid = device->busid;
+    driver = device->driver;
     
     memset(device, 0, sizeof(XConfigDeviceRec));
 
@@ -285,8 +280,12 @@ static int update_device(XConfigPtr config, XConfigDevicePtr device)
     device->chipid = -1;
     device->chiprev = -1;
     device->irq = -1;
-    
-    device->driver = "nvidia";
+
+    if (op->preserve_driver) {
+        device->driver = driver;
+    } else {
+        device->driver = "nvidia";
+    }
     
     /*
      * XXX do we really want to preserve the BusID line?  Let's only
@@ -364,7 +363,7 @@ static void update_display(Options *op, XConfigScreenPtr screen)
         XConfigDisplayPtr display;
         XConfigModePtr mode = NULL;
         
-        mode = xconfigAddMode(mode, "nvidia-auto-select");
+        xconfigAddMode(&mode, "nvidia-auto-select");
         
         display = nvalloc(sizeof(XConfigDisplayRec));
         display->depth = screen->defaultdepth;
@@ -376,6 +375,7 @@ static void update_display(Options *op, XConfigScreenPtr screen)
         
         screen->displays = display;
     }
+
 } /* update_display() */
 
 

@@ -202,6 +202,18 @@ NvCfgBool nvCfgGetDisplayDevices(NvCfgDeviceHandle handle,
                                  unsigned int *display_device_mask);
 
 
+
+/* nvCfgGetSupportedDisplayDevices() - get all supported display devices,
+ * not only connected ones. Interpretation of display_device_mask 
+ * parameter is the same as for nvCfgGetDisplayDevices() call.
+ * On success, NVCFG_TRUE will be returned and display_device_mask will be
+ * assigned.  On failure, NVCFG_FALSE will be returned.
+ */
+
+NvCfgBool nvCfgGetSupportedDisplayDevices(NvCfgDeviceHandle handle,
+                                 unsigned int *display_device_mask);
+
+
 /*
  * nvCfgGetEDIDData() - return an allocated byte array containing the
  * EDID for the specified display device, if any.  On success,

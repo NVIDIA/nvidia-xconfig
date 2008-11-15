@@ -44,6 +44,7 @@
 #define COOL_BITS_OPTION                    33
 #define ACPID_SOCKET_PATH_OPTION            34
 #define HANDLE_SPECIAL_KEYS_OPTION          35
+#define PRESERVE_DRIVER_NAME_OPTION         36
 
 /*
  * To add a boolean option to nvidia-xconfig:
@@ -134,10 +135,6 @@ static const NVGetoptOption __options[] = {
       "Enables or disables support for OpenGL rendering into 32-bit ARGB "
       "windows and pixmaps." },
 
-    { "allow-ddcci", XCONFIG_BOOL_VAL(ALLOW_DDCCI_BOOL_OPTION),
-      NVGETOPT_IS_BOOLEAN,  NULL, "Enables or disables DDC/CI support in the "
-      "NV-CONTROL X extension." },
-
     { "allow-dfp-stereo", XCONFIG_BOOL_VAL(ALLOW_DFP_STEREO_BOOL_OPTION),
       NVGETOPT_IS_BOOLEAN, NULL,
       "Enable or disable the \"AllowDFPStereo\" X configuration option." },
@@ -223,6 +220,11 @@ static const NVGetoptOption __options[] = {
     { "dynamic-twinview", XCONFIG_BOOL_VAL(DYNAMIC_TWINVIEW_BOOL_OPTION),
       NVGETOPT_IS_BOOLEAN, NULL,
       "Enable or disable support for dynamically configuring TwinView." },
+    
+    { "preserve-driver-name", PRESERVE_DRIVER_NAME_OPTION, 0, NULL,
+      "By default nvidia-xconfig changes the  display  driver  to \"nvidia\" "
+      "for all configured X screens; this option preserves the existing driver "
+      "name of each X screen." },
     
     { "enable-acpi-hotkeys",
       XCONFIG_BOOL_VAL(ENABLE_ACPI_HOTKEYS_BOOL_OPTION), 
@@ -334,6 +336,12 @@ static const NVGetoptOption __options[] = {
     { "mode",
       MODE_OPTION, NVGETOPT_IS_BOOLEAN | NVGETOPT_STRING_ARGUMENT, NULL,
       "Add the specified mode to the mode list." },
+
+    { "mode-debug", XCONFIG_BOOL_VAL(MODE_DEBUG_BOOL_OPTION),
+      NVGETOPT_IS_BOOLEAN, NULL,
+      "Enable or disable the \"ModeDebug\" X configuration option; when "
+      "enabled, this option causes the X driver to print verbose details "
+      "about mode validation to the X log file." },
 
     { "mode-list", MODE_LIST_OPTION, NVGETOPT_STRING_ARGUMENT, "MODELIST",
       "Remove all existing modes from the X configuration's modelist and "
