@@ -499,7 +499,7 @@ static void update_display_options(Options *op, XConfigScreenPtr screen)
         if (op->add_modes_list.n) {
             int mode_list_size = op->add_modes_list.n;
 
-            xconfigFreeModeList(display->modes);
+            xconfigFreeModeList(&display->modes);
             display->modes = NULL;
 
             /*
