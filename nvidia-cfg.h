@@ -42,12 +42,26 @@
 
 /*
  * NvCfgDevice - data structure containing bus:slot pairs
+ *
+ * This is deprecated; please use NvCfgPciDevice instead
  */
 
 typedef struct {
     int bus;
     int slot;
 } NvCfgDevice;
+
+
+/*
+ * NvCfgPciDevice - data structure identifying a device on the PCI bus
+ */
+
+typedef struct {
+    int domain;
+    int bus;
+    int slot;
+    int function;
+} NvCfgPciDevice;
 
 
 
@@ -137,9 +151,26 @@ typedef enum {
  * containing the bus address of each NVIDIA PCI VGA adapter.  When
  * the caller is done, it should free the devs array.  On failure,
  * NVCFG_FALSE will be returned.
+ *
+ * This is deprecated; please use nvCfgGetPciDevices() instead.
  */
 
 NvCfgBool nvCfgGetDevices(int *n, NvCfgDevice **devs);
+
+
+
+/*
+ * nvCfgGetPciDevices() - retrieve an array of NvCfgPciDevice's
+ * indicating what PCI devices are present on the system.  On success,
+ * NVCFG_TRUE will be returned, n will contain the number of NVIDIA
+ * PCI graphics devices present in the system, and devs will be an
+ * allocated array containing the PCI domain:bus:slot:function
+ * address of each NVIDIA PCI graphics device.  When the caller is
+ * done, it should free the devs array.  On failure, NVCFG_FALSE will
+ * be returned.
+ */
+
+NvCfgBool nvCfgGetPciDevices(int *n, NvCfgPciDevice **devs);
 
 
 
@@ -148,9 +179,37 @@ NvCfgBool nvCfgGetDevices(int *n, NvCfgDevice **devs);
  * identified by the bus:slot PCI address.  On success, NVCFG_TRUE
  * will be returned and handle be assigned.  On failure, NVCFG_FALSE
  * will be returned.
+ *
+ * This is deprecated; please use nvCfgOpenPciDevice() instead.
  */
 
 NvCfgBool nvCfgOpenDevice(int bus, int slot, NvCfgDeviceHandle *handle);
+
+
+
+/*
+ * nvCfgOpenPciDevice() - open a connection to the NVIDIA device
+ * identified by the domain:bus:slot:function PCI address.  On
+ * success, NVCFG_TRUE will be returned and handle will be assigned.
+ * On failure, NVCFG_FALSE will be returned.
+ */
+
+NvCfgBool nvCfgOpenPciDevice(int domain, int bus, int device, int function,
+                             NvCfgDeviceHandle *handle);
+
+
+
+/*
+ * nvCfgOpenAllPciDevices() - open a connection to each NVIDIA device
+ * in the system.  On success, NVCFG_TRUE will be returned, n will be
+ * assigned the number of NVIDIA devices in the system, and handles
+ * will be assigned with an allocated array of NvCfgDeviceHandles;
+ * each element in the array is a handle to one of the NVIDIA devices
+ * in the system.  The caller should free the handles array when no
+ * longer needed.  On failure, NVCFG_FALSE will be returned.
+ */
+
+NvCfgBool nvCfgOpenAllPciDevices(int *n, NvCfgDeviceHandle **handles);
 
 
 
@@ -160,6 +219,15 @@ NvCfgBool nvCfgOpenDevice(int bus, int slot, NvCfgDeviceHandle *handle);
  */
 
 NvCfgBool nvCfgCloseDevice(NvCfgDeviceHandle handle);
+
+
+
+/*
+ * nvCfgCloseAllPciDevices() - close all the NVIDIA device connections
+ * opened by a previous call to nvCfgOpenAllPciDevices().
+ */
+
+NvCfgBool nvCfgCloseAllPciDevices(void);
 
 
 
