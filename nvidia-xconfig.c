@@ -451,7 +451,7 @@ void parse_commandline(Options *op, int argc, char *argv[])
                 break;
             }
 
-            if (intval < 1 || intval > 6) {
+            if (intval < 0 || intval > 9) {
                 fprintf(stderr, "\n");
                 fprintf(stderr, "Invalid stereo: %d.\n", intval);
                 fprintf(stderr, "\n");
