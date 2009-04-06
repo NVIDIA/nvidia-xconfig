@@ -50,7 +50,6 @@ static const NvidiaXConfigOption __options[] = {
     { OVERLAY_DEFAULT_VISUAL_BOOL_OPTION,    FALSE, "OverlayDefaultVisual" },
     { NO_BANDWIDTH_TEST_BOOL_OPTION,         TRUE,  "NoBandWidthTest" },
     { NO_POWER_CONNECTOR_CHECK_BOOL_OPTION,  TRUE,  "NoPowerConnectorCheck" },
-    { ALLOW_DFP_STEREO_BOOL_OPTION,          FALSE, "AllowDFPStereo" },
     { ALLOW_GLX_WITH_COMPOSITE_BOOL_OPTION,  FALSE, "AllowGLXWithComposite" },
     { RANDR_ROTATION_BOOL_OPTION,            FALSE, "RandRRotation" },
     { TWINVIEW_BOOL_OPTION,                  FALSE, "TwinView" },

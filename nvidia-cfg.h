@@ -318,4 +318,15 @@ NvCfgBool nvCfgGetEDID(NvCfgDeviceHandle handle,
 NvCfgBool nvCfgIsPrimaryDevice(NvCfgDeviceHandle handle,
                                NvCfgBool *is_primary_device);
 
+/*
+ * nvCfgGetTeslaSerialNumbers() - returns an allocated array of strings 
+ * containing the serial numbers of all NVIDIA Tesla/QuadroPlex devices
+ * connected to the host, followed by a NULL character. It is the caller's
+ * responsibility to free the returned array of strings. On success, 
+ * NVCFG_TRUE will be returned and serials will be assigned.  On failure,
+ * NVCFG_FALSE will be returned.
+ */
+
+NvCfgBool nvCfgGetTeslaSerialNumbers(char ***serials);
+
 #endif /* __NVIDIA_CFG__ */

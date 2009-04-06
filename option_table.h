@@ -135,10 +135,6 @@ static const NVGetoptOption __options[] = {
       "Enables or disables support for OpenGL rendering into 32-bit ARGB "
       "windows and pixmaps." },
 
-    { "allow-dfp-stereo", XCONFIG_BOOL_VAL(ALLOW_DFP_STEREO_BOOL_OPTION),
-      NVGETOPT_IS_BOOLEAN, NULL,
-      "Enable or disable the \"AllowDFPStereo\" X configuration option." },
-
     { "allow-glx-with-composite",
       XCONFIG_BOOL_VAL(ALLOW_GLX_WITH_COMPOSITE_BOOL_OPTION),
       NVGETOPT_IS_BOOLEAN, NULL,
@@ -479,8 +475,7 @@ static const NVGetoptOption __options[] = {
       "Enable or disable the stereo mode.  Valid values for [STEREO] are: 0 "
       "(Disabled), 1 (DCC glasses), 2 (Blueline glasses), 3 (Onboard stereo), "
       "4 (TwinView clone mode stereo), 5 (SeeReal digital flat panel), 6 "
-      "(Sharp3D digital flat panel), 7 (Arisawa/Hyundai/Zalman/Pavione/Miracube), "
-      "8 (3D DLP), 9 (3D DLP)." },
+      "(Sharp3D digital flat panel), 7 (Arisawa/Hyundai/Zalman/Pavione/Miracube)." },
 
     { "tv-standard", TV_STANDARD_OPTION,
       NVGETOPT_STRING_ARGUMENT | NVGETOPT_ALLOW_DISABLE, "TV-STANDARD",
