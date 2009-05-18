@@ -314,12 +314,6 @@ static const NVGetoptOption __options[] = {
       "not specified, the first Server Layout in the X configuration "
       "file is used." },
 
-    { "load-kernel-module",
-      XCONFIG_BOOL_VAL(LOAD_KERNEL_MODULE_BOOL_OPTION),
-      NVGETOPT_IS_BOOLEAN, NULL,
-      "Allow or disallow NVIDIA Linux X driver module to load the NVIDIA "
-      "Linux kernel module automatically."},
-
     { "logo",
       XCONFIG_BOOL_VAL(NOLOGO_BOOL_OPTION), NVGETOPT_IS_BOOLEAN, NULL,
       "Disable or enable the \"NoLogo\" X configuration option." },

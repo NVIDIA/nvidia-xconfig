@@ -64,7 +64,6 @@ static const NvidiaXConfigOption __options[] = {
     { MULTISAMPLE_COMPATIBILITY_BOOL_OPTION, FALSE, "MultisampleCompatibility" },
     { XVMC_USES_TEXTURES_BOOL_OPTION,        FALSE, "XvmcUsesTextures" },
     { EXACT_MODE_TIMINGS_DVI_BOOL_OPTION,    FALSE, "ExactModeTimingsDVI" },
-    { LOAD_KERNEL_MODULE_BOOL_OPTION,        FALSE, "LoadKernelModule" },
     { ADD_ARGB_GLX_VISUALS_BOOL_OPTION,      FALSE, "AddARGBGLXVisuals" },
     { DISABLE_GLX_ROOT_CLIPPING_BOOL_OPTION, FALSE, "DisableGLXRootClipping" },
     { USE_EDID_DPI_BOOL_OPTION,              FALSE, "UseEdidDpi" },
