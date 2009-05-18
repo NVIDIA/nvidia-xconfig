@@ -469,7 +469,8 @@ static const NVGetoptOption __options[] = {
       "Enable or disable the stereo mode.  Valid values for [STEREO] are: 0 "
       "(Disabled), 1 (DCC glasses), 2 (Blueline glasses), 3 (Onboard stereo), "
       "4 (TwinView clone mode stereo), 5 (SeeReal digital flat panel), 6 "
-      "(Sharp3D digital flat panel), 7 (Arisawa/Hyundai/Zalman/Pavione/Miracube)." },
+      "(Sharp3D digital flat panel), 7 (Arisawa/Hyundai/Zalman/Pavione/Miracube), "
+      "8 (3D DLP), 9 (3D DLP INV)." },
 
     { "tv-standard", TV_STANDARD_OPTION,
       NVGETOPT_STRING_ARGUMENT | NVGETOPT_ALLOW_DISABLE, "TV-STANDARD",
