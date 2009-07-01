@@ -164,8 +164,6 @@ typedef struct __options {
     TextRows add_modes;
     TextRows remove_modes;
 
-    int supports_extension_section;
-
     GenerateOptions gop;
 
 } Options;
