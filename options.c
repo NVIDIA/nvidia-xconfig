@@ -222,7 +222,7 @@ void validate_composite(Options *op, XConfigPtr config)
      */
     
     if (disable_composite &&
-        (op->supports_extension_section ||
+        (op->gop.supports_extension_section ||
          config->extensions ||
          GET_BOOL_OPTION(op->boolean_options, COMPOSITE_BOOL_OPTION))) {
         

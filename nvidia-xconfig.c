@@ -193,59 +193,17 @@ static void print_help(int advanced)
 
 
 /*
- * get_default_project_root() - scan some common directories for the X
- * project root
- *
- * Users of this information should be careful to account for the
- * modular layout.
- */
-
-char *get_default_project_root(void)
-{
-    char *paths[] = { "/usr/X11R6", "/usr/X11", NULL };
-    struct stat stat_buf;
-    int i;
-        
-    for (i = 0; paths[i]; i++) {
-        
-        if (stat(paths[i], &stat_buf) == -1) {
-            continue;
-        }
-    
-        if (S_ISDIR(stat_buf.st_mode)) {
-            return paths[i];
-        }
-    }
-    
-    /* default to "/usr/X11R6", I guess */
-
-    return paths[0];
-
-} /* get_default_project_root() */
-
-
-
-/*
  * parse_commandline() - malloc an Options structure, initialize it,
  * and fill in any pertinent data from the commandline arguments
  */
 
-Options *parse_commandline(int argc, char *argv[])
+void parse_commandline(Options *op, int argc, char *argv[])
 {
-    Options *op;
     int c, boolval;
     char *strval;
     int intval, disable;
     double doubleval;
 
-    op = (Options *) nvalloc(sizeof(Options));
-    
-    op->gop.x_project_root = get_default_project_root();
-    op->nvagp = -1;
-    op->transparent_index = -1;
-    op->stereo = -1;
-    op->cool_bits = -1;
-    op->tv_over_scan = -1.0;
     
     while (1) {
         
@@ -748,7 +706,42 @@ Options *parse_commandline(int argc, char *argv[])
     
     op->xconfig = tilde_expansion(op->xconfig);
     op->output_xconfig = tilde_expansion(op->output_xconfig);
+
+    return;
     
+ fail:
+    
+    fprintf(stderr, "\n");
+    fprintf(stderr, "Invalid commandline, please run `%s --help` "
+            "for usage information.\n", argv[0]);
+    fprintf(stderr, "\n");
+    exit(1);
+
+} /* parse_commandline() */
+
+
+
+/*
+ * load_default_options - malloc an Options structure
+ * and initialize it with default values.
+ *
+ */
+
+Options *load_default_options(void)
+{
+    Options *op;
+
+    op = (Options *) nvalloc(sizeof(Options));
+    if (!op) return NULL;
+    
+    op->nvagp = -1;
+    op->transparent_index = -1;
+    op->stereo = -1;
+    op->cool_bits = -1;
+    op->tv_over_scan = -1.0;
+
+    xconfigGenerateLoadDefaultOptions(&op->gop);
+
     /*
      * XXX save the option structure so that printing routines can
      * access it (and so that we don't have to carry the op everywhere
@@ -760,20 +753,9 @@ Options *parse_commandline(int argc, char *argv[])
         __op = op;
     }
     
-    return (op);
-    
- fail:
-    
-    fprintf(stderr, "\n");
-    fprintf(stderr, "Invalid commandline, please run `%s --help` "
-            "for usage information.\n", argv[0]);
-    fprintf(stderr, "\n");
-    exit(1);
-    
-    return NULL;
+    return op;
 
-} /* parse_commandline() */
-
+} /* load_default_options() */
 
 
 
@@ -1096,99 +1078,6 @@ int update_xconfig(Options *op, XConfigPtr config)
 
 
 /*
- * get_xserver_in_use() - try to determine which X server is in use
- * (XFree86, Xorg); also determine if the X server supports the
- * Extension section of the X config file; support for the "Extension"
- * section was added between X.Org 6.7 and 6.8.
- *
- * Some of the parsing here mimics what is done in the
- * check_for_modular_xorg() function in nvidia-installer
- */
-
-#define NV_LINE_LEN 1024
-#define EXTRA_PATH "/bin:/usr/bin:/sbin:/usr/sbin:/usr/X11R6/bin:/usr/bin/X11"
-#define VERSION_FORMAT "X Protocol Version %d, Revision %d, Release %d.%d"
-
-static void get_xserver_in_use(Options *op)
-{
-#if defined(NV_SUNOS)    
-
-    /*
-     * Solaris x86/x64 always uses X.Org 6.8 or higher, atleast as far
-     * as the NVIDIA X driver is concerned
-     */
-    
-    op->gop.xserver = X_IS_XORG;
-    op->supports_extension_section = TRUE;
-    
-#else
-    
-    FILE *stream = NULL;
-    int xserver = -1;
-    int dummy, len, release_major, release_minor;
-    char *cmd, *ptr, *ret;
-    
-    op->supports_extension_section = FALSE;
-    
-    /* run `X -version` with a PATH that hopefully includes the X binary */
-    
-    cmd = xconfigStrcat("PATH=", op->gop.x_project_root, ":",
-                        EXTRA_PATH, ":$PATH X -version 2>&1", NULL);
-    
-    if ((stream = popen(cmd, "r"))) {
-        char buf[NV_LINE_LEN];
-        
-        /* read in as much of the input as we can fit into the buffer */
-        
-        ptr = buf;
-
-        do {
-            len = NV_LINE_LEN - (ptr - buf) - 1;
-            ret = fgets(ptr, len, stream);
-            ptr = strchr(ptr, '\0');
-        } while ((ret != NULL) && (len > 1));
-        
-        /* Check if this is an XFree86 release */
-        
-        if (strstr(buf, "XFree86 Version") != NULL) {
-            xserver = X_IS_XF86;
-            op->supports_extension_section = FALSE;
-        } else {
-            xserver = X_IS_XORG;
-            if ((ptr = strstr(buf, "X Protocol Version")) != NULL &&
-                sscanf(ptr, VERSION_FORMAT, &dummy, &dummy,
-                       &release_major, &release_minor) == 4) {
-                
-                if ((release_major > 6) ||
-                    ((release_major == 6) && (release_minor >= 8))) {
-                    op->supports_extension_section = TRUE; 
-                }
-            }
-        } 
-    }
-    /* Close the popen()'ed stream. */
-    pclose(stream);
-    free(cmd);
-
-    if (xserver == -1) {
-        char *xorgpath;
-
-        xorgpath = xconfigStrcat(op->gop.x_project_root, "/bin/Xorg", NULL);
-        if (access(xorgpath, F_OK)==0) {
-            xserver = X_IS_XORG;
-        } else {
-            xserver = X_IS_XF86;
-        }
-        free(xorgpath);
-    }
-    
-    op->gop.xserver=xserver;
-#endif
-} /* get_xserver_in_use */
-
-
-
-/*
  * main program entry point
  *
  * The intended behavior is that, by default, nvidia-xconfig make the
@@ -1205,9 +1094,18 @@ int main(int argc, char *argv[])
     int ret;
     XConfigPtr config = NULL;
     
+
+    /* Load defaults */
+
+    op = load_default_options();
+    if (!op) {
+        fprintf(stderr, "\nOut of memory error.\n\n");
+        return 1;
+    }
+
     /* parse the commandline */
 
-    op = parse_commandline(argc, argv);
+    parse_commandline(op, argc, argv);
     
     /*
      * first, check for any of special options that cause us to exit
@@ -1259,7 +1157,7 @@ int main(int argc, char *argv[])
     /*
      * Get which X server is in use: Xorg or XFree86
      */
-    get_xserver_in_use(op);
+    xconfigGetXServerInUse(&op->gop);
     
     /*
      * if we failed to find the system's config file, generate a new
