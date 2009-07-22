@@ -378,7 +378,7 @@ static const NVGetoptOption __options[] = {
       "for this library (in case it cannot find it on its own).  This option "
       "should normally not be needed." },
 
-    { "only-one-x-screen", '1', 0,
+    { "only-one-x-screen", '1', 0, NULL,
       "Disable all but one X screen." },
 
     { "overlay",

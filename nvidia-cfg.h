@@ -1,4 +1,4 @@
-/* 
+/*
  * nvidia-cfg
  *
  * Copyright (c) 2004  NVIDIA Corp.  All rights reserved.
@@ -79,24 +79,24 @@ typedef struct {
      */
 
     char monitor_name[64];
-    
+
     /*
      * The horiz_sync and vert_refresh ranges are retrieved from an
      * EDID 1.x Monitor Descriptor, or an EDID 2.x Range Limit.
      */
-    
+
     unsigned int min_horiz_sync;    /* in Hz */
     unsigned int max_horiz_sync;    /* in Hz */
     unsigned int min_vert_refresh;  /* in Hz */
     unsigned int max_vert_refresh;  /* in Hz */
-    
+
     unsigned int max_pixel_clock;   /* in kHz */
 
     /*
      * The max xres, yres, and refresh, if not 0, are taken from the
      * largest mode in the EDID.
      */
-    
+
     unsigned int max_xres;          /* in pixels */
     unsigned int max_yres;          /* in pixels */
     unsigned int max_refresh;       /* in Hz */
@@ -106,19 +106,19 @@ typedef struct {
      * specified by the EDID as the preferred timing mode of the
      * display device.
      */
-    
+
     unsigned int preferred_xres;    /* in pixels */
     unsigned int preferred_yres;    /* in pixels */
     unsigned int preferred_refresh; /* in Hz */
 
     /*
      * the physical width and height, if not 0, are the physical
-     * dimensions of the display device.  
+     * dimensions of the display device.
      */
-    
+
     unsigned int physical_width;    /* in mm */
     unsigned int physical_height;   /* in mm */
-    
+
 } NvCfgDisplayDeviceInformation;
 
 
@@ -272,7 +272,7 @@ NvCfgBool nvCfgGetDisplayDevices(NvCfgDeviceHandle handle,
 
 
 /* nvCfgGetSupportedDisplayDevices() - get all supported display devices,
- * not only connected ones. Interpretation of display_device_mask 
+ * not only connected ones. Interpretation of display_device_mask
  * parameter is the same as for nvCfgGetDisplayDevices() call.
  * On success, NVCFG_TRUE will be returned and display_device_mask will be
  * assigned.  On failure, NVCFG_FALSE will be returned.
