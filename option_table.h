@@ -147,9 +147,10 @@ static const NVGetoptOption __options[] = {
 
     { "cool-bits", COOL_BITS_OPTION,
       NVGETOPT_INTEGER_ARGUMENT | NVGETOPT_ALLOW_DISABLE, NULL,
-      "Enable or disable the \"Coolbits\" X configuration option. Setting this "
+      "Enable or disable the \"Coolbits\" X configuration option.  Setting this "
       "option will enable support in the NV-CONTROL X extension for manipulating "
-      "GPU clock settings. Default value is 0.\n"
+      "GPU clock and GPU fan control settings. Default value is 0.  For fan\n"
+      "control set it to 4.  " 
       "WARNING: this may cause system damage and void warranties." },
 
     { "composite",
