@@ -38,7 +38,7 @@ static int enable_separate_x_screens(Options *op, XConfigPtr config,
 static int disable_separate_x_screens(Options *op, XConfigPtr config,
                                       XConfigLayoutPtr layout);
 
-static int set_xinerama(int xinerama_enabled, XConfigPtr config);
+static int set_xinerama(int xinerama_enabled, XConfigLayoutPtr layout);
 
 static XConfigDisplayPtr clone_display_list(XConfigDisplayPtr display0);
 static XConfigDevicePtr clone_device(XConfigDevicePtr device0);
@@ -90,7 +90,7 @@ int apply_multi_screen_options(Options *op, XConfigPtr config,
                         XINERAMA_BOOL_OPTION)) {
         if (!set_xinerama(GET_BOOL_OPTION(op->boolean_option_values,
                                           XINERAMA_BOOL_OPTION),
-                          config)) return FALSE;
+                          layout)) return FALSE;
     }
     
     if (op->only_one_screen) {
@@ -301,24 +301,13 @@ void free_devices(DevicesPtr pDevices)
 
 
 /*
- * set_xinerama() - This makes sure there is a ServerFlags
+ * set_xinerama() - This makes sure there is a ServerLayout
  * section and sets the "Xinerama" option
  */
 
-static int set_xinerama(int xinerama_enabled, XConfigPtr config)
+static int set_xinerama(int xinerama_enabled, XConfigLayoutPtr layout)
 {
-    if (!config->flags) {
-        config->flags = nvalloc(sizeof(XConfigFlagsRec));
-        if ( !config->flags ) {
-            return FALSE;
-        }
-    }
-
-    if (config->flags->options) {
-        xconfigRemoveNamedOption(&(config->flags->options), "Xinerama", NULL);
-    }
-
-    xconfigAddNewOption(&config->flags->options,
+    xconfigAddNewOption(&(layout->options),
                         "Xinerama",
                         (xinerama_enabled ? "1" : "0"));
 
