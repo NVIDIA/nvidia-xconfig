@@ -745,6 +745,13 @@ void update_options(Options *op, XConfigScreenPtr screen)
         }
     }
 
+    /* add the ConnectedMonitor option */
 
-  
+    if (op->connected_monitor) {
+        remove_option(screen, "ConnectedMonitor");
+        if (op->connected_monitor != NV_DISABLE_STRING_OPTION) {
+            set_option_value(screen, "ConnectedMonitor", op->connected_monitor);
+        }
+    }
+
 } /* update_options() */

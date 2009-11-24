@@ -164,6 +164,7 @@ typedef struct __options {
     char *tv_out_format;
     char *acpid_socket_path;
     char *handle_special_keys;
+    char *connected_monitor;
 
     double tv_over_scan;
 

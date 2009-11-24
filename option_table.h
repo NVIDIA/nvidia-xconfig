@@ -45,6 +45,7 @@
 #define ACPID_SOCKET_PATH_OPTION            34
 #define HANDLE_SPECIAL_KEYS_OPTION          35
 #define PRESERVE_DRIVER_NAME_OPTION         36
+#define CONNECTED_MONITOR_OPTION            37
 
 /*
  * To add a boolean option to nvidia-xconfig:
@@ -156,6 +157,12 @@ static const NVGetoptOption __options[] = {
     { "composite",
       XCONFIG_BOOL_VAL(COMPOSITE_BOOL_OPTION), NVGETOPT_IS_BOOLEAN, NULL,
       "Enable or disable the \"Composite\" X extension." },
+
+    { "connected-monitor", CONNECTED_MONITOR_OPTION,
+      NVGETOPT_STRING_ARGUMENT | NVGETOPT_ALLOW_DISABLE, "CONNECTED-MONITOR",
+      "Enable or disable the  \"ConnectedMonitor\" X configuration option; "
+      "setting this option forces the X driver to behave as if the specified "
+      "display devices are connected to the GPU." },
 
     { "connect-to-acpid",
       XCONFIG_BOOL_VAL(CONNECT_TO_ACPID_BOOL_OPTION), NVGETOPT_IS_BOOLEAN, NULL,
@@ -468,10 +475,10 @@ static const NVGetoptOption __options[] = {
     { "stereo", STEREO_OPTION,
       NVGETOPT_INTEGER_ARGUMENT | NVGETOPT_ALLOW_DISABLE, NULL,
       "Enable or disable the stereo mode.  Valid values for [STEREO] are: 0 "
-      "(Disabled), 1 (DCC glasses), 2 (Blueline glasses), 3 (Onboard stereo), "
+      "(Disabled), 1 (DDC glasses), 2 (Blueline glasses), 3 (Onboard stereo), "
       "4 (TwinView clone mode stereo), 5 (SeeReal digital flat panel), 6 "
       "(Sharp3D digital flat panel), 7 (Arisawa/Hyundai/Zalman/Pavione/Miracube), "
-      "8 (3D DLP), 9 (3D DLP INV)." },
+      "8 (3D DLP), 9 (3D DLP INV), 10 (NVIDIA 3D VISION)." },
 
     { "tv-standard", TV_STANDARD_OPTION,
       NVGETOPT_STRING_ARGUMENT | NVGETOPT_ALLOW_DISABLE, "TV-STANDARD",

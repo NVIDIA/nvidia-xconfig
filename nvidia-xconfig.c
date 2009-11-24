@@ -451,7 +451,7 @@ void parse_commandline(Options *op, int argc, char *argv[])
                 break;
             }
 
-            if (intval < 0 || intval > 9) {
+            if (intval < 0 || intval > 10) {
                 fprintf(stderr, "\n");
                 fprintf(stderr, "Invalid stereo: %d.\n", intval);
                 fprintf(stderr, "\n");
@@ -698,7 +698,12 @@ void parse_commandline(Options *op, int argc, char *argv[])
         case CUSTOM_EDID_OPTION:
             op->custom_edid = disable ? NV_DISABLE_STRING_OPTION : strval;
             break;
-          
+
+        case CONNECTED_MONITOR_OPTION:
+            op->connected_monitor =
+                disable ? NV_DISABLE_STRING_OPTION : strval;
+            break;
+
         default:
             goto fail;
         }
