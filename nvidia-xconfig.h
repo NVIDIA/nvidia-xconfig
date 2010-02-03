@@ -165,6 +165,7 @@ typedef struct __options {
     char *acpid_socket_path;
     char *handle_special_keys;
     char *connected_monitor;
+    char *registry_dwords;
 
     double tv_over_scan;
 

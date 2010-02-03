@@ -754,4 +754,11 @@ void update_options(Options *op, XConfigScreenPtr screen)
         }
     }
 
+    if (op->registry_dwords) {
+        remove_option(screen, "RegistryDwords");
+        if (op->registry_dwords != NV_DISABLE_STRING_OPTION) {
+            set_option_value(screen, "RegistryDwords", op->registry_dwords);
+        }
+    }
+
 } /* update_options() */

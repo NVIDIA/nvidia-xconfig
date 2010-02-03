@@ -46,6 +46,7 @@
 #define HANDLE_SPECIAL_KEYS_OPTION          35
 #define PRESERVE_DRIVER_NAME_OPTION         36
 #define CONNECTED_MONITOR_OPTION            37
+#define REGISTRY_DWORDS_OPTION              38
 
 /*
  * To add a boolean option to nvidia-xconfig:
@@ -431,6 +432,10 @@ static const NVGetoptOption __options[] = {
     { "randr-rotation",
       XCONFIG_BOOL_VAL(RANDR_ROTATION_BOOL_OPTION), NVGETOPT_IS_BOOLEAN, NULL,
       "Enable or disable the \"RandRRotation\" X configuration option." },
+
+    { "registry-dwords", REGISTRY_DWORDS_OPTION,
+      NVGETOPT_STRING_ARGUMENT | NVGETOPT_ALLOW_DISABLE, NULL,
+      "Enable or disable the \"RegistryDwords\" X configuration option." },
 
     { "render-accel",
       XCONFIG_BOOL_VAL(RENDER_ACCEL_BOOL_OPTION), NVGETOPT_IS_BOOLEAN, NULL,

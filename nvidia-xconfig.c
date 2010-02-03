@@ -704,6 +704,10 @@ void parse_commandline(Options *op, int argc, char *argv[])
                 disable ? NV_DISABLE_STRING_OPTION : strval;
             break;
 
+        case REGISTRY_DWORDS_OPTION:
+            op->registry_dwords = disable ? NV_DISABLE_STRING_OPTION : strval;
+            break;
+
         default:
             goto fail;
         }
