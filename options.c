@@ -50,6 +50,7 @@ static const NvidiaXConfigOption __options[] = {
     { OVERLAY_DEFAULT_VISUAL_BOOL_OPTION,    FALSE, "OverlayDefaultVisual" },
     { NO_BANDWIDTH_TEST_BOOL_OPTION,         TRUE,  "NoBandWidthTest" },
     { NO_POWER_CONNECTOR_CHECK_BOOL_OPTION,  TRUE,  "NoPowerConnectorCheck" },
+    { THERMAL_CONFIGURATION_CHECK_BOOL_OPTION, FALSE, "ThermalConfigurationCheck" },
     { ALLOW_GLX_WITH_COMPOSITE_BOOL_OPTION,  FALSE, "AllowGLXWithComposite" },
     { RANDR_ROTATION_BOOL_OPTION,            FALSE, "RandRRotation" },
     { TWINVIEW_BOOL_OPTION,                  FALSE, "TwinView" },
@@ -254,7 +255,8 @@ static void remove_option(XConfigScreenPtr screen, const char *name)
  * name, searching all the option lists associated with this screen
  */
 
-XConfigOptionPtr get_screen_option(XConfigScreenPtr screen, const char *name)
+static XConfigOptionPtr get_screen_option(XConfigScreenPtr screen,
+                                          const char *name)
 {
     XConfigDisplayPtr display;
     XConfigOptionPtr opt;
@@ -408,7 +410,7 @@ static char *find_metamode_offset(char *string, char **end)
 static int remove_metamode_offsets(XConfigScreenPtr screen,
                                    char **old_metamodes, char **new_metamodes)
 {
-    char *start, *end;
+    char *start, *end = NULL;
     char *new_string;
     char *n, *o, *tmp;
 
@@ -621,6 +623,15 @@ void update_options(Options *op, XConfigScreenPtr screen)
         remove_option(screen, "SLI");
         if (op->sli != NV_DISABLE_STRING_OPTION) {
             set_option_value(screen, "SLI", op->sli);
+        }
+    }
+
+    /* add the metamodes option */
+
+    if (op->metamodes_str) {
+        remove_option(screen, "MetaModes");
+        if (op->metamodes_str != NV_DISABLE_STRING_OPTION) {
+            set_option_value(screen, "MetaModes", op->metamodes_str);
         }
     }
 

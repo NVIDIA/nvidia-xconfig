@@ -41,6 +41,24 @@
  * (--) NVIDIA(0):
  * (--) NVIDIA(0): --- End of EDID for ViewSonic VPD150 (DFP-1) ---
  *
+ * The added possibilities for the X log are, that the log file contains
+ * timestamps along with the raw EDID byte dump like this:
+ *
+ * (--) Dec 29 15:27:13 NVIDIA(0):   00 ff ff ff ff ff ff 00  5a 63 47 4b fc 27 00 00
+ * (--) Dec 29 15:27:13 NVIDIA(0):   0f 0a 01 02 9e 1e 17 64  ee 04 85 a0 57 4a 9b 26
+ *
+ * In the above example, we see log for the 0'th screen. But there
+ * can be upto 16 screens, so we can expect the X log content as below:
+ *
+ * (--) Dec 29 15:27:13 NVIDIA(13):   00 ff ff ff ff ff ff 00  5a 63 47 4b fc 27 00 00
+ * (--) Dec 29 15:27:13 NVIDIA(13):   0f 0a 01 02 9e 1e 17 64  ee 04 85 a0 57 4a 9b 26
+ *
+ * Where "NVIDIA(13)" indicates 13'th screen. We need to process both
+ * timestamps & screen numbers from (0-15), while parsing the X log file
+ * for raw EDID bytes. We have special states
+ * (STATE_LOOKING_FOR_START_OF_LABEL & STATE_LOOKING_FOR_SCREEN_NUMBER_IN_LABEL)
+ * for handling these special cases.
+ *
  * A .txt file will contain a raw EDID byte dump like this:
  *
  * 00 FF FF FF FF FF FF 00-06 10 F4 01 01 01 01 01    ................
@@ -389,6 +407,41 @@ static int findEdidHeaderforLogFile(FilePtr pFile)
 } // findEdidHeaderforLogFile()
 
 
+/*
+ * findLogFileLineLabel() - scan the mmapped file, starting at
+ * 'pFile->current', for the string "NVIDIA(".  If we find the
+ * string, return TRUE, and leave pFile->current pointing to the last
+ * character of the string.  If we reach the end of the mmapped
+ * file, return FALSE.
+ *
+ * Note we intentionally leave pFile->current pointing to the last
+ * character of the string, because the readEdidDataforLogFile()
+ * state machine will move pFile->current forward one character when
+ * findLogFileLineLabel() succeeds.
+ */
+
+static int findLogFileLineLabel(FilePtr pFile)
+{
+    while (((pFile->current - pFile->start) + 7) <= pFile->length) {
+
+        if ((pFile->current[0]  == 'N') &&
+            (pFile->current[1]  == 'V') &&
+            (pFile->current[2]  == 'I') &&
+            (pFile->current[3]  == 'D') &&
+            (pFile->current[4]  == 'I') &&
+            (pFile->current[5]  == 'A') &&
+            (pFile->current[6]  == '(')) {
+
+            pFile->current += 6;
+            return TRUE;
+        }
+        pFile->current++;
+    }
+
+    return FALSE;
+
+} // findLogFileLineLabel()
+
 
 /*
  * readEdidData() - start parsing at pFile->current for the EDID
@@ -401,7 +454,9 @@ static int findEdidHeaderforLogFile(FilePtr pFile)
 
 #define STATE_LOOKING_FOR_TOP_NIBBLE    0
 #define STATE_LOOKING_FOR_BOTTOM_NIBBLE 1
-#define STATE_LOOKING_FOR_END_OF_LABEL 2
+#define STATE_LOOKING_FOR_START_OF_LABEL 2
+#define STATE_LOOKING_FOR_SCREEN_NUMBER_IN_LABEL 3
+#define STATE_LOOKING_FOR_END_OF_LABEL 4
 
 #define MAX_EDID_SIZE 4096
 
@@ -437,7 +492,7 @@ static int readEdidDataforLogFile(FilePtr pFile, EdidPtr pEdid)
             /* if we hit a newline, transition to label parsing */
             
             if (c == '\n') {
-                state = STATE_LOOKING_FOR_END_OF_LABEL;
+                state = STATE_LOOKING_FOR_START_OF_LABEL;
                 goto nextChar;
             }
             
@@ -492,7 +547,49 @@ static int readEdidDataforLogFile(FilePtr pFile, EdidPtr pEdid)
             goto fail; /* anything else is an error */
             
             break;
-            
+
+        case STATE_LOOKING_FOR_START_OF_LABEL:
+
+            /*
+             * look for the "NVIDIA(" portion of the label; if we find
+             * it, transition to looking for the screen number within the
+             * label; if we don't find the label, consider it an error
+             */
+
+            if (findLogFileLineLabel(pFile)) {
+                state = STATE_LOOKING_FOR_SCREEN_NUMBER_IN_LABEL;
+                goto nextChar;
+            } else {
+                goto fail;
+            }
+            break;
+
+        case STATE_LOOKING_FOR_SCREEN_NUMBER_IN_LABEL:
+
+            /*
+             * if we find a digit, this is part of the screen number;
+             * continue searching for more of the screen number
+             */
+
+            if (isdigit(c)) {
+                goto nextChar;
+            }
+
+            /*
+             * if we find a closing parenthesis, then we are at the end of the
+             * label's screen number; transition to looking for the end
+             * of the label
+             */
+
+            if (c == ')') {
+                state = STATE_LOOKING_FOR_END_OF_LABEL;
+                goto nextChar;
+            }
+
+            goto fail; /* anything else is an error */
+
+            break;
+
         case STATE_LOOKING_FOR_END_OF_LABEL:
 
             /*
@@ -505,11 +602,8 @@ static int readEdidDataforLogFile(FilePtr pFile, EdidPtr pEdid)
                 state = STATE_LOOKING_FOR_TOP_NIBBLE;
                 goto nextChar;
             }
-            
-            /*
-             * anything else is assumed to be text within the label,
-             * so just ignore it
-             */
+
+            goto fail; /* anything else is an error */
             
             break;
 

@@ -59,7 +59,7 @@ static void print_version(void)
     fmtoutp(TAB, "This program is used to manipulate X configuration files, "
             "specifically to enable NVIDIA X driver functionality.");
     fmtout("");
-    fmtoutp(TAB, "Copyright (C) 2005 - 2008 NVIDIA Corporation.");
+    fmtoutp(TAB, "Copyright (C) 2005 - 2010 NVIDIA Corporation.");
     fmtout("");
     
 } /* print_version() */
@@ -197,7 +197,7 @@ static void print_help(int advanced)
  * and fill in any pertinent data from the commandline arguments
  */
 
-void parse_commandline(Options *op, int argc, char *argv[])
+static void parse_commandline(Options *op, int argc, char *argv[])
 {
     int c, boolval;
     char *strval;
@@ -492,6 +492,10 @@ void parse_commandline(Options *op, int argc, char *argv[])
             nv_text_rows_append(&op->remove_modes, strval);
             break;
 
+        case META_MODES_OPTION:
+            op->metamodes_str = strval;
+            break;
+
         case MULTI_GPU_OPTION:
             {
                 const char* valid_values[] = {
@@ -550,6 +554,7 @@ void parse_commandline(Options *op, int argc, char *argv[])
                     "sfr",
                     "aa",
                     "afrofaa",
+                    "mosaic",
                     NULL
                 };
                 int i;
@@ -738,7 +743,7 @@ void parse_commandline(Options *op, int argc, char *argv[])
  *
  */
 
-Options *load_default_options(void)
+static Options *load_default_options(void)
 {
     Options *op;
 
@@ -779,7 +784,7 @@ Options *load_default_options(void)
  * write the backup to the user's home directory.
  */
 
-int backup_file(Options *op, const char *orig_filename)
+static int backup_file(Options *op, const char *orig_filename)
 {
     char *filename;
     int ret = FALSE;
@@ -833,7 +838,7 @@ int backup_file(Options *op, const char *orig_filename)
  *    Otherwise we use "/etc/X11/xorg.conf",.
  */
 
-int write_xconfig(Options *op, XConfigPtr config)
+static int write_xconfig(Options *op, XConfigPtr config)
 {
     char *filename = NULL;
     char *d, *tmp = NULL;
@@ -935,6 +940,49 @@ int write_xconfig(Options *op, XConfigPtr config)
 
 
 /*
+ * find_banner_prefix() - helper for update_banner(); like
+ * 'strstr("# nvidia-xconfig:")' but allows arbitrary whitespace between
+ * '#' and 'n'.
+ */
+
+static char *find_banner_prefix(char *str)
+{
+    char *s, *comment = NULL;
+
+    for (s = str; s && *s; s++) {
+        char c = *s;
+
+        /*
+         * if we aren't presently looking at a comment, and we found the
+         * start of a comment, then save it and goto the next char
+         */
+
+        if ((!comment) && (c == '#')) {
+            comment = s;
+            continue;
+        }
+
+        if (comment) {
+            /* ignore space within the comment */
+            if (isspace(c)) {
+                continue;
+            }
+            /* if the prefix matches, then return the start of the comment */
+            if (strncmp(s, "nvidia-xconfig:", 15) == 0) {
+                return comment;
+            }
+        }
+
+        /* anything else forces us out of any current comment */
+        comment = NULL;
+    }
+    return NULL;
+
+} /* find_banner_prefix() */
+
+
+
+/*
  * update_banner() - add our banner at the top of the config, but
  * first we need to remove any lines that already include our prefix
  * (because presumably they are a banner from an earlier run of
@@ -953,7 +1001,7 @@ static void update_banner(XConfigPtr config)
     
     /* remove all lines that begin with the prefix */
     
-    while (s && (line = strstr(s, prefix))) {
+    while (s && (line = find_banner_prefix(s))) {
         
         eol = strchr(line, '\n'); /* find the end of the line */
         
@@ -1037,7 +1085,7 @@ static XConfigPtr find_system_xconfig(Options *op)
 
 
 
-int update_xconfig(Options *op, XConfigPtr config)
+static int update_xconfig(Options *op, XConfigPtr config)
 {
     XConfigLayoutPtr layout;
     XConfigScreenPtr screen;

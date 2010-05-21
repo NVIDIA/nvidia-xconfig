@@ -115,14 +115,16 @@ DevicesPtr find_devices(Options *op)
     int i, j, n, count = 0;
     unsigned int mask, bit;
     DeviceRec tmpDevice;
-    NvCfgDeviceHandle handle;
-    NvCfgDevice *devs = NULL;
+    NvCfgPciDevice *devs = NULL;
     NvCfgBool is_primary_device;
     char *lib_path;
     void *lib_handle;
 
     NvCfgBool (*__getDevices)(int *n, NvCfgDevice **devs);
     NvCfgBool (*__openDevice)(int bus, int slot, NvCfgDeviceHandle *handle);
+    NvCfgBool (*__getPciDevices)(int *n, NvCfgPciDevice **devs);
+    NvCfgBool (*__openPciDevice)(int domain, int bus, int slot, int function,
+                                 NvCfgDeviceHandle *handle);
     NvCfgBool (*__getNumCRTCs)(NvCfgDeviceHandle handle, int *crtcs);
     NvCfgBool (*__getProductName)(NvCfgDeviceHandle handle, char **name);
     NvCfgBool (*__getDisplayDevices)(NvCfgDeviceHandle handle,
@@ -165,6 +167,8 @@ DevicesPtr find_devices(Options *op)
     /* required functions */
     __GET_FUNC(__getDevices, "nvCfgGetDevices");
     __GET_FUNC(__openDevice, "nvCfgOpenDevice");
+    __GET_FUNC(__getPciDevices, "nvCfgGetPciDevices");
+    __GET_FUNC(__openPciDevice, "nvCfgOpenPciDevice");
     __GET_FUNC(__getNumCRTCs, "nvCfgGetNumCRTCs");
     __GET_FUNC(__getProductName, "nvCfgGetProductName");
     __GET_FUNC(__getDisplayDevices, "nvCfgGetDisplayDevices");
@@ -174,7 +178,7 @@ DevicesPtr find_devices(Options *op)
     /* optional functions */
     __isPrimaryDevice = dlsym(lib_handle, "nvCfgIsPrimaryDevice");
     
-    if (__getDevices(&count, &devs) != NVCFG_TRUE) {
+    if (__getPciDevices(&count, &devs) != NVCFG_TRUE) {
         return NULL;
     }
 
@@ -190,17 +194,25 @@ DevicesPtr find_devices(Options *op)
         
         pDevices->devices[i].dev = devs[i];
         
-        if (__openDevice(devs[i].bus, devs[i].slot, &handle) != NVCFG_TRUE)
+        if (__openPciDevice(devs[i].domain, devs[i].bus, devs[i].slot, 0,
+                            &(pDevices->devices[i].handle)) != NVCFG_TRUE) {
             goto fail;
+        }
         
-        if (__getNumCRTCs(handle, &pDevices->devices[i].crtcs) != NVCFG_TRUE)
+        if (__getNumCRTCs(pDevices->devices[i].handle,
+                          &pDevices->devices[i].crtcs) != NVCFG_TRUE) {
             goto fail;
-        
-        if (__getProductName(handle, &pDevices->devices[i].name) != NVCFG_TRUE)
+        }
+
+        if (__getProductName(pDevices->devices[i].handle,
+                             &pDevices->devices[i].name) != NVCFG_TRUE) {
             goto fail;
-        
-        if (__getDisplayDevices(handle, &mask) != NVCFG_TRUE)
+        }
+
+        if (__getDisplayDevices(pDevices->devices[i].handle, &mask) !=
+            NVCFG_TRUE) {
             goto fail;
+        }
         
         pDevices->devices[i].displayDeviceMask = mask;
 
@@ -228,7 +240,7 @@ DevicesPtr find_devices(Options *op)
                 pDisplayDevice = &pDevices->devices[i].displayDevices[n];
                 pDisplayDevice->mask = bit;
 
-                if (__getEDID(handle, bit,
+                if (__getEDID(pDevices->devices[i].handle, bit,
                               &pDisplayDevice->info) != NVCFG_TRUE) {
                     pDisplayDevice->info_valid = FALSE;
                 } else {
@@ -241,14 +253,15 @@ DevicesPtr find_devices(Options *op)
         }
 
         if ((i != 0) && (__isPrimaryDevice != NULL) &&
-            (__isPrimaryDevice(handle, &is_primary_device) == NVCFG_TRUE) &&
+            (__isPrimaryDevice(pDevices->devices[i].handle,
+                               &is_primary_device) == NVCFG_TRUE) &&
             (is_primary_device == NVCFG_TRUE)) {
             memcpy(&tmpDevice, &pDevices->devices[0], sizeof(DeviceRec));
             memcpy(&pDevices->devices[0], &pDevices->devices[i], sizeof(DeviceRec));
             memcpy(&pDevices->devices[i], &tmpDevice, sizeof(DeviceRec));
         }
         
-        if (__closeDevice(handle) != NVCFG_TRUE)
+        if (__closeDevice(pDevices->devices[i].handle) != NVCFG_TRUE)
             goto fail;
     }
     
@@ -258,6 +271,13 @@ DevicesPtr find_devices(Options *op)
 
     fmtwarn("Unable to use the nvidia-cfg library to query NVIDIA "
             "hardware.");
+
+    for (i = 0; i < pDevices->nDevices; i++) {
+        /* close the opened device */
+        if (pDevices->devices[i].handle) {
+            __closeDevice(pDevices->devices[i].handle);
+        }
+    }
 
     free_devices(pDevices);
     pDevices = NULL;

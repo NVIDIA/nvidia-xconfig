@@ -47,6 +47,7 @@
 #define PRESERVE_DRIVER_NAME_OPTION         36
 #define CONNECTED_MONITOR_OPTION            37
 #define REGISTRY_DWORDS_OPTION              38
+#define META_MODES_OPTION                   39
 
 /*
  * To add a boolean option to nvidia-xconfig:
@@ -258,7 +259,7 @@ static const NVGetoptOption __options[] = {
 
     { "extract-edids-output-file",
       EXTRACT_EDIDS_OUTPUT_FILE_OPTION, NVGETOPT_STRING_ARGUMENT, "FILENAME",
-      "When the '--extract-edids-from-log' option is used, nvidia-xconfig "
+      "When the '--extract-edids-from-file' option is used, nvidia-xconfig "
       "writes any extracted EDID to a file, typically \"edid.bin\" in the "
       "current directory.  Use this option to specify an alternate "
       "filename.  Note that nvidia-xconfig, if necessary, will append a "
@@ -348,6 +349,11 @@ static const NVGetoptOption __options[] = {
 
     { "remove-mode", REMOVE_MODE_OPTION, NVGETOPT_STRING_ARGUMENT, "MODE",
       "Remove the specified mode from the mode list." },
+
+    { "metamodes", META_MODES_OPTION, NVGETOPT_STRING_ARGUMENT, "METAMODES",
+      "Add the MetaMode X configuration option with the value [METAMODES] "
+      "which will replace any existing MetaMode option already in the X "
+      "configuration file." },
 
     { "mouse", MOUSE_OPTION, NVGETOPT_STRING_ARGUMENT, NULL,
       "When generating a new X configuration file (which happens when no "
@@ -475,7 +481,7 @@ static const NVGetoptOption __options[] = {
     { "sli", SLI_OPTION,
       NVGETOPT_STRING_ARGUMENT | NVGETOPT_ALLOW_DISABLE, NULL,
       "Enable or disable SLI.  Valid values for [SLI] are 'Off', 'On', 'Auto', "
-      "'AFR', 'SFR', 'AA', 'AFRofAA'." },
+      "'AFR', 'SFR', 'AA', 'AFRofAA', 'Mosaic'." },
 
     { "stereo", STEREO_OPTION,
       NVGETOPT_INTEGER_ARGUMENT | NVGETOPT_ALLOW_DISABLE, NULL,
@@ -484,6 +490,12 @@ static const NVGetoptOption __options[] = {
       "4 (TwinView clone mode stereo), 5 (SeeReal digital flat panel), 6 "
       "(Sharp3D digital flat panel), 7 (Arisawa/Hyundai/Zalman/Pavione/Miracube), "
       "8 (3D DLP), 9 (3D DLP INV), 10 (NVIDIA 3D VISION)." },
+
+    { "thermal-configuration-check",
+      XCONFIG_BOOL_VAL(THERMAL_CONFIGURATION_CHECK_BOOL_OPTION),
+      NVGETOPT_IS_BOOLEAN, NULL,
+      "Disable or enable the \"ThermalConfigurationCheck\" "
+      "X configuration option." },
 
     { "tv-standard", TV_STANDARD_OPTION,
       NVGETOPT_STRING_ARGUMENT | NVGETOPT_ALLOW_DISABLE, "TV-STANDARD",

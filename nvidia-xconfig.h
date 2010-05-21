@@ -89,8 +89,9 @@ typedef struct {
 #define CONNECT_TO_ACPID_BOOL_OPTION            37
 #define ENABLE_ACPI_HOTKEYS_BOOL_OPTION         38
 #define MODE_DEBUG_BOOL_OPTION                  39
+#define THERMAL_CONFIGURATION_CHECK_BOOL_OPTION 40
 
-#define XCONFIG_BOOL_OPTION_COUNT (MODE_DEBUG_BOOL_OPTION + 1)
+#define XCONFIG_BOOL_OPTION_COUNT (THERMAL_CONFIGURATION_CHECK_BOOL_OPTION + 1)
 
 /* # of 32-bit variables needed to hold all the boolean options (bits) */
 #define XCONFIG_BOOL_OPTION_SLOTS  \
@@ -166,6 +167,7 @@ typedef struct __options {
     char *handle_special_keys;
     char *connected_monitor;
     char *registry_dwords;
+    char *metamodes_str;
 
     double tv_over_scan;
 
@@ -191,7 +193,8 @@ typedef struct _display_device_rec {
 } DisplayDeviceRec, *DisplayDevicePtr;
 
 typedef struct _device_rec {
-    NvCfgDevice dev;
+    NvCfgPciDevice dev;
+    NvCfgDeviceHandle handle;
     int crtcs;
     char *name;
     unsigned int displayDeviceMask;

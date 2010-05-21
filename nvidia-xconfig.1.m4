@@ -1,10 +1,10 @@
 dnl This file is to be preprocessed by m4.
 changequote([[[, ]]])dnl
 define(__OPTIONS__, [[[include([[[options.1.inc]]])dnl]]])dnl
-.\" Copyright (C) 2005 NVIDIA Corporation.
+.\" Copyright (C) 2005-2010 NVIDIA Corporation.
 .\"
 __HEADER__
-.TH nvidia-xconfig 1 2005-08-19 "nvidia-xconfig 1.0"
+.TH nvidia\-xconfig 1 "__DATE__" "nvidia\-xconfig __VERSION__"
 .SH NAME
 nvidia-xconfig \- manipulate X configuration files for the NVIDIA driver
 .SH SYNOPSIS
@@ -82,6 +82,9 @@ Adds a 1600x1200 mode to an existing X configuration.
 .BI "nvidia-xconfig \-\-mode-list=" "1600x1200 1280x1024"
 Removes any existing modes from the X configuration file, replacing them with "1600x1200" and "1280x1024".
 .TP
+.BI "nvidia-xconfig \-\-metamodes=" "1024x768 +0+0, 1024x768 +1024+0"
+Adds the MetaMode "1024x768 +0+0, 1024x768 +1024+0" to the existing X configuration file, replacing any existing MetaModes X configuration option.
+.TP
 .B nvidia-xconfig \-\-only\-one\-x\-screen \-\-sli=Auto
 Configures the X server to have just one X screen that will use SLI when available.
 .\" .SH FILES
@@ -95,4 +98,4 @@ NVIDIA Corporation
 .BR nvidia-settings (1),
 .I /usr/share/doc/NVIDIA_GLX-1.0/README.txt
 .SH COPYRIGHT
-Copyright \(co 2005 NVIDIA Corporation.
+Copyright \(co 2005-2010 NVIDIA Corporation.
