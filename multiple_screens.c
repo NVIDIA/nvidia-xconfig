@@ -117,6 +117,7 @@ DevicesPtr find_devices(Options *op)
     DeviceRec tmpDevice;
     NvCfgPciDevice *devs = NULL;
     NvCfgBool is_primary_device;
+    NvCfgBool ret;
     char *lib_path;
     void *lib_handle;
 
@@ -261,8 +262,12 @@ DevicesPtr find_devices(Options *op)
             memcpy(&pDevices->devices[i], &tmpDevice, sizeof(DeviceRec));
         }
         
-        if (__closeDevice(pDevices->devices[i].handle) != NVCFG_TRUE)
+        ret = __closeDevice(pDevices->devices[i].handle);
+        pDevices->devices[i].handle = NULL;
+
+        if (ret != NVCFG_TRUE) {
             goto fail;
+        }
     }
     
     goto done;

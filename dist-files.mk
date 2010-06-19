@@ -54,3 +54,4 @@ DIST_FILES += option_table.h
 DIST_FILES += nvidia-xconfig.1.m4
 DIST_FILES += gen-manpage-opts.c
 DIST_FILES += dist-files.mk
+DIST_FILES += COPYING
