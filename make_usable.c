@@ -275,7 +275,27 @@ static int update_device(Options *op, XConfigPtr config, XConfigDevicePtr device
     device->comment = comment;
     device->screen = screen;
     device->board = board;
-    device->busid = busid;
+
+    /*
+     * Considering three conditions, in order, while populating busid field
+     * 1. If we want to write busid with option --busid
+     * 2. If we want to preserve existing bus id
+     * 3. If there are multiple screens
+     */
+
+    if (op->busid) {
+        device->busid = op->busid;
+    } else if (GET_BOOL_OPTION(op->boolean_options,
+                               PRESERVE_BUSID_BOOL_OPTION)) {
+        if (GET_BOOL_OPTION(op->boolean_option_values,
+                            PRESERVE_BUSID_BOOL_OPTION)) {
+            device->busid = busid;
+        } else {
+            device->busid = NULL;
+        }
+    } else if (config->screens->next) {
+        device->busid = busid;
+    }
 
     device->chipid = -1;
     device->chiprev = -1;
@@ -285,16 +305,6 @@ static int update_device(Options *op, XConfigPtr config, XConfigDevicePtr device
         device->driver = driver;
     } else {
         device->driver = "nvidia";
-    }
-    
-    /*
-     * XXX do we really want to preserve the BusID line?  Let's only
-     * preserve the BusID if there are multiple screens in this
-     * config; not a very good heuristic
-     */
-    
-    if (!config->screens->next) {
-        device->busid = NULL;
     }
     
     return TRUE;

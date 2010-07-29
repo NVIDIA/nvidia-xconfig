@@ -251,6 +251,8 @@ static void parse_commandline(Options *op, int argc, char *argv[])
 
         case LAYOUT_OPTION: op->layout = strval; break;
         case SCREEN_OPTION: op->screen = strval; break;
+        case DEVICE_OPTION: op->device = strval; break;
+        case BUSID_OPTION: op->busid = strval; break;
 
         case X_PREFIX_OPTION: op->gop.x_project_root = strval; break;
 
@@ -1088,8 +1090,8 @@ static XConfigPtr find_system_xconfig(Options *op)
 static int update_xconfig(Options *op, XConfigPtr config)
 {
     XConfigLayoutPtr layout;
-    XConfigScreenPtr screen;
     XConfigAdjacencyPtr adj;
+    int updated;
 
     /* get the layout to update */
     
@@ -1106,22 +1108,44 @@ static int update_xconfig(Options *op, XConfigPtr config)
 
     /*
      * update the device and option for all screens, or the screen
-     * that was requested
+     * or device that was requested.
      */
-    
-    if (op->screen) {
-        screen = xconfigFindScreen(op->screen, config->screens);
-        if (!screen) {
-            fmterr("Unable to find screen '%s'", op->screen);
-            return FALSE;
+    updated = FALSE;
+
+    for (adj = layout->adjacencies; adj; adj = adj->next) {
+
+        if (!adj->screen) {
+            continue;
         }
-        update_screen(op, config, screen);
-    } else {
-        for (adj = layout->adjacencies; adj; adj = adj->next) {
-            update_screen(op, config, adj->screen);
+
+        /* if screen option set: skip adj if not the requested screen */
+
+        if ((op->screen) &&
+            (xconfigNameCompare(op->screen, adj->screen->identifier) != 0)) {
+            continue;
         }
+
+        /* if device option set: skip adj if not the requested device */
+
+        if ((op->device) &&
+            (xconfigNameCompare(op->device, adj->screen->device_name) != 0)) {
+            continue;
+        }
+
+        update_screen(op, config, adj->screen);
+        updated = TRUE;
     }
-    
+
+    if (op->screen && !updated) {
+        fmterr("Unable to find screen '%s'", op->screen);
+        return FALSE;
+    }
+
+    if (op->device && !updated) {
+        fmterr("Unable to find device '%s'", op->device);
+        return FALSE;
+    }
+
     update_extensions(op, config);
 
     update_modules(config);

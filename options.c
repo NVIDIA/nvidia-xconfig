@@ -550,6 +550,7 @@ void update_options(Options *op, XConfigScreenPtr screen)
             if (i == SEPARATE_X_SCREENS_BOOL_OPTION) continue;
             if (i == XINERAMA_BOOL_OPTION) continue;
             if (i == COMPOSITE_BOOL_OPTION) continue;
+            if (i == PRESERVE_BUSID_BOOL_OPTION) continue;
             
             o = get_option(i);
             

@@ -442,10 +442,11 @@ static int enable_separate_x_screens(Options *op, XConfigPtr config,
             }
             
             screenlist[i]->device->busid = nvalloc(32);
-            snprintf(screenlist[i]->device->busid, 32,
-                     "PCI:%d:%d:0",
-                     pDevices->devices[i].dev.bus,
-                     pDevices->devices[i].dev.slot);
+            xconfigFormatPciBusString(screenlist[i]->device->busid, 32,
+                                      pDevices->devices[i].dev.domain,
+                                      pDevices->devices[i].dev.bus,
+                                      pDevices->devices[i].dev.slot);
+
             screenlist[i]->device->board = nvstrdup(pDevices->devices[i].name);
         }
 
@@ -850,6 +851,7 @@ static int enable_all_gpus(Options *op, XConfigPtr config,
     for (i = 0; i < pDevices->nDevices; i++) {
         xconfigGenerateAddScreen(config,
                                  pDevices->devices[i].dev.bus,
+                                 pDevices->devices[i].dev.domain,
                                  pDevices->devices[i].dev.slot,
                                  pDevices->devices[i].name, i);
     }

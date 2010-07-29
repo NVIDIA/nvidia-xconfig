@@ -48,6 +48,8 @@
 #define CONNECTED_MONITOR_OPTION            37
 #define REGISTRY_DWORDS_OPTION              38
 #define META_MODES_OPTION                   39
+#define BUSID_OPTION                        42
+#define DEVICE_OPTION                       43
 
 /*
  * To add a boolean option to nvidia-xconfig:
@@ -148,6 +150,21 @@ static const NVGetoptOption __options[] = {
       NVGETOPT_IS_BOOLEAN, NULL,
       "Disable or enable the \"NoBandWidthTest\" X configuration option." },
 
+    { "busid", BUSID_OPTION, NVGETOPT_STRING_ARGUMENT, NULL,
+      "This option writes the specified BusID to the device section of the "
+      "X configuration file.  If there are multiple device sections, then it "
+      "adds the BusID field to each of them.  To add the BusID to only a "
+      "specific device or screen section, use the '--device' or '--screen' "
+      "options." },
+
+    { "preserve-busid", XCONFIG_BOOL_VAL(PRESERVE_BUSID_BOOL_OPTION),
+      NVGETOPT_IS_BOOLEAN, NULL,
+      "By default, nvidia-xconfig preserves the existing BusID in the X "
+      "configuration file only if there are multiple X screens configured "
+      "for the X server.  Use '--preserve-busid' or '--no-preserve-busid' to "
+      "force the BusID to be preserved or not preserved, overriding the "
+      "default behavior." },
+
     { "cool-bits", COOL_BITS_OPTION,
       NVGETOPT_INTEGER_ARGUMENT | NVGETOPT_ALLOW_DISABLE, NULL,
       "Enable or disable the \"Coolbits\" X configuration option.  Setting this "
@@ -199,6 +216,13 @@ static const NVGetoptOption __options[] = {
     { "depth", 'd', NVGETOPT_INTEGER_ARGUMENT, NULL,
       "Set the default depth to [DEPTH]; valid values for [DEPTH] are "
       "8, 15, 16, 24, and 30." },
+
+    { "device", DEVICE_OPTION, NVGETOPT_STRING_ARGUMENT, NULL,
+      "The nvidia-xconfig utility operates on one or more devices in "
+      "the X configuration file.  If this option is specified, the "
+      "device named [DEVICE] in the X configuration file will be "
+      "used.  If this option is not specified, all the devices within "
+      "the X configuration file will be used." },
 
     { "disable-glx-root-clipping",
       XCONFIG_BOOL_VAL(DISABLE_GLX_ROOT_CLIPPING_BOOL_OPTION),
