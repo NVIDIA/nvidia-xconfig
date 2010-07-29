@@ -71,7 +71,7 @@ int query_gpu_info(Options *op)
         xconfigFormatPciBusString(busid, BUS_ID_STRING_LENGTH,
                                   pDevices->devices[i].dev.domain,
                                   pDevices->devices[i].dev.bus,
-                                  pDevices->devices[i].dev.slot);
+                                  pDevices->devices[i].dev.slot, 0);
         fmtoutp(TAB, "PCI BusID : %s", busid);
 
         fmtout("");
