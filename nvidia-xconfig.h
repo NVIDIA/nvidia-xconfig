@@ -171,6 +171,9 @@ typedef struct __options {
     char *connected_monitor;
     char *registry_dwords;
     char *metamodes_str;
+    char *color_space;
+    char *color_range;
+    char *flatpanel_properties;
 
     double tv_over_scan;
 

@@ -544,7 +544,8 @@ void update_options(Options *op, XConfigScreenPtr screen)
             
             /*
              * SEPARATE_X_SCREENS_BOOL_OPTION, XINERAMA_BOOL_OPTION,
-             * and COMPOSITE_BOOL_OPTION are handled separately
+             * COMPOSITE_BOOL_OPTION, and PRESERVE_BUSID_BOOL_OPTION
+             * are handled separately
              */
 
             if (i == SEPARATE_X_SCREENS_BOOL_OPTION) continue;
@@ -770,6 +771,32 @@ void update_options(Options *op, XConfigScreenPtr screen)
         remove_option(screen, "RegistryDwords");
         if (op->registry_dwords != NV_DISABLE_STRING_OPTION) {
             set_option_value(screen, "RegistryDwords", op->registry_dwords);
+        }
+    }
+
+    /* add the ColorSpace option */
+
+    if (op->color_space) {
+        remove_option(screen, "ColorSpace");
+        if (op->color_space != NV_DISABLE_STRING_OPTION) {
+            set_option_value(screen, "ColorSpace", op->color_space);
+        }
+    }
+
+    if (op->color_range) {
+        remove_option(screen, "ColorRange");
+        if (op->color_range != NV_DISABLE_STRING_OPTION) {
+            set_option_value(screen, "ColorRange", op->color_range);
+        }
+    }
+
+    /* add the flatpanel properties option */
+
+    if (op->flatpanel_properties) {
+        remove_option(screen, "FlatPanelProperties");
+        if (op->flatpanel_properties != NV_DISABLE_STRING_OPTION) {
+            set_option_value(screen, "FlatPanelProperties",
+                             op->flatpanel_properties);
         }
     }
 

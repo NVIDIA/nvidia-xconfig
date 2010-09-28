@@ -40,7 +40,6 @@ SRC += nvidia-xconfig.c
 SRC += make_usable.c
 SRC += multiple_screens.c
 SRC += tree.c
-SRC += nvgetopt.c
 SRC += options.c
 SRC += lscf.c
 SRC += query_gpu_info.c
@@ -48,7 +47,6 @@ SRC += extract_edids.c
 
 DIST_FILES := $(SRC)
 DIST_FILES += $(addprefix $(XCONFIG_PARSER_DIR)/,$(XCONFIG_PARSER_EXTRA_DIST))
-DIST_FILES += nvgetopt.h
 DIST_FILES += nvidia-xconfig.h
 DIST_FILES += option_table.h
 DIST_FILES += nvidia-xconfig.1.m4

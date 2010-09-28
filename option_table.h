@@ -48,8 +48,11 @@
 #define CONNECTED_MONITOR_OPTION            37
 #define REGISTRY_DWORDS_OPTION              38
 #define META_MODES_OPTION                   39
+#define COLOR_SPACE_OPTION                  40
+#define COLOR_RANGE_OPTION                  41
 #define BUSID_OPTION                        42
 #define DEVICE_OPTION                       43
+#define FLATPANEL_PROPERTIES_OPTION         44
 
 /*
  * To add a boolean option to nvidia-xconfig:
@@ -84,44 +87,36 @@
 
 #define XCONFIG_BOOL_VAL(x) (XCONFIG_BOOL_OPTION_START + (x))
 
-/*
- * The OPTION_HELP_ALWAYS flag is or'ed into the nvgetopts flags, but
- * is only used by print_help() to know whether to print the help
- * information for that option all the time, or only when advanced
- * help is requested.
- */
-
-#define OPTION_HELP_ALWAYS          0x8000
 
 static const NVGetoptOption __options[] = {
     /* These options are printed by "nvidia-xconfig --help" */
 
-    { "xconfig", 'c', NVGETOPT_STRING_ARGUMENT | OPTION_HELP_ALWAYS, NULL,
+    { "xconfig", 'c', NVGETOPT_STRING_ARGUMENT | NVGETOPT_HELP_ALWAYS, NULL,
       "Use [XCONFIG] as the input X config file; if this option is not "
       "specified, then the same search path used by the X server will be "
       "used to find the X configuration file." },
 
     { "output-xconfig", 'o',
-      NVGETOPT_STRING_ARGUMENT | OPTION_HELP_ALWAYS, NULL,
+      NVGETOPT_STRING_ARGUMENT | NVGETOPT_HELP_ALWAYS, NULL,
       "Use [OUTPUT-XCONFIG] as the output X configuration file; if this "
       "option is not specified, then the input X configuration filename will "
       "also be used as the output X configuration filename." },
 
-    { "silent", 's', OPTION_HELP_ALWAYS, NULL,
+    { "silent", 's', NVGETOPT_HELP_ALWAYS, NULL,
       "Run silently; no messages will be printed to stdout, except for "
       "warning and error messages to stderr." },
 
-    { "tree", 't',  OPTION_HELP_ALWAYS, NULL,
+    { "tree", 't',  NVGETOPT_HELP_ALWAYS, NULL,
       "Read the X configuration file, print to stdout the X "
       "configuration data in a tree format, and exit." },
 
-    { "version", 'v', OPTION_HELP_ALWAYS, NULL,
+    { "version", 'v', NVGETOPT_HELP_ALWAYS, NULL,
       "Print the nvidia-xconfig version and exit." },
 
-    { "help", 'h', OPTION_HELP_ALWAYS,  NULL,
+    { "help", 'h', NVGETOPT_HELP_ALWAYS,  NULL,
       "Print usage information for the common commandline options and exit." },
 
-    { "advanced-help", 'A', OPTION_HELP_ALWAYS,  NULL,
+    { "advanced-help", 'A', NVGETOPT_HELP_ALWAYS,  NULL,
       "Print usage information for the common commandline options as well "
       "as the advanced options, and then exit." },
 
@@ -150,7 +145,8 @@ static const NVGetoptOption __options[] = {
       NVGETOPT_IS_BOOLEAN, NULL,
       "Disable or enable the \"NoBandWidthTest\" X configuration option." },
 
-    { "busid", BUSID_OPTION, NVGETOPT_STRING_ARGUMENT, NULL,
+    { "busid", BUSID_OPTION,
+      NVGETOPT_STRING_ARGUMENT | NVGETOPT_ALLOW_DISABLE, NULL,
       "This option writes the specified BusID to the device section of the "
       "X configuration file.  If there are multiple device sections, then it "
       "adds the BusID field to each of them.  To add the BusID to only a "
@@ -289,6 +285,13 @@ static const NVGetoptOption __options[] = {
       "filename.  Note that nvidia-xconfig, if necessary, will append a "
       "unique number to the EDID filename, to avoid overwriting existing "
       "files (e.g., \"edid.bin.1\" if \"edid.bin\" already exists)." },
+
+    { "flatpanel-properties", FLATPANEL_PROPERTIES_OPTION,
+      NVGETOPT_STRING_ARGUMENT | NVGETOPT_ALLOW_DISABLE, NULL,
+      "Set the flat panel properties. The supported properties are: "
+      "'scaling', 'dithering' & 'ditheringmode'.  Please see the NVIDIA "
+      "README 'Appendix B. X Config Options' for more details on the "
+      "possible values and syntax." },
 
     { "flip", XCONFIG_BOOL_VAL(NOFLIP_BOOL_OPTION), NVGETOPT_IS_BOOLEAN, NULL,
       "Enable or disable OpenGL flipping" },
@@ -626,6 +629,16 @@ static const NVGetoptOption __options[] = {
       NVGETOPT_IS_BOOLEAN, NULL,
       "Forces XvMC to use the 3D engine for XvMCPutSurface requests rather "
       "than the video overlay." },
+
+    { "color-space", COLOR_SPACE_OPTION,
+      NVGETOPT_STRING_ARGUMENT | NVGETOPT_ALLOW_DISABLE, "COLORSPACE",
+      "Enable or disable the \"ColorSpace\" X configuration option. "
+      "Valid values for \"COLORSPACE\" are: \"RGB\" and \"YCbCr444\"." },
+
+    { "color-range", COLOR_RANGE_OPTION,
+      NVGETOPT_STRING_ARGUMENT | NVGETOPT_ALLOW_DISABLE, "COLORRANGE",
+      "Sets the \"ColorRange\" X configuration option. "
+      "Valid values for \"COLORRANGE\" are: \"Full\" and \"Limited\"." },
 
     { NULL, 0, 0, NULL, NULL },
 };

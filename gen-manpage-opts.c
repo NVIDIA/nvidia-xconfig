@@ -128,7 +128,7 @@ int main(int argc, char* argv[])
     for (i = 0; __options[i].name; i++) {
         o = &__options[i];
 
-        if (!(o->flags & OPTION_HELP_ALWAYS))
+        if (!(o->flags & NVGETOPT_HELP_ALWAYS))
             continue;
 
         print_option(o);
@@ -139,7 +139,7 @@ int main(int argc, char* argv[])
     for (i = 0; __options[i].name; i++) {
         o = &__options[i];
 
-        if (o->flags & OPTION_HELP_ALWAYS)
+        if (o->flags & NVGETOPT_HELP_ALWAYS)
             continue;
 
         print_option(o);

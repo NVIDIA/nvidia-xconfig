@@ -138,7 +138,7 @@ static void print_help(int advanced)
          * not set, then skip this option
          */
 
-        if (!advanced && !(o->flags & OPTION_HELP_ALWAYS)) continue;
+        if (!advanced && !(o->flags & NVGETOPT_HELP_ALWAYS)) continue;
 
         /* if we are going to need the argument, process it now */
 
@@ -252,7 +252,9 @@ static void parse_commandline(Options *op, int argc, char *argv[])
         case LAYOUT_OPTION: op->layout = strval; break;
         case SCREEN_OPTION: op->screen = strval; break;
         case DEVICE_OPTION: op->device = strval; break;
-        case BUSID_OPTION: op->busid = strval; break;
+        case BUSID_OPTION:
+            op->busid = disable ? NV_DISABLE_STRING_OPTION : strval;
+            break;
 
         case X_PREFIX_OPTION: op->gop.x_project_root = strval; break;
 
@@ -713,6 +715,19 @@ static void parse_commandline(Options *op, int argc, char *argv[])
 
         case REGISTRY_DWORDS_OPTION:
             op->registry_dwords = disable ? NV_DISABLE_STRING_OPTION : strval;
+            break;
+
+        case COLOR_SPACE_OPTION:
+            op->color_space = disable ? NV_DISABLE_STRING_OPTION : strval;
+            break;
+
+        case COLOR_RANGE_OPTION:
+            op->color_range = disable ? NV_DISABLE_STRING_OPTION : strval;
+            break;
+
+        case FLATPANEL_PROPERTIES_OPTION:
+            op->flatpanel_properties =
+                disable ? NV_DISABLE_STRING_OPTION : strval;
             break;
 
         default:

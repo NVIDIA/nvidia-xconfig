@@ -63,13 +63,33 @@ endif
 GEN_MANPAGE_OPTS   = $(OUTPUTDIR)/gen-manpage-opts
 OPTIONS_1_INC      = $(OUTPUTDIR)/options.1.inc
 
+
+##############################################################################
+# The common-utils directory may be in one of two places: either
+# elsewhere in the driver source tree when building nvidia-xconfig as
+# part of the NVIDIA driver build (in which case, COMMON_UTILS_DIR
+# should be defined by the calling makefile), or directly in the
+# source directory when building from the nvidia-xconfig source
+# tarball (in which case, the below conditional assignment should be
+# used)
+##############################################################################
+
+COMMON_UTILS_DIR          ?= common-utils
+
 include dist-files.mk
 
 SRC += $(STAMP_C)
 
+include $(COMMON_UTILS_DIR)/src.mk
+SRC += $(addprefix $(COMMON_UTILS_DIR)/,$(COMMON_UTILS_SRC))
+
 OBJS = $(call BUILD_OBJECT_LIST,$(SRC))
 
-CFLAGS += -I XF86Config-parser -I $(OUTPUTDIR) -I $(NVIDIA_CFG_DIR)
+CFLAGS += -I XF86Config-parser
+CFLAGS += -I $(OUTPUTDIR)
+CFLAGS += -I $(NVIDIA_CFG_DIR)
+CFLAGS += -I $(COMMON_UTILS_DIR)
+
 HOST_CFLAGS += $(CFLAGS)
 
 LDFLAGS += -lm

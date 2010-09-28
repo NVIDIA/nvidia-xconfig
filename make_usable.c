@@ -277,13 +277,16 @@ static int update_device(Options *op, XConfigPtr config, XConfigDevicePtr device
     device->board = board;
 
     /*
-     * Considering three conditions, in order, while populating busid field
-     * 1. If we want to write busid with option --busid
-     * 2. If we want to preserve existing bus id
-     * 3. If there are multiple screens
+     * Considering four conditions, in order, while populating busid field
+     * 1. If the user specified "--no-busid", obey that
+     * 2. If we want to write busid with option --busid
+     * 3. If we want to preserve existing bus id
+     * 4. If there are multiple screens
      */
 
-    if (op->busid) {
+    if (op->busid == NV_DISABLE_STRING_OPTION) {
+        device->busid = NULL;
+    } else if (op->busid) {
         device->busid = op->busid;
     } else if (GET_BOOL_OPTION(op->boolean_options,
                                PRESERVE_BUSID_BOOL_OPTION)) {
