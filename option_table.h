@@ -53,6 +53,8 @@
 #define BUSID_OPTION                        42
 #define DEVICE_OPTION                       43
 #define FLATPANEL_PROPERTIES_OPTION         44
+#define NVIDIA_3DVISION_USB_PATH_OPTION     45
+#define NVIDIA_3DVISIONPRO_CONFIG_FILE_OPTION  46
 
 /*
  * To add a boolean option to nvidia-xconfig:
@@ -516,7 +518,8 @@ static const NVGetoptOption __options[] = {
       "(Disabled), 1 (DDC glasses), 2 (Blueline glasses), 3 (Onboard stereo), "
       "4 (TwinView clone mode stereo), 5 (SeeReal digital flat panel), 6 "
       "(Sharp3D digital flat panel), 7 (Arisawa/Hyundai/Zalman/Pavione/Miracube), "
-      "8 (3D DLP), 9 (3D DLP INV), 10 (NVIDIA 3D VISION)." },
+      "8 (3D DLP), 9 (3D DLP INV), 10 (NVIDIA 3D VISION), "
+      "11 (NVIDIA 3D VISION PRO)." },
 
     { "thermal-configuration-check",
       XCONFIG_BOOL_VAL(THERMAL_CONFIGURATION_CHECK_BOOL_OPTION),
@@ -639,6 +642,18 @@ static const NVGetoptOption __options[] = {
       NVGETOPT_STRING_ARGUMENT | NVGETOPT_ALLOW_DISABLE, "COLORRANGE",
       "Sets the \"ColorRange\" X configuration option. "
       "Valid values for \"COLORRANGE\" are: \"Full\" and \"Limited\"." },
+
+    { "3dvision-usb-path", NVIDIA_3DVISION_USB_PATH_OPTION, NVGETOPT_STRING_ARGUMENT,
+      NULL, "Set this option to specify the sysfs path of the connected "
+      "USB dongle." },
+
+    { "3dvisionpro-config-file", NVIDIA_3DVISIONPRO_CONFIG_FILE_OPTION, NVGETOPT_STRING_ARGUMENT,
+      NULL, "Set this option to specify the NVIDIA 3DVisionPro "
+      "configuration file. Ensure X server has a read and write access "
+      "permissions to this file. NVIDIA X driver stores the hub and "
+      "the pairing configuration in this file to re-use across X restarts. "
+      "If this option is not provided, 3D VisionPro configuration will not "
+      "be stored." },
 
     { NULL, 0, 0, NULL, NULL },
 };

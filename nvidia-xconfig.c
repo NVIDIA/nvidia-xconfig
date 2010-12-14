@@ -455,7 +455,7 @@ static void parse_commandline(Options *op, int argc, char *argv[])
                 break;
             }
 
-            if (intval < 0 || intval > 10) {
+            if (intval < 0 || intval > 11) {
                 fprintf(stderr, "\n");
                 fprintf(stderr, "Invalid stereo: %d.\n", intval);
                 fprintf(stderr, "\n");
@@ -728,6 +728,14 @@ static void parse_commandline(Options *op, int argc, char *argv[])
         case FLATPANEL_PROPERTIES_OPTION:
             op->flatpanel_properties =
                 disable ? NV_DISABLE_STRING_OPTION : strval;
+            break;
+
+        case NVIDIA_3DVISION_USB_PATH_OPTION:
+            op->nvidia_3dvision_usb_path = disable ? NV_DISABLE_STRING_OPTION : strval;
+            break;
+
+        case NVIDIA_3DVISIONPRO_CONFIG_FILE_OPTION:
+            op->nvidia_3dvisionpro_config_file = disable ? NV_DISABLE_STRING_OPTION : strval;
             break;
 
         default:

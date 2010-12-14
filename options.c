@@ -800,4 +800,20 @@ void update_options(Options *op, XConfigScreenPtr screen)
         }
     }
 
+    /* add the 3DVisionUSBPath option */
+    if (op->nvidia_3dvision_usb_path) {
+        remove_option(screen, "3DVisionUSBPath");
+        if (op->nvidia_3dvision_usb_path != NV_DISABLE_STRING_OPTION) {
+            set_option_value(screen, "3DVisionUSBPath", op->nvidia_3dvision_usb_path);
+        }
+    }
+
+    /* add the 3DVisionProConfigFile option */
+    if (op->nvidia_3dvisionpro_config_file) {
+        remove_option(screen, "3DVisionProConfigFile");
+        if (op->nvidia_3dvisionpro_config_file != NV_DISABLE_STRING_OPTION) {
+            set_option_value(screen, "3DVisionProConfigFile", op->nvidia_3dvisionpro_config_file);
+        }
+    }
+
 } /* update_options() */

@@ -174,7 +174,8 @@ typedef struct __options {
     char *color_space;
     char *color_range;
     char *flatpanel_properties;
-
+    char *nvidia_3dvision_usb_path;
+    char *nvidia_3dvisionpro_config_file;
     double tv_over_scan;
 
     struct {
