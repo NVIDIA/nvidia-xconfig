@@ -816,4 +816,14 @@ void update_options(Options *op, XConfigScreenPtr screen)
         }
     }
 
+    /* add the 3DVisionDisplayType option */
+
+    if (op->nvidia_3dvision_display_type != -1) {
+        remove_option(screen, "3DVisionDisplayType");
+        if (op->nvidia_3dvision_display_type != -2) {
+            snprintf(scratch, 8, "%d", op->nvidia_3dvision_display_type);
+            set_option_value(screen, "3DVisionDisplayType", scratch);
+        }
+    }
+
 } /* update_options() */

@@ -28,21 +28,11 @@
 #ifndef __NVIDIA_XCONFIG_H__
 #define __NVIDIA_XCONFIG_H__
 
-#define PROGRAM_NAME "nvidia-xconfig"
-
 #include "xf86Parser.h"
 #include "nvidia-cfg.h"
+#include "common-utils.h"
 
 #include <sys/types.h>
-
-#if !defined(TRUE)
-#define TRUE 1
-#endif
-
-#if !defined(FALSE)
-#define FALSE 0
-#endif
-
 
 typedef struct {
     char **t; /* the text rows */
@@ -145,6 +135,7 @@ typedef struct __options {
     int transparent_index;
     int stereo;
     int cool_bits;
+    int nvidia_3dvision_display_type;
 
     char *xconfig;
     char *output_xconfig;
@@ -217,15 +208,9 @@ typedef struct {
 
 /* util.c */
 
-void *nvalloc(size_t size);
-char *nvstrcat(const char *str, ...);
-void *nvrealloc(void *ptr, size_t size);
-char *nvstrdup(const char *s);
-void nvfree(void *s);
 int copy_file(const char *srcfile, const char *dstfile, mode_t mode);
 
 int directory_exists(const char *dir);
-char *tilde_expansion(char *str);
 
 void reset_current_terminal_width(unsigned short new_val);
 

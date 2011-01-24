@@ -89,6 +89,7 @@ CFLAGS += -I XF86Config-parser
 CFLAGS += -I $(OUTPUTDIR)
 CFLAGS += -I $(NVIDIA_CFG_DIR)
 CFLAGS += -I $(COMMON_UTILS_DIR)
+CFLAGS += -DPROGRAM_NAME=\"nvidia-xconfig\"
 
 HOST_CFLAGS += $(CFLAGS)
 

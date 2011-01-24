@@ -55,6 +55,7 @@
 #define FLATPANEL_PROPERTIES_OPTION         44
 #define NVIDIA_3DVISION_USB_PATH_OPTION     45
 #define NVIDIA_3DVISIONPRO_CONFIG_FILE_OPTION  46
+#define NVIDIA_3DVISION_DISPLAY_TYPE_OPTION 47
 
 /*
  * To add a boolean option to nvidia-xconfig:
@@ -654,6 +655,13 @@ static const NVGetoptOption __options[] = {
       "the pairing configuration in this file to re-use across X restarts. "
       "If this option is not provided, 3D VisionPro configuration will not "
       "be stored." },
+
+    { "3dvision-display-type", NVIDIA_3DVISION_DISPLAY_TYPE_OPTION,
+      NVGETOPT_INTEGER_ARGUMENT | NVGETOPT_ALLOW_DISABLE,
+      NULL, "When NVIDIA 3D Vision is enabled with a non 3D Vision ready "
+      "display, use this option to specify the display type. Valid values "
+      "are: 0 (Assume it is a CRT), 1 (Assume it is a DLP) and "
+      "2 (Assume it is a DLP TV and enable the checkerboard output)." },
 
     { NULL, 0, 0, NULL, NULL },
 };

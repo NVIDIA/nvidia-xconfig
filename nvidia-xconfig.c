@@ -738,6 +738,24 @@ static void parse_commandline(Options *op, int argc, char *argv[])
             op->nvidia_3dvisionpro_config_file = disable ? NV_DISABLE_STRING_OPTION : strval;
             break;
 
+        case NVIDIA_3DVISION_DISPLAY_TYPE_OPTION:
+
+            /* mark as disabled, so we can remove the option later */
+
+            if (disable) {
+                op->nvidia_3dvision_display_type = -2;
+                break;
+            }
+
+            if (intval < 0 || intval > 2) {
+                fprintf(stderr, "\n");
+                fprintf(stderr, "Invalid 3D Vision display type option: %d.\n", intval);
+                fprintf(stderr, "\n");
+                goto fail;
+            }
+            op->nvidia_3dvision_display_type = intval;
+            break;
+
         default:
             goto fail;
         }
@@ -779,6 +797,7 @@ static Options *load_default_options(void)
     op->transparent_index = -1;
     op->stereo = -1;
     op->cool_bits = -1;
+    op->nvidia_3dvision_display_type = -1;
     op->tv_over_scan = -1.0;
 
     xconfigGenerateLoadDefaultOptions(&op->gop);

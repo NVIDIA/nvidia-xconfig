@@ -1005,7 +1005,7 @@ static char *findFileName(char *option)
     /* if the user gave an option, start by expanding '~' */
     
     if (option) {
-        return nvstrdup(tilde_expansion(option));
+        return tilde_expansion(option);
     }
 
     /* if we can write to the current directory, then use that */
@@ -1060,8 +1060,13 @@ static int writeEdidFile(EdidPtr pEdid, char *filename)
      */
     
     n = 0;
-    working_filename = nvstrdup(filename);
+    working_filename = tilde_expansion(filename);
     
+    if (!working_filename) {
+        msg = "Memory allocation failure";
+        goto done;
+    }
+
     while (access(working_filename, F_OK) == 0) {
         snprintf(scratch, 64, "%d", n++);
         nvfree(working_filename);
