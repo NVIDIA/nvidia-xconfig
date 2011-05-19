@@ -663,5 +663,9 @@ static const NVGetoptOption __options[] = {
       "are: 0 (Assume it is a CRT), 1 (Assume it is a DLP) and "
       "2 (Assume it is a DLP TV and enable the checkerboard output)." },
 
+    { "base-mosaic",
+      XCONFIG_BOOL_VAL(BASE_MOSAIC_BOOL_OPTION), NVGETOPT_IS_BOOLEAN, NULL,
+      "Enable or disable the \"BaseMosaic\" X configuration option." },
+
     { NULL, 0, 0, NULL, NULL },
 };

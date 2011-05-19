@@ -81,8 +81,9 @@ typedef struct {
 #define MODE_DEBUG_BOOL_OPTION                  39
 #define THERMAL_CONFIGURATION_CHECK_BOOL_OPTION 40
 #define PRESERVE_BUSID_BOOL_OPTION              41
+#define BASE_MOSAIC_BOOL_OPTION                 42
 
-#define XCONFIG_BOOL_OPTION_COUNT (PRESERVE_BUSID_BOOL_OPTION + 1)
+#define XCONFIG_BOOL_OPTION_COUNT (BASE_MOSAIC_BOOL_OPTION + 1)
 
 /* # of 32-bit variables needed to hold all the boolean options (bits) */
 #define XCONFIG_BOOL_OPTION_SLOTS  \

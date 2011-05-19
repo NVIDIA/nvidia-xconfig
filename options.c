@@ -77,6 +77,7 @@ static const NvidiaXConfigOption __options[] = {
     { CONNECT_TO_ACPID_BOOL_OPTION,          FALSE, "ConnectToAcpid" },
     { ENABLE_ACPI_HOTKEYS_BOOL_OPTION,       FALSE, "EnableACPIHotkeys" },
     { MODE_DEBUG_BOOL_OPTION,                FALSE, "ModeDebug" },
+    { BASE_MOSAIC_BOOL_OPTION,               FALSE, "BaseMosaic" },
     { 0,                                     FALSE, NULL },
 };
 
