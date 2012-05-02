@@ -34,7 +34,6 @@
  * (--) NVIDIA(0):   69 65 77 53 6f 6e 69 63  20 56 50 44 00 00 00 fc
  * (--) NVIDIA(0):   00 31 35 30 0a 20 20 20  20 20 20 20 20 20 00 ce
  * (--) NVIDIA(0):
- * (--) NVIDIA(0): --- End of EDID for ViewSonic VPD150 (DFP-1) ---
  *
  * The added possibilities for the X log are, that the log file contains
  * timestamps along with the raw EDID byte dump like this:
@@ -54,6 +53,9 @@
  * (STATE_LOOKING_FOR_START_OF_LABEL & STATE_LOOKING_FOR_SCREEN_NUMBER_IN_LABEL)
  * for handling these special cases.
  *
+ * Note that in some cases the label could have the form
+ * "NVIDIA(GPU-0)" rather than "NVIDIA(0)".
+
  * A .txt file will contain a raw EDID byte dump like this:
  *
  * 00 FF FF FF FF FF FF 00-06 10 F4 01 01 01 01 01    ................
@@ -146,6 +148,27 @@ static int writeEdidFile(EdidPtr pEdid, char *filename);
 
 static void freeEdid(EdidPtr pEdid);
 
+/*
+ * Moves FilePtr::current to the end of the next occurrence of the
+ * specified string within the file.  Return TRUE if the string is
+ * found in the file; return FALSE otherwise.
+ */
+
+static inline int moveFilePointerPastString(FilePtr pFile, const char *s)
+{
+    size_t len = strlen(s);
+
+    while (((pFile->current - pFile->start) + len) <= pFile->length) {
+
+        if (strncmp(pFile->current, s, len) == 0) {
+
+            pFile->current += len;
+            return TRUE;
+        }
+        pFile->current++;
+    }
+    return FALSE;
+}
 
 
 /*
@@ -373,32 +396,8 @@ static EdidPtr findEdidforTextFile(FilePtr pFile)
 
 static int findEdidHeaderforLogFile(FilePtr pFile)
 {
-    while (((pFile->current - pFile->start) + 15) <= pFile->length) {
-        
-        if ((pFile->current[0]  == 'R') &&
-            (pFile->current[1]  == 'a') &&
-            (pFile->current[2]  == 'w') &&
-            (pFile->current[3]  == ' ') &&
-            (pFile->current[4]  == 'E') &&
-            (pFile->current[5]  == 'D') &&
-            (pFile->current[6]  == 'I') &&
-            (pFile->current[7]  == 'D') &&
-            (pFile->current[8]  == ' ') &&
-            (pFile->current[9]  == 'b') &&
-            (pFile->current[10] == 'y') &&
-            (pFile->current[11] == 't') &&
-            (pFile->current[12] == 'e') &&
-            (pFile->current[13] == 's') &&
-            (pFile->current[14] == ':')) {
-            
-            pFile->current += 15;
-            return TRUE;
-        }
-        pFile->current++;
-    }
+    return moveFilePointerPastString(pFile, "Raw EDID bytes:");
 
-    return FALSE;
-    
 } // findEdidHeaderforLogFile()
 
 
@@ -413,21 +412,30 @@ static int findEdidHeaderforLogFile(FilePtr pFile)
  * character of the string, because the readEdidDataforLogFile()
  * state machine will move pFile->current forward one character when
  * findLogFileLineLabel() succeeds.
+ *
+ * This handles both "NVIDIA(#)" and "NVIDIA(GPU-#)".
  */
 
 static int findLogFileLineLabel(FilePtr pFile)
 {
-    while (((pFile->current - pFile->start) + 7) <= pFile->length) {
+    while ((pFile->current - pFile->start) <= pFile->length) {
 
-        if ((pFile->current[0]  == 'N') &&
-            (pFile->current[1]  == 'V') &&
-            (pFile->current[2]  == 'I') &&
-            (pFile->current[3]  == 'D') &&
-            (pFile->current[4]  == 'I') &&
-            (pFile->current[5]  == 'A') &&
-            (pFile->current[6]  == '(')) {
+        const char *gpuTag = "NVIDIA(GPU";
+        const char *screenTag = "NVIDIA(";
 
-            pFile->current += 6;
+        size_t remainder = pFile->length - (pFile->current - pFile->start);
+
+        if ((remainder > strlen(gpuTag)) &&
+            (strncmp(pFile->current, gpuTag, strlen(gpuTag)) == 0)) {
+
+            pFile->current += strlen(gpuTag);
+            return TRUE;
+        }
+
+        if ((remainder > strlen(screenTag)) &&
+            (strncmp(pFile->current, screenTag, strlen(screenTag)) == 0)) {
+
+            pFile->current += strlen(screenTag);
             return TRUE;
         }
         pFile->current++;
@@ -508,20 +516,13 @@ static int readEdidDataforLogFile(FilePtr pFile, EdidPtr pEdid)
                 state = STATE_LOOKING_FOR_BOTTOM_NIBBLE;
                 goto nextChar;
             }
-            
+
             /*
-             * if we find the text "--- End of EDID for ... ---", then
-             * we want to parse that to find out the name of the
-             * display device whose EDID we are reading; this is also
-             * our exit condition for the state machine
+             * if we hit anything else, we have reached the end of the
+             * EDID: exit the state machine.
              */
-            
-            if (c == '-') {
-                goto done;
-            }
-            
-            goto fail; /* anything else is an error */
-            
+
+            goto done;
             break;
             
         case STATE_LOOKING_FOR_BOTTOM_NIBBLE:
@@ -803,88 +804,75 @@ static int readEdidDataforTextFile(FilePtr pFile, EdidPtr pEdid)
 } // readEdidDataforTextFile()
 
 /*
- * readEdidFooter() - the EDID footer is in the form:
+ * readEdidFooter() - the optional EDID footer is in the form:
  *
  * --- End of EDID for [dpy name] ---
  *
- * Parse the footer to get the dpy name.  pFile->current is expected
- * to point at the start of the footer.  On success, pEdid->name is
- * assigned and TRUE is returned.  On failure, FALSE is returned.
+ * Parse the footer to get the dpy name.  If a footer is present,
+ * pFile->current is expected to point at the start of it.  On
+ * success, pEdid->name is assigned and TRUE is returned.  On failure,
+ * FALSE is returned.
  */
 
 static int readEdidFooterforLogFile(FilePtr pFile, EdidPtr pEdid)
 {
     char *begin;
-    int len;
+    int len, ret;
+    const char *edidFooterStart = "--- End of EDID for ";
+    const char *edidFooterEnd = " ---";
     
     /* check that the mapping is large enough */
 
-    if (((pFile->current - pFile->start) + 20) > pFile->length) {
+    if (((pFile->current - pFile->start) + strlen(edidFooterStart)) >
+        pFile->length) {
         return FALSE;
     }
 
-    /* make sure that the expected text is there */
+    /* check whether the footer text is there */
 
-    if ((pFile->current[0]  != '-') ||
-        (pFile->current[1]  != '-') ||
-        (pFile->current[2]  != '-') ||
-        (pFile->current[3]  != ' ') ||
-        (pFile->current[4]  != 'E') ||
-        (pFile->current[5]  != 'n') ||
-        (pFile->current[6]  != 'd') ||
-        (pFile->current[7]  != ' ') ||
-        (pFile->current[8]  != 'o') ||
-        (pFile->current[9]  != 'f') ||
-        (pFile->current[10] != ' ') ||
-        (pFile->current[11] != 'E') ||
-        (pFile->current[12] != 'D') ||
-        (pFile->current[13] != 'I') ||
-        (pFile->current[14] != 'D') ||
-        (pFile->current[15] != ' ') ||
-        (pFile->current[16] != 'f') ||
-        (pFile->current[17] != 'o') ||
-        (pFile->current[18] != 'r') ||
-        (pFile->current[19] != ' ')) {
-        
-        return FALSE;
+    if (strncmp(pFile->current, edidFooterStart, strlen(edidFooterStart)) != 0) {
+
+        /* if not, we do not know the name of the display device */
+
+        pEdid->name = strdup("unknown");
+
+        return TRUE;
     }
     
     /* skip past the start */
 
-    pFile->current += 20;
+    pFile->current += strlen(edidFooterStart);
     
     begin = pFile->current;
     
     /* search for the end of the expected text */
 
-    while (((pFile->current - pFile->start) + 5) <= pFile->length) {
+    ret = moveFilePointerPastString(pFile, edidFooterEnd);
 
-        if ((pFile->current[0] == ' ') &&
-            (pFile->current[1] == '-') &&
-            (pFile->current[2] == '-') &&
-            (pFile->current[3] == '-')) {
-            
-            len = pFile->current - begin;
-
-            /* make sure the name length seems reasonable */
-
-            if ((len > 512) || (len < 1)) {
-                return FALSE;
-            }
-            
-            pEdid->name = nvalloc(len + 1);
-                
-            strncpy(pEdid->name, begin, len);
-            pEdid->name[len] = '\0';
-            
-            return TRUE;
-        }
-
-        pFile->current++;
+    if (!ret) {
+        return FALSE;
     }
 
-    return FALSE;
-    
+    /*
+     * moveFilePointerPastString() will have moved current past the
+     * end of the footer
+     */
+
+    len = pFile->current - begin - strlen(edidFooterEnd);
+
+    /* make sure the name length seems reasonable */
+
+    if ((len > 512) || (len < 1)) {
+        return FALSE;
+    }
+
+    pEdid->name = nvalloc(len + 1);
+
+    strncpy(pEdid->name, begin, len);
+    pEdid->name[len] = '\0';
+
+    return TRUE;
+
 } // readEdidFooterforLogFile()
 
 /* 
@@ -894,30 +882,8 @@ static int readEdidFooterforLogFile(FilePtr pFile, EdidPtr pEdid)
  */
  
 static int findEdidfooterforTextFile(FilePtr pFile)
-{   
-    pFile->current = pFile->start;
-    while (((pFile->current - pFile->start) + 12) <= pFile->length) {
-
-        if ((pFile->current[0]  == 'E') &&
-            (pFile->current[1]  == 'D') &&
-            (pFile->current[2]  == 'I') &&
-            (pFile->current[3]  == 'D') && 
-            (pFile->current[4]  == ' ') &&
-            (pFile->current[5]  == 'V') &&
-            (pFile->current[6]  == 'e') &&
-            (pFile->current[7]  == 'r') &&
-            (pFile->current[8]  == 's') &&
-            (pFile->current[9]  == 'i') &&
-            (pFile->current[10] == 'o') &&
-            (pFile->current[11] == 'n')) {
-            
-            pFile->current = pFile->start;
-            return TRUE;
-        }
-        pFile->current++;
-    }
-    
-return FALSE;
+{
+    return moveFilePointerPastString(pFile, "EDID Version");
 
 } // findEdidfooterforTextFile()
 
@@ -928,62 +894,42 @@ static int readMonitorNameforTextFile(FilePtr pFile, EdidPtr pEdid)
     char *begin;
     int len;
 
-    while (((pFile->current - pFile->start) + 12) <= pFile->length) {
+    int ret = moveFilePointerPastString(pFile, "Monitor Name");
 
-        if ((pFile->current[0]  == 'M') &&
-            (pFile->current[1]  == 'o') &&
-            (pFile->current[2]  == 'n') &&
-            (pFile->current[3]  == 'i') &&
-            (pFile->current[4]  == 't') &&
-            (pFile->current[5]  == 'o') &&
-            (pFile->current[6]  == 'r') &&
-            (pFile->current[7]  == ' ') &&
-            (pFile->current[8]  == 'N') &&
-            (pFile->current[9]  == 'a') &&
-            (pFile->current[10] == 'm') &&
-            (pFile->current[11] == 'e')) {
-        
-            pFile->current += 12;
-            goto next;
-        }
-     
-        pFile->current++;
-
+    if (!ret) {
+        return FALSE;
     }
+
+    /* search for start of the expected text */
+
+    while (pFile->current[0] != ':') pFile->current++;
+    pFile->current += 2;
+
+    begin = pFile->current;
+
+    /* search for the end of expected text */
+
+    while (((pFile->current - pFile->start) + 2) <= pFile->length) {
+
+        if ((pFile->current[0] == '\r') && (pFile->current[1] == '\n')) {
+
+            len = pFile->current - begin;
+
+            if ((len > 512) || (len < 1)) {
+                return FALSE;
+            }
+
+            pEdid->name = nvalloc(len + 1);
+
+            strncpy(pEdid->name, begin, len);
+            pEdid->name[len] = '\0';
+
+            return TRUE;
+        }
+        pFile->current++;
+    }
+
     return FALSE;
-
-    next:
-
-       /* search for start of the expected text */
-
-       while (pFile->current[0] != ':') pFile->current++;
-       pFile->current += 2;
-
-       begin = pFile->current;
-
-       /* search for the end of expected text */
-  
-       while (((pFile->current - pFile->start) + 2) <= pFile->length) {
-
-           if ((pFile->current[0] == '\r') && (pFile->current[1] == '\n')) {
-
-               len = pFile->current - begin;
-               
-               if ((len > 512) || (len < 1)) {
-                   return FALSE;
-               }
-   
-               pEdid->name = nvalloc(len + 1);
-
-               strncpy(pEdid->name, begin, len);
-               pEdid->name[len] = '\0';
-
-               return TRUE;
-           }
-           pFile->current++;
-       }
-
-     return FALSE;
 
 } // readMonitorNameforTextFile() 
 

@@ -88,14 +88,14 @@ CFLAGS += -DPROGRAM_NAME=\"nvidia-xconfig\"
 
 HOST_CFLAGS += $(CFLAGS)
 
-LDFLAGS += -lm
+LIBS += -lm
 
 ifneq ($(TARGET_OS),FreeBSD)
-  LDFLAGS += -ldl
+  LIBS += -ldl
 endif
 
 ifeq ($(TARGET_OS),SunOS)
-  LDFLAGS += -lscf
+  LIBS += -lscf
 endif
 
 
@@ -110,16 +110,16 @@ all: $(NVIDIA_XCONFIG) $(MANPAGE)
 install: NVIDIA_XCONFIG_install MANPAGE_install
 
 NVIDIA_XCONFIG_install: $(NVIDIA_XCONFIG)
-	$(MKDIR) $(bindir)
-	$(INSTALL) $(INSTALL_BIN_ARGS) $< $(bindir)/$(notdir $<)
+	$(MKDIR) $(BINDIR)
+	$(INSTALL) $(INSTALL_BIN_ARGS) $< $(BINDIR)/$(notdir $<)
 
 MANPAGE_install: $(MANPAGE)
-	$(MKDIR) $(mandir)
-	$(INSTALL) $(INSTALL_DOC_ARGS) $< $(mandir)/$(notdir $<)
+	$(MKDIR) $(MANDIR)
+	$(INSTALL) $(INSTALL_DOC_ARGS) $< $(MANDIR)/$(notdir $<)
 
 $(NVIDIA_XCONFIG): $(OBJS)
-	$(call quiet_cmd,LINK) -o $@ $(OBJS) $(CFLAGS) \
-	  $(LDFLAGS) $(BIN_LDFLAGS)
+	$(call quiet_cmd,LINK) $(CFLAGS) $(LDFLAGS) $(BIN_LDFLAGS) \
+	    -o $@ $(OBJS) $(LIBS)
 	$(call quiet_cmd,STRIP_CMD) $@
 
 # define the rule to build each object file
@@ -142,16 +142,22 @@ AUTO_TEXT = ".\\\" WARNING: THIS FILE IS AUTO-GENERATED!  Edit $< instead."
 
 doc: $(MANPAGE)
 
-$(eval $(call DEFINE_OBJECT_RULE,HOST_CC,gen-manpage-opts.c))
+GEN_MANPAGE_OPTS_SRC  = gen-manpage-opts.c
+GEN_MANPAGE_OPTS_SRC += $(COMMON_UTILS_DIR)/gen-manpage-opts-helper.c
 
-$(GEN_MANPAGE_OPTS): $(call BUILD_OBJECT_LIST,gen-manpage-opts.c)
-	$(call quiet_cmd,HOST_LINK) $< -o $@ \
-		$(HOST_CFLAGS) $(HOST_LDFLAGS) $(HOST_BIN_LDFLAGS)
+GEN_MANPAGE_OPTS_OBJS = $(call BUILD_OBJECT_LIST,$(GEN_MANPAGE_OPTS_SRC))
+
+$(foreach src, $(GEN_MANPAGE_OPTS_SRC), \
+    $(eval $(call DEFINE_OBJECT_RULE,HOST_CC,$(src))))
+
+$(GEN_MANPAGE_OPTS): $(GEN_MANPAGE_OPTS_OBJS)
+	$(call quiet_cmd,HOST_LINK) \
+	    $(HOST_CFLAGS) $(HOST_LDFLAGS) $(HOST_BIN_LDFLAGS) $^ -o $@
 
 $(OPTIONS_1_INC): $(GEN_MANPAGE_OPTS)
 	@./$< > $@
 
-$(MANPAGE_not_gzipped): nvidia-xconfig.1.m4 $(OPTIONS_1_INC)
+$(MANPAGE_not_gzipped): nvidia-xconfig.1.m4 $(OPTIONS_1_INC) $(VERSION_MK)
 	$(call quiet_cmd,M4) -D__HEADER__=$(AUTO_TEXT) -I $(OUTPUTDIR) \
 	  -D__VERSION__=$(NVIDIA_VERSION) \
 	  -D__DATE__="`$(DATE) +%F`" \

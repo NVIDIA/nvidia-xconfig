@@ -26,8 +26,6 @@
 static char *display_device_mask_to_display_device_name(unsigned int mask);
 
 
-#define TAB    "  "
-#define BIGTAB "     "
 #define BUS_ID_STRING_LENGTH 32
 
 

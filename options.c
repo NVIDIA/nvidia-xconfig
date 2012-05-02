@@ -563,7 +563,7 @@ void update_options(Options *op, XConfigScreenPtr screen)
             }
             
             set_option_value(screen, o->name, val);
-            fmtmsg("Option \"%s\" \"%s\" added to "
+            fmtout("Option \"%s\" \"%s\" added to "
                    "Screen \"%s\".", o->name, val, screen->identifier);
         }
     }
@@ -672,7 +672,6 @@ void update_options(Options *op, XConfigScreenPtr screen)
                              op->twinview_orientation);
             if (remove_metamode_offsets(screen,
                                         &old_metamodes, &new_metamodes)) {
-                fmtmsg("");
                 fmtwarn("The MetaModes option contained explicit offsets, "
                         "which would have overridden the specified "
                         "TwinViewOrientation; in order to honor the "
@@ -681,7 +680,6 @@ void update_options(Options *op, XConfigScreenPtr screen)
                         "Old MetaModes option: \"%s\"\n"
                         "New MetaModes option: \"%s\".",
                         old_metamodes, new_metamodes);
-                fmtmsg("");
                 nvfree(old_metamodes);
                 nvfree(new_metamodes);
             }

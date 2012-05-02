@@ -29,12 +29,6 @@
 
 #include <sys/types.h>
 
-typedef struct {
-    char **t; /* the text rows */
-    int n;    /* number of rows */
-    int m;    /* maximum row length */
-} TextRows;
-
 
 /* Boolean options */
 #define NOLOGO_BOOL_OPTION                      0
@@ -107,7 +101,6 @@ typedef struct __options {
     int force_generate;
     int tree;
     int post_tree;
-    int silent;
     int keyboard_list;
     int mouse_list;
     int enable_all_gpus;
@@ -115,6 +108,7 @@ typedef struct __options {
     int disable_scf;
     int query_gpu_info;
     int preserve_driver;
+    int restore_original_backup;
     
     /*
      * the option parser will set bits in boolean_options to indicate
@@ -208,23 +202,7 @@ int copy_file(const char *srcfile, const char *dstfile, mode_t mode);
 
 int directory_exists(const char *dir);
 
-void reset_current_terminal_width(unsigned short new_val);
-
-TextRows *nv_format_text_rows(const char *prefix,
-                              const char *str,
-                              int width, int word_boundary);
-void nv_text_rows_append(TextRows *t, const char *msg);
-void nv_free_text_rows(TextRows *t);
-void nv_concat_text_rows(TextRows *t0, TextRows *t1);
-
 char *fget_next_line(FILE *fp, int *eof);
-
-void fmtout(const char *fmt, ...);
-void fmtoutp(const char *prefix, const char *fmt, ...);
-void fmtmsg(const char *fmt, ...);
-void fmterr(const char *fmt, ...);
-void fmtwarn(const char *fmt, ...);
-
 
 /* make_usable.c */
 

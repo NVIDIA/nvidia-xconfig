@@ -10,6 +10,8 @@
  * description - text for use by print_help() to describe the option
  */
 
+#include "nvidia-xconfig.h"
+
 #define SCREEN_OPTION                       1
 #define LAYOUT_OPTION                       2
 #define X_PREFIX_OPTION                     3
@@ -56,6 +58,8 @@
 #define NVIDIA_3DVISION_USB_PATH_OPTION     45
 #define NVIDIA_3DVISIONPRO_CONFIG_FILE_OPTION  46
 #define NVIDIA_3DVISION_DISPLAY_TYPE_OPTION 47
+/* skip 48-57, as these are '0' - '9' */
+#define RESTORE_ORIGINAL_BACKUP_OPTION      58
 
 /*
  * To add a boolean option to nvidia-xconfig:
@@ -95,13 +99,13 @@ static const NVGetoptOption __options[] = {
     /* These options are printed by "nvidia-xconfig --help" */
 
     { "xconfig", 'c', NVGETOPT_STRING_ARGUMENT | NVGETOPT_HELP_ALWAYS, NULL,
-      "Use [XCONFIG] as the input X config file; if this option is not "
+      "Use &XCONFIG& as the input X config file; if this option is not "
       "specified, then the same search path used by the X server will be "
       "used to find the X configuration file." },
 
     { "output-xconfig", 'o',
       NVGETOPT_STRING_ARGUMENT | NVGETOPT_HELP_ALWAYS, NULL,
-      "Use [OUTPUT-XCONFIG] as the output X configuration file; if this "
+      "Use &OUTPUT-XCONFIG& as the output X configuration file; if this "
       "option is not specified, then the input X configuration filename will "
       "also be used as the output X configuration filename." },
 
@@ -213,13 +217,13 @@ static const NVGetoptOption __options[] = {
       "to use an 8 bit (LUT)." },
 
     { "depth", 'd', NVGETOPT_INTEGER_ARGUMENT, NULL,
-      "Set the default depth to [DEPTH]; valid values for [DEPTH] are "
+      "Set the default depth to &DEPTH&; valid values for &DEPTH& are "
       "8, 15, 16, 24, and 30." },
 
     { "device", DEVICE_OPTION, NVGETOPT_STRING_ARGUMENT, NULL,
       "The nvidia-xconfig utility operates on one or more devices in "
       "the X configuration file.  If this option is specified, the "
-      "device named [DEVICE] in the X configuration file will be "
+      "device named &DEVICE& in the X configuration file will be "
       "used.  If this option is not specified, all the devices within "
       "the X configuration file will be used." },
 
@@ -273,7 +277,7 @@ static const NVGetoptOption __options[] = {
 
     { "extract-edids-from-file", 'E', NVGETOPT_STRING_ARGUMENT, "FILE",
       "Extract any raw EDID byte blocks contained in the specified X "
-      "log file [LOG]; raw EDID bytes are printed by the NVIDIA X driver to "
+      "log file &LOG&; raw EDID bytes are printed by the NVIDIA X driver to "
       "the X log as hexidecimal when verbose logging is enabled with the "
       "\"-logverbose 6\" X server commandline option.  Any extracted EDIDs "
       "are then written as binary data to individual files.  These files "
@@ -291,8 +295,8 @@ static const NVGetoptOption __options[] = {
 
     { "flatpanel-properties", FLATPANEL_PROPERTIES_OPTION,
       NVGETOPT_STRING_ARGUMENT | NVGETOPT_ALLOW_DISABLE, NULL,
-      "Set the flat panel properties. The supported properties are: "
-      "'scaling', 'dithering' & 'ditheringmode'.  Please see the NVIDIA "
+      "Set the flat panel properties. The supported properties are "
+      "'scaling', 'dithering' and 'ditheringmode'.  Please see the NVIDIA "
       "README 'Appendix B. X Config Options' for more details on the "
       "possible values and syntax." },
 
@@ -318,7 +322,7 @@ static const NVGetoptOption __options[] = {
       NVGETOPT_STRING_ARGUMENT | NVGETOPT_ALLOW_DISABLE, "WHEN",
       "Specify when the X server should use the builtin keyboard handler to "
       "process special key combinations (such as Ctrl+Alt+Backspace); see "
-      "the X configuration man page for details.  The value of [WHEN] can be "
+      "the X configuration man page for details.  The value of &WHEN& can be "
       "'Always', 'Never', or 'WhenNeeded'." },
 
     { "include-implicit-metamodes",
@@ -330,7 +334,7 @@ static const NVGetoptOption __options[] = {
     { "keyboard", KEYBOARD_OPTION, NVGETOPT_STRING_ARGUMENT, NULL,
       "When generating a new X configuration file (which happens when no "
       "system X configuration file can be found, or the '--force-generate' "
-      "option is specified), use [KEYBOARD] as the keyboard type, rather "
+      "option is specified), use &KEYBOARD& as the keyboard type, rather "
       "than attempting to probe the system for the keyboard type.  "
       "For a list of possible keyboard types, see the '--keyboard-list' "
       "option." },
@@ -350,7 +354,7 @@ static const NVGetoptOption __options[] = {
     { "layout", LAYOUT_OPTION, NVGETOPT_STRING_ARGUMENT, NULL,
       "The nvidia-xconfig utility operates on a Server Layout within the X "
       "configuration file.  If this option is specified, the layout named "
-      "[LAYOUT] in the X configuration file will be used.  If this option is "
+      "&LAYOUT& in the X configuration file will be used.  If this option is "
       "not specified, the first Server Layout in the X configuration "
       "file is used." },
 
@@ -375,20 +379,20 @@ static const NVGetoptOption __options[] = {
 
     { "mode-list", MODE_LIST_OPTION, NVGETOPT_STRING_ARGUMENT, "MODELIST",
       "Remove all existing modes from the X configuration's modelist and "
-      "add the one(s) specified in the [MODELIST] string." },
+      "add the one(s) specified in the &MODELIST& string." },
 
     { "remove-mode", REMOVE_MODE_OPTION, NVGETOPT_STRING_ARGUMENT, "MODE",
       "Remove the specified mode from the mode list." },
 
     { "metamodes", META_MODES_OPTION, NVGETOPT_STRING_ARGUMENT, "METAMODES",
-      "Add the MetaMode X configuration option with the value [METAMODES] "
+      "Add the MetaMode X configuration option with the value &METAMODES& "
       "which will replace any existing MetaMode option already in the X "
       "configuration file." },
 
     { "mouse", MOUSE_OPTION, NVGETOPT_STRING_ARGUMENT, NULL,
       "When generating a new X configuration file (which happens when no "
       "system X configuration file can be found, or the '--force-generate' "
-      "option is specified), use [MOUSE] as the mouse type, rather than "
+      "option is specified), use &MOUSE& as the mouse type, rather than "
       "attempting to probe the system for the mouse type.  For a list of "
       "possible mouse types, see the '--mouse-list' option." },
 
@@ -398,8 +402,8 @@ static const NVGetoptOption __options[] = {
 
     { "multigpu", MULTI_GPU_OPTION,
       NVGETOPT_STRING_ARGUMENT | NVGETOPT_ALLOW_DISABLE, NULL,
-      "Enable or disable MultiGPU.  Valid values for [MULTIGPU] are 'Off', 'On',"
-      " 'Auto', 'AFR', 'SFR', 'AA'." },
+      "Enable or disable MultiGPU.  Valid values for &MULTIGPU& are "
+      "'Off', 'On', 'Auto', 'AFR', 'SFR', 'AA'." },
 
     { "multisample-compatibility",
       XCONFIG_BOOL_VAL(MULTISAMPLE_COMPATIBILITY_BOOL_OPTION),
@@ -443,7 +447,7 @@ static const NVGetoptOption __options[] = {
     { "transparent-index", TRANSPARENT_INDEX_OPTION,
       NVGETOPT_INTEGER_ARGUMENT | NVGETOPT_ALLOW_DISABLE, "INDEX",
       "Pixel to use as transparent when using color index overlays.  "
-      "Valid values for [TRANSPARENT-INDEX] are 0-255."},
+      "Valid values for &TRANSPARENT-INDEX& are 0-255."},
 
     { "post-tree", 'T', 0, NULL,
       "Like the '--tree' option, but goes through the full process of "
@@ -485,13 +489,13 @@ static const NVGetoptOption __options[] = {
     { "rotate",
       ROTATE_OPTION, NVGETOPT_STRING_ARGUMENT | NVGETOPT_ALLOW_DISABLE, NULL,
       "Enable or disable the \"Rotate\" X configuration option.  Valid values "
-      "for [ROTATE] are 'normal', 'left', 'CCW', 'inverted', "
+      "for &ROTATE& are 'normal', 'left', 'CCW', 'inverted', "
       "'right', and 'CW'.  Rotation can be disabled " },
 
     { "screen", SCREEN_OPTION, NVGETOPT_STRING_ARGUMENT, NULL,
       "The nvidia-xconfig utility operates on one or more screens within a "
       "Server Layout in the X configuration file.  If this option is "
-      "specified, the screen named [SCREEN] in the X configuration file will "
+      "specified, the screen named &SCREEN& in the X configuration file will "
       "be used.  If this option is not specified, all screens within the "
       "selected Server Layout in the X configuration file "
       "will be used used." },
@@ -510,12 +514,12 @@ static const NVGetoptOption __options[] = {
 
     { "sli", SLI_OPTION,
       NVGETOPT_STRING_ARGUMENT | NVGETOPT_ALLOW_DISABLE, NULL,
-      "Enable or disable SLI.  Valid values for [SLI] are 'Off', 'On', 'Auto', "
+      "Enable or disable SLI.  Valid values for &SLI& are 'Off', 'On', 'Auto', "
       "'AFR', 'SFR', 'AA', 'AFRofAA', 'Mosaic'." },
 
     { "stereo", STEREO_OPTION,
       NVGETOPT_INTEGER_ARGUMENT | NVGETOPT_ALLOW_DISABLE, NULL,
-      "Enable or disable the stereo mode.  Valid values for [STEREO] are: 0 "
+      "Enable or disable the stereo mode.  Valid values for &STEREO& are: 0 "
       "(Disabled), 1 (DDC glasses), 2 (Blueline glasses), 3 (Onboard stereo), "
       "4 (TwinView clone mode stereo), 5 (SeeReal digital flat panel), 6 "
       "(Sharp3D digital flat panel), 7 (Arisawa/Hyundai/Zalman/Pavione/Miracube), "
@@ -551,7 +555,7 @@ static const NVGetoptOption __options[] = {
 
     { "twinview-orientation", TWINVIEW_ORIENTATION_OPTION,
       NVGETOPT_STRING_ARGUMENT | NVGETOPT_ALLOW_DISABLE, "ORIENTATION",
-      "Specify the TwinViewOrientation.  Valid values for [ORIENTATION] are: "
+      "Specify the TwinViewOrientation.  Valid values for &ORIENTATION& are: "
       "\"RightOf\" (the default), \"LeftOf\", \"Above\", \"Below\", or "
       "\"Clone\"." },
 
@@ -564,7 +568,7 @@ static const NVGetoptOption __options[] = {
       TWINVIEW_XINERAMA_INFO_ORDER_OPTION,
       NVGETOPT_STRING_ARGUMENT | NVGETOPT_ALLOW_DISABLE, NULL,
       "Enable or disable the \"TwinViewXineramaInfoOrder\" X configuration "
-      "option.  [TWINVIEW-XINERAMA-INFO-ORDER] is a comma-separated list "
+      "option.  &TWINVIEW-XINERAMA-INFO-ORDER& is a comma-separated list "
       "of display device names that describe the order in which "
       "TwinViewXineramaInfo should be reported.  E.g., \"CRT, DFP, TV\"." },
 
@@ -666,6 +670,16 @@ static const NVGetoptOption __options[] = {
     { "base-mosaic",
       XCONFIG_BOOL_VAL(BASE_MOSAIC_BOOL_OPTION), NVGETOPT_IS_BOOLEAN, NULL,
       "Enable or disable the \"BaseMosaic\" X configuration option." },
+
+    { "restore-original-backup", RESTORE_ORIGINAL_BACKUP_OPTION, 0, NULL,
+      "Restore a backup of the X configuration that was made before any "
+      "changes were made by nvidia-xconfig, if such a backup is available. "
+      "This type of backup is made by nvidia-xconfig before it modifies an "
+      "X configuration file that it has not previously touched; this is "
+      "assumed to be an X configuration file that predates the involvement "
+      "of the NVIDIA X driver. As an example, nvidia-xconfig will copy an "
+      "X configuration file at /etc/X11/xorg.conf to /etc/X11/xorg.conf."
+      "nvidia-xconfig-original the first time it makes changes to that file."},
 
     { NULL, 0, 0, NULL, NULL },
 };

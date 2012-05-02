@@ -37,6 +37,8 @@
 #define TAB    "  "
 #define BIGTAB "      "
 
+#define ORIG_SUFFIX   ".nvidia-xconfig-original"
+#define BACKUP_SUFFIX ".backup"
 
 
 /*
@@ -79,111 +81,35 @@ static void print_summary(void)
 
 
 /*
- * cook_description() - the description string may contain text within
- * brackets, which is used by the manpage generator to denote text to
- * be italicized.  We want to omit the bracket characters here.
- */
-
-static char *cook_description(const char *description)
-{
-    int len;
-    char *s, *dst;
-    const char *src;
-    
-    len = strlen(description);
-    s = nvalloc(len + 1);
-    
-    for (src = description, dst = s; *src; src++) {
-        if (*src != '[' && (*src != ']')) {
-            *dst = *src;
-            dst++;
-        }
-    }
-
-    *dst = '\0';
-
-    return s;
-    
-} /* cook_description() */
-
-
-/*
  * print_help() - loop through the __options[] table, and print the
  * description of each option.
  */
 
+static void print_help_helper(const char *name, const char *description)
+{
+    fmtoutp(TAB, name);
+    fmtoutp(BIGTAB, description);
+    fmtout("");
+}
+
 static void print_help(int advanced)
 {
-    int i, j, len;
-    char *msg, *tmp, scratch[8], arg[64];
-    const NVGetoptOption *o;
-    
+    unsigned int include_mask = 0;
+
     print_version();
     print_summary();
 
     fmtout("");
     fmtout("nvidia-xconfig [options]");
     fmtout("");
-    
-    for (i = 0; __options[i].name; i++) {
-        o = &__options[i];
 
-        /*
-         * if non-advanced help is requested, and the ALWAYS flag is
-         * not set, then skip this option
-         */
-
-        if (!advanced && !(o->flags & NVGETOPT_HELP_ALWAYS)) continue;
-
-        /* if we are going to need the argument, process it now */
-
-        if (o->flags & NVGETOPT_HAS_ARGUMENT) {
-            if (o->arg_name) {
-                strcpy(arg, o->arg_name);
-            } else {
-                len = strlen(o->name);
-                for (j = 0; j < len; j++) arg[j] = toupper(o->name[j]);
-                arg[len] = '\0';
-            }
-        }
-        
-        msg = nvstrcat("--", o->name, NULL);
-
-        if (isalpha(o->val)) {
-            sprintf(scratch, "%c", o->val);
-
-            if (o->flags & NVGETOPT_HAS_ARGUMENT) {
-                tmp = nvstrcat("-", scratch, " ", arg, ", ", msg, NULL);
-            } else {
-                tmp = nvstrcat("-", scratch, ", ", msg, NULL);
-            }
-            free(msg);
-            msg = tmp;
-        }
-        
-        if (o->flags & NVGETOPT_HAS_ARGUMENT) {
-            tmp = nvstrcat(msg, "=", arg, NULL);
-            free(msg);
-            msg = tmp;
-        }
-        if (((o->flags & NVGETOPT_IS_BOOLEAN) &&
-             !(o->flags & NVGETOPT_HAS_ARGUMENT)) ||
-            (o->flags & NVGETOPT_ALLOW_DISABLE)) {
-            tmp = nvstrcat(msg, ", --no-", o->name, NULL);
-            free(msg);
-            msg = tmp;
-        }
-
-        fmtoutp(TAB, msg);
-        if (o->description) {
-            tmp = cook_description(o->description);
-            fmtoutp(BIGTAB, tmp);
-            free(tmp);
-        }
-        fmtout("");
-        free(msg);
+    if (!advanced) {
+        /* only print options with the ALWAYS flag */
+        include_mask |= NVGETOPT_HELP_ALWAYS;
     }
-} /* print_help() */
+
+    nvgetopt_print_help(__options, include_mask, print_help_helper);
+}
 
 
 
@@ -227,7 +153,7 @@ static void parse_commandline(Options *op, int argc, char *argv[])
         case 'T': op->post_tree = TRUE; break;
         case 'h': print_help(FALSE); exit(0); break;
         case 'A': print_help(TRUE); exit(0); break;
-        case 's': op->silent = TRUE; break;
+        case 's': silence_fmt(1); break;
         case 'a': op->enable_all_gpus = TRUE; break;
         case '1': op->only_one_screen = TRUE; break;
         
@@ -751,6 +677,10 @@ static void parse_commandline(Options *op, int argc, char *argv[])
             op->nvidia_3dvision_display_type = intval;
             break;
 
+        case RESTORE_ORIGINAL_BACKUP_OPTION:
+            op->restore_original_backup = TRUE;
+            break;
+
         default:
             goto fail;
         }
@@ -816,21 +746,22 @@ static Options *load_default_options(void)
 
 /*
  * backup_file() - create a backup of orig_filename, naming the backup
- * file "<original>.backup".
+ * file "<orig_filename>.<suffix>".
  *
  * XXX If we fail to write to the backup file (eg, it is in a
  * read-only directory), then we should do something intelligent like
  * write the backup to the user's home directory.
  */
 
-static int backup_file(Options *op, const char *orig_filename)
+static int backup_file(Options *op, const char *orig_filename,
+                       const char *suffix)
 {
     char *filename;
     int ret = FALSE;
     
     /* construct the backup filename */
     
-    filename = nvstrcat(orig_filename, ".backup", NULL);
+    filename = nvstrcat(orig_filename, suffix, NULL);
     
     /* if the backup file already exists, remove it */
 
@@ -849,7 +780,7 @@ static int backup_file(Options *op, const char *orig_filename)
         goto done;
     }
     
-    fmtmsg("Backed up file '%s' as '%s'", orig_filename, filename);
+    fmtout("Backed up file '%s' as '%s'", orig_filename, filename);
     ret = TRUE;
     
  done:
@@ -863,7 +794,7 @@ static int backup_file(Options *op, const char *orig_filename)
 
 
 /*
- * write_xconfig() - write the Xconfig to file.
+ * find_xconfig() - search for an X config file.
  *
  * We search for the filename is this order:
  *
@@ -874,14 +805,12 @@ static int backup_file(Options *op, const char *orig_filename)
  * 3) use xf86openConfigFile()
  *
  * 4) If the detected X server is XFree86, we use use "/etc/X11/XF86Config"
- *    Otherwise we use "/etc/X11/xorg.conf",.
+ *    Otherwise we use "/etc/X11/xorg.conf".
  */
 
-static int write_xconfig(Options *op, XConfigPtr config)
+static char *find_xconfig(Options *op, XConfigPtr config)
 {
     char *filename = NULL;
-    char *d, *tmp = NULL;
-    int ret = FALSE;
     
     /* 1) "--output-xconfig" option */
     
@@ -891,7 +820,7 @@ static int write_xconfig(Options *op, XConfigPtr config)
     
     /* config->filename */
 
-    if (!filename && config->filename) {
+    if (!filename && config && config->filename) {
         filename = nvstrdup(config->filename);
     }
     
@@ -917,7 +846,103 @@ static int write_xconfig(Options *op, XConfigPtr config)
             filename = nvstrdup("/etc/X11/xorg.conf");
         }
     }
+
+    return filename;
+} /* find_xconfig() */
+
+
+/*
+ * restore_backup - search for a backup file with the given suffix;
+ * if one is found, restore it.
+ */
+static int restore_backup(Options *op, XConfigPtr config, const char *suffix)
+{
+    char *filename = find_xconfig(op, config);
+    char *backup = nvstrcat(filename, suffix, NULL);
+    struct stat st;
+    int ret = FALSE;
+
+    if (lstat(backup, &st) != 0) {
+        fmterr("Unable to restore from original backup file '%s' (%s)",
+              backup, strerror(errno));
+        goto done;
+    }
+
+    /*
+     * do not restore files if the permissions might allow a malicious user to
+     * modify the backup, potentially tricking an administrator into restoring
+     * the modified backup.
+     */
+    if (!S_ISREG(st.st_mode)  /* non-regular files */ ||
+        st.st_uid != 0        /* not owned by root*/  ||
+        (st.st_gid != 0 && (st.st_mode & S_IWGRP)) /* non-root group write */ ||
+        (st.st_mode & S_IWOTH) /* world writable */ ) {
+        fmterr("The permissions of the original backup file '%s' are too loose "
+               "to be trusted. The file will not be restored.", backup);
+        goto done;
+    }
     
+    /*
+     * if the backup is empty, assume that no original x config file existed
+     * and delete the current X config file.
+     */
+
+    if (st.st_size == 0) {
+        if (unlink(filename) != 0) {
+            fmterr("Unable to remove file '%s' (%s)",
+                   filename, strerror(errno));
+             goto done;
+        }
+    } else {
+        /* copy the file */
+
+        if (!copy_file(backup, filename, 0644)) {
+            /* copy_file() prints out its own error messages */
+            goto done;
+        }
+    }
+
+    /* remove backup: a new one is created if nvidia-xconfig is run again */
+
+    if (access(backup, F_OK) == 0) {
+        if (unlink(backup) != 0) {
+            fmterr("Unable to remove backup file '%s' (%s)",
+                   backup, strerror(errno));
+            goto done;
+        }
+    }
+
+    if (st.st_size == 0) {
+        fmtout("The backup file '%s' was empty. This usually means that nvidia-"
+               "xconfig did not find an X configuration file the first time it "
+               "was run. The X configuration file '%s' was deleted.",
+               backup, filename);
+    } else {
+        fmtout("Restored backup file '%s' to '%s'", backup, filename);
+    }
+
+    ret = TRUE;
+
+ done:
+
+    free(backup);
+    free(filename);
+    
+    return ret;
+} /* restore_backup() */
+
+
+
+/*
+ * write_xconfig() - write the Xconfig to file.
+ */
+
+static int write_xconfig(Options *op, XConfigPtr config, int first_touch)
+{
+    char *filename = find_xconfig(op, config);
+    char *d, *tmp = NULL;
+    int ret = FALSE;
+
     /*
      * XXX it's strange that lack of permission to write to the target
      * location (the likely case with users not having write
@@ -937,10 +962,27 @@ static int write_xconfig(Options *op, XConfigPtr config)
         goto done;
     }
     
-    /* if the file already exists, create a backup first */
+    /* 
+     * if the file already exists, create a backup first. if this is our first
+     * time writing the x config, create a separate "original" backup file.
+     */
     
     if (access(filename, F_OK) == 0) {
-        if (!backup_file(op, filename)) goto done;
+        if (first_touch && !backup_file(op, filename, ORIG_SUFFIX)) goto done;
+        if (!backup_file(op, filename, BACKUP_SUFFIX)) goto done;
+    }
+
+    /* 
+     * if no file exists, and this is our first time writing the x config, back
+     * up an empty file to use as the "original" backup.
+     */
+
+    else if (first_touch) {
+        char *fakeorig = nvstrcat(filename, ORIG_SUFFIX, NULL);
+        if (!copy_file("/dev/null", fakeorig, 0644)) {
+            fmtwarn("Unable to write an empty backup file \"%s\".", fakeorig);
+        }
+        free(fakeorig);
     }
     
     /* write the config file */
@@ -952,8 +994,8 @@ static int write_xconfig(Options *op, XConfigPtr config)
         goto done;
     }
 
-    fmtmsg("New X configuration file written to '%s'", filename);
-    fmtmsg("");
+    fmtout("New X configuration file written to '%s'", filename);
+    fmtout("");
     
     
     /* Set the default depth in the Solaris Management Facility 
@@ -1092,8 +1134,8 @@ static XConfigPtr find_system_xconfig(Options *op)
     filename = xconfigOpenConfigFile(op->xconfig, op->gop.x_project_root);
     
     if (filename) {
-        fmtmsg("");
-        fmtmsg("Using X configuration file: \"%s\".", filename);
+        fmtout("");
+        fmtout("Using X configuration file: \"%s\".", filename);
     } else {
         fmtwarn("Unable to locate/open X configuration file.");
         return NULL;
@@ -1213,6 +1255,7 @@ int main(int argc, char *argv[])
     Options *op;
     int ret;
     XConfigPtr config = NULL;
+    int first_touch = 0;
     
 
     /* Load defaults */
@@ -1256,6 +1299,13 @@ int main(int argc, char *argv[])
         return (ret ? 0 : 1);
     }
 
+    if (op->restore_original_backup) {
+        config = find_system_xconfig(op);
+        xconfigGetXServerInUse(&op->gop);
+        ret = restore_backup(op, config, ORIG_SUFFIX);
+        return (ret ? 0 : 1);
+    }
+
     /*
      * we want to open and parse the system's existing X config file,
      * if possible
@@ -1286,6 +1336,7 @@ int main(int argc, char *argv[])
     
     if (!config) {
         config = xconfigGenerate(&op->gop);
+        first_touch = 1;
     }
 
     /*
@@ -1296,6 +1347,14 @@ int main(int argc, char *argv[])
     if (!config) {
         fmterr("Unable to generate a usable X configuration file.");
         return 1;
+    }
+
+    /* if a config file existed, check to see if it had an nvidia-xconfig
+     * banner: this would suggest that we've touched this file before.
+     */
+
+    if (!first_touch) {
+        first_touch = (find_banner_prefix(config->comment) == NULL);
     }
 
     /* now, we have a good config; apply whatever the user requested */
@@ -1311,7 +1370,7 @@ int main(int argc, char *argv[])
     
     /* write the config back out to file */
 
-    if (!write_xconfig(op, config)) {
+    if (!write_xconfig(op, config, first_touch)) {
         return 1;
     }
 
