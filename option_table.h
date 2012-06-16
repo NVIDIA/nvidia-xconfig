@@ -34,9 +34,9 @@
 #define QUERY_GPU_INFO_OPTION               21
 #define EXTRACT_EDIDS_OUTPUT_FILE_OPTION    22
 #define MULTI_GPU_OPTION                    23
-#define TWINVIEW_XINERAMA_INFO_ORDER_OPTION 24
+#define NVIDIA_XINERAMA_INFO_ORDER_OPTION 24
 #define LOGO_PATH_OPTION                    25
-#define TWINVIEW_ORIENTATION_OPTION         26
+#define METAMODE_ORIENTATION_OPTION         26
 #define VIRTUAL_OPTION                      27
 #define USE_DISPLAY_DEVICE_OPTION           28
 #define CUSTOM_EDID_OPTION                  29
@@ -521,7 +521,7 @@ static const NVGetoptOption __options[] = {
       NVGETOPT_INTEGER_ARGUMENT | NVGETOPT_ALLOW_DISABLE, NULL,
       "Enable or disable the stereo mode.  Valid values for &STEREO& are: 0 "
       "(Disabled), 1 (DDC glasses), 2 (Blueline glasses), 3 (Onboard stereo), "
-      "4 (TwinView clone mode stereo), 5 (SeeReal digital flat panel), 6 "
+      "4 (multi-display clone mode stereo), 5 (SeeReal digital flat panel), 6 "
       "(Sharp3D digital flat panel), 7 (Arisawa/Hyundai/Zalman/Pavione/Miracube), "
       "8 (3D DLP), 9 (3D DLP INV), 10 (NVIDIA 3D VISION), "
       "11 (NVIDIA 3D VISION PRO)." },
@@ -550,27 +550,25 @@ static const NVGetoptOption __options[] = {
       "Enable or disable the \"TVOverScan\" X configuration option. Valid "
       "values are decimal values in the range 1.0 and 0.0." },
 
-    { "twinview", XCONFIG_BOOL_VAL(TWINVIEW_BOOL_OPTION),
-      NVGETOPT_IS_BOOLEAN, NULL, "Enable or disable TwinView." },
-
-    { "twinview-orientation", TWINVIEW_ORIENTATION_OPTION,
+    { "metamode-orientation", METAMODE_ORIENTATION_OPTION,
       NVGETOPT_STRING_ARGUMENT | NVGETOPT_ALLOW_DISABLE, "ORIENTATION",
-      "Specify the TwinViewOrientation.  Valid values for &ORIENTATION& are: "
+      "Specify the MetaModeOrientation.  Valid values for &ORIENTATION& are: "
       "\"RightOf\" (the default), \"LeftOf\", \"Above\", \"Below\", or "
       "\"Clone\"." },
 
-    { "twinview-xinerama-info",
-      XCONFIG_BOOL_VAL(NO_TWINVIEW_XINERAMA_INFO_BOOL_OPTION),
+    { "nvidia-xinerama-info",
+      XCONFIG_BOOL_VAL(NVIDIA_XINERAMA_INFO_BOOL_OPTION),
       NVGETOPT_IS_BOOLEAN, NULL,
-      "Prohibits providing Xinerama information when in TwinView." },
+      "Enable or disable providing Xinerama information from the "
+      "NVIDIA X driver." },
 
-    { "twinview-xinerama-info-order",
-      TWINVIEW_XINERAMA_INFO_ORDER_OPTION,
+    { "nvidia-xinerama-info-order",
+      NVIDIA_XINERAMA_INFO_ORDER_OPTION,
       NVGETOPT_STRING_ARGUMENT | NVGETOPT_ALLOW_DISABLE, NULL,
-      "Enable or disable the \"TwinViewXineramaInfoOrder\" X configuration "
-      "option.  &TWINVIEW-XINERAMA-INFO-ORDER& is a comma-separated list "
+      "Enable or disable the \"nvidiaXineramaInfoOrder\" X configuration "
+      "option.  &NVIDIA-XINERAMA-INFO-ORDER& is a comma-separated list "
       "of display device names that describe the order in which "
-      "TwinViewXineramaInfo should be reported.  E.g., \"CRT, DFP, TV\"." },
+      "nvidiaXineramaInfo should be reported.  E.g., \"CRT, DFP, TV\"." },
 
     { "ubb",
       XCONFIG_BOOL_VAL(UBB_BOOL_OPTION), NVGETOPT_IS_BOOLEAN, NULL,

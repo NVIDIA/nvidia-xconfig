@@ -69,8 +69,8 @@ __OPTIONS__
 Reads an existing X config file and adapts it to use the NVIDIA driver.
 If no X config file can be found, a new one is created at /etc/X11/XF86Config with default settings.
 .TP
-.B nvidia-xconfig \-\-post\-tree \-\-twinview
-Reads the existing X configuration file, adds the TwinView option, and then prints the resulting config file to standard out in tree form.
+.B nvidia-xconfig \-\-post\-tree \-\-metamode\-orientation=clone
+Reads the existing X configuration file, adds the MetaModeOrientation option, and then prints the resulting config file to standard out in tree form.
 The configuration file is not modified.
 .TP
 .B nvidia-xconfig \-\-enable\-all\-gpus

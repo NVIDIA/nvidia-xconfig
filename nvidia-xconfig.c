@@ -556,12 +556,12 @@ static void parse_commandline(Options *op, int argc, char *argv[])
             op->extract_edids_output_file = strval;
             break;
 
-        case TWINVIEW_XINERAMA_INFO_ORDER_OPTION:
-            op->twinview_xinerama_info_order =
+        case NVIDIA_XINERAMA_INFO_ORDER_OPTION:
+            op->nvidia_xinerama_info_order =
                 disable ? NV_DISABLE_STRING_OPTION : strval;
             break;
 
-        case TWINVIEW_ORIENTATION_OPTION:
+        case METAMODE_ORIENTATION_OPTION:
             {
                 const char* valid_values[] = {
                     "RightOf",
@@ -574,7 +574,7 @@ static void parse_commandline(Options *op, int argc, char *argv[])
                 int i;
 
                 if (disable) {
-                    op->twinview_orientation = NV_DISABLE_STRING_OPTION;
+                    op->metamode_orientation = NV_DISABLE_STRING_OPTION;
                     break;
                 }
                 
@@ -584,12 +584,12 @@ static void parse_commandline(Options *op, int argc, char *argv[])
                 }
 
                 if (!valid_values[i]) {
-                    fprintf(stderr, "Invalid TwinViewOrientation option: "
+                    fprintf(stderr, "Invalid MetaModeOrientation option: "
                             "\"%s\".\n", strval);
                     goto fail;
                 }
                 
-                op->twinview_orientation = strval;
+                op->metamode_orientation = strval;
             }
             break;
 

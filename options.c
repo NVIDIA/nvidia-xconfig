@@ -48,9 +48,8 @@ static const NvidiaXConfigOption __options[] = {
     { THERMAL_CONFIGURATION_CHECK_BOOL_OPTION, FALSE, "ThermalConfigurationCheck" },
     { ALLOW_GLX_WITH_COMPOSITE_BOOL_OPTION,  FALSE, "AllowGLXWithComposite" },
     { RANDR_ROTATION_BOOL_OPTION,            FALSE, "RandRRotation" },
-    { TWINVIEW_BOOL_OPTION,                  FALSE, "TwinView" },
     { XINERAMA_BOOL_OPTION,                  FALSE, "Xinerama" },
-    { NO_TWINVIEW_XINERAMA_INFO_BOOL_OPTION, TRUE,  "NoTwinViewXineramaInfo" },
+    { NVIDIA_XINERAMA_INFO_BOOL_OPTION,      FALSE, "nvidiaXineramaInfo" },
     { NOFLIP_BOOL_OPTION,                    TRUE,  "NoFlip" },
     { DAC_8BIT_BOOL_OPTION,                  FALSE, "Dac8Bit" },
     { USE_EDID_FREQS_BOOL_OPTION,            FALSE, "UseEdidFreqs" },
@@ -303,32 +302,6 @@ static void set_option_value(XConfigScreenPtr screen,
 
 
 /*
- * update_twinview_options() - update the TwinView options
- */
-
-static void update_twinview_options(Options *op, XConfigScreenPtr screen)
-{
-    /*
-     * if TwinView was specified, enable/disable the other TwinView
-     * options, too
-     */
-
-    if (GET_BOOL_OPTION(op->boolean_options, TWINVIEW_BOOL_OPTION)) {
-        remove_option(screen, "TwinViewOrientation");
-        remove_option(screen, "SecondMonitorHorizSync");
-        remove_option(screen, "SecondMonitorVertRefresh");
-        remove_option(screen, "MetaModes");
-        
-        if (GET_BOOL_OPTION(op->boolean_option_values, TWINVIEW_BOOL_OPTION)) {
-            set_option_value(screen, "MetaModes",
-                             "nvidia-auto-select, nvidia-auto-select");
-        }
-    }
-} /* update_twinview_options() */
-
-
-
-/*
  * find_metamode_offset() - find the first metamode offset in
  * 'string'; returns a pointer to the start of the offset
  * specification and assigns 'end' (if non-NULL) to the first character
@@ -568,10 +541,6 @@ void update_options(Options *op, XConfigScreenPtr screen)
         }
     }
 
-    /* update the TwinView-related options */
-
-    update_twinview_options(op, screen);
-    
     /* update the Display SubSection options */
     
     update_display_options(op, screen);
@@ -650,32 +619,31 @@ void update_options(Options *op, XConfigScreenPtr screen)
             set_option_value(screen, "AcpidSocketPath", op->acpid_socket_path);
         }
     }
-        
 
-    /* add the twinview xinerama info order option */
-    
-    if (op->twinview_xinerama_info_order) {
-        remove_option(screen, "TwinViewXineramaInfoOrder");
-        if (op->twinview_xinerama_info_order != NV_DISABLE_STRING_OPTION) {
-            set_option_value(screen, "TwinViewXineramaInfoOrder",
-                             op->twinview_xinerama_info_order);
+    /* add the nvidia xinerama info order option */
+
+    if (op->nvidia_xinerama_info_order) {
+        remove_option(screen, "nvidiaXineramaInfoOrder");
+        if (op->nvidia_xinerama_info_order != NV_DISABLE_STRING_OPTION) {
+            set_option_value(screen, "nvidiaXineramaInfoOrder",
+                             op->nvidia_xinerama_info_order);
         }
     }
 
-    /* add the twinview orientation option */
+    /* add the metamode orientation option */
     
-    if (op->twinview_orientation) {
-        remove_option(screen, "TwinViewOrientation");
-        if (op->twinview_orientation != NV_DISABLE_STRING_OPTION) {
+    if (op->metamode_orientation) {
+        remove_option(screen, "MetaModeOrientation");
+        if (op->metamode_orientation != NV_DISABLE_STRING_OPTION) {
             char *old_metamodes, *new_metamodes;
-            set_option_value(screen, "TwinViewOrientation",
-                             op->twinview_orientation);
+            set_option_value(screen, "MetaModeOrientation",
+                             op->metamode_orientation);
             if (remove_metamode_offsets(screen,
                                         &old_metamodes, &new_metamodes)) {
                 fmtwarn("The MetaModes option contained explicit offsets, "
                         "which would have overridden the specified "
-                        "TwinViewOrientation; in order to honor the "
-                        "requested TwinViewOrientation, the explicit offsets "
+                        "MetaModeOrientation; in order to honor the "
+                        "requested MetaModeOrientation, the explicit offsets "
                         "have been removed from the MetaModes option.\n\n"
                         "Old MetaModes option: \"%s\"\n"
                         "New MetaModes option: \"%s\".",

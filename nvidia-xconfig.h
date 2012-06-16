@@ -42,10 +42,9 @@
 #define NO_POWER_CONNECTOR_CHECK_BOOL_OPTION    8
 #define ALLOW_GLX_WITH_COMPOSITE_BOOL_OPTION    10
 #define RANDR_ROTATION_BOOL_OPTION              11
-#define TWINVIEW_BOOL_OPTION                    12
 #define SEPARATE_X_SCREENS_BOOL_OPTION          13
 #define XINERAMA_BOOL_OPTION                    14
-#define NO_TWINVIEW_XINERAMA_INFO_BOOL_OPTION   15
+#define NVIDIA_XINERAMA_INFO_BOOL_OPTION        15
 #define NOFLIP_BOOL_OPTION                      16
 #define DAC_8BIT_BOOL_OPTION                    17
 #define USE_EDID_FREQS_BOOL_OPTION              18
@@ -140,9 +139,9 @@ typedef struct __options {
     char *nvidia_cfg_path;
     char *extract_edids_from_file;
     char *extract_edids_output_file;
-    char *twinview_xinerama_info_order;
+    char *nvidia_xinerama_info_order;
     char *logo_path;
-    char *twinview_orientation;
+    char *metamode_orientation;
     char *use_display_device;
     char *custom_edid;
     char *tv_standard;
