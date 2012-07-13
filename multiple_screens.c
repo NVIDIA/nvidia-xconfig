@@ -781,10 +781,9 @@ static void create_adjacencies(Options *op, XConfigPtr config,
                                XConfigLayoutPtr layout)
 {
     XConfigAdjacencyPtr adj, prev_adj;
-    XConfigScreenPtr screen, prev;
+    XConfigScreenPtr screen;
     int i;
-    
-    prev = NULL;
+
     i = 0;
     prev_adj = NULL;
     
@@ -803,7 +802,6 @@ static void create_adjacencies(Options *op, XConfigPtr config,
         }
         
         prev_adj = adj;
-        prev = screen;
         i++;
     }
     

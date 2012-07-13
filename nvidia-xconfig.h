@@ -201,8 +201,6 @@ int copy_file(const char *srcfile, const char *dstfile, mode_t mode);
 
 int directory_exists(const char *dir);
 
-char *fget_next_line(FILE *fp, int *eof);
-
 /* make_usable.c */
 
 int update_modules(XConfigPtr config);

@@ -12,54 +12,55 @@
 
 #include "nvidia-xconfig.h"
 
-#define SCREEN_OPTION                       1
-#define LAYOUT_OPTION                       2
-#define X_PREFIX_OPTION                     3
-#define KEYBOARD_OPTION                     5
-#define KEYBOARD_LIST_OPTION                6
-#define KEYBOARD_DRIVER_OPTION              7
-#define MOUSE_OPTION                        8
-#define FORCE_GENERATE_OPTION               9
-#define MOUSE_LIST_OPTION                   10
-#define MODE_OPTION                         11
-#define MODE_LIST_OPTION                    12
-#define REMOVE_MODE_OPTION                  13
-#define NVIDIA_CFG_PATH_OPTION              14
-#define NVAGP_OPTION                        15
-#define SLI_OPTION                          16
-#define DISABLE_SCF_OPTION                  17
-#define TRANSPARENT_INDEX_OPTION            18
-#define STEREO_OPTION                       19
-#define ROTATE_OPTION                       20
-#define QUERY_GPU_INFO_OPTION               21
-#define EXTRACT_EDIDS_OUTPUT_FILE_OPTION    22
-#define MULTI_GPU_OPTION                    23
-#define NVIDIA_XINERAMA_INFO_ORDER_OPTION 24
-#define LOGO_PATH_OPTION                    25
-#define METAMODE_ORIENTATION_OPTION         26
-#define VIRTUAL_OPTION                      27
-#define USE_DISPLAY_DEVICE_OPTION           28
-#define CUSTOM_EDID_OPTION                  29
-#define TV_STANDARD_OPTION                  30
-#define TV_OUT_FORMAT_OPTION                31
-#define TV_OVER_SCAN_OPTION                 32
-#define COOL_BITS_OPTION                    33
-#define ACPID_SOCKET_PATH_OPTION            34
-#define HANDLE_SPECIAL_KEYS_OPTION          35
-#define PRESERVE_DRIVER_NAME_OPTION         36
-#define CONNECTED_MONITOR_OPTION            37
-#define REGISTRY_DWORDS_OPTION              38
-#define META_MODES_OPTION                   39
-#define COLOR_SPACE_OPTION                  40
-#define COLOR_RANGE_OPTION                  41
-#define BUSID_OPTION                        42
-#define DEVICE_OPTION                       43
-#define FLATPANEL_PROPERTIES_OPTION         44
-#define NVIDIA_3DVISION_USB_PATH_OPTION     45
-#define NVIDIA_3DVISIONPRO_CONFIG_FILE_OPTION  46
-#define NVIDIA_3DVISION_DISPLAY_TYPE_OPTION 47
-/* skip 48-57, as these are '0' - '9' */
-#define RESTORE_ORIGINAL_BACKUP_OPTION      58
+enum {
+    SCREEN_OPTION = 1024,
+    LAYOUT_OPTION,
+    X_PREFIX_OPTION,
+    KEYBOARD_OPTION,
+    KEYBOARD_LIST_OPTION,
+    KEYBOARD_DRIVER_OPTION,
+    MOUSE_OPTION,
+    FORCE_GENERATE_OPTION,
+    MOUSE_LIST_OPTION,
+    MODE_OPTION,
+    MODE_LIST_OPTION,
+    REMOVE_MODE_OPTION,
+    NVIDIA_CFG_PATH_OPTION,
+    NVAGP_OPTION,
+    SLI_OPTION,
+    DISABLE_SCF_OPTION,
+    TRANSPARENT_INDEX_OPTION,
+    STEREO_OPTION,
+    ROTATE_OPTION,
+    QUERY_GPU_INFO_OPTION,
+    EXTRACT_EDIDS_OUTPUT_FILE_OPTION,
+    MULTI_GPU_OPTION,
+    NVIDIA_XINERAMA_INFO_ORDER_OPTION,
+    LOGO_PATH_OPTION,
+    METAMODE_ORIENTATION_OPTION,
+    VIRTUAL_OPTION,
+    USE_DISPLAY_DEVICE_OPTION,
+    CUSTOM_EDID_OPTION,
+    TV_STANDARD_OPTION,
+    TV_OUT_FORMAT_OPTION,
+    TV_OVER_SCAN_OPTION,
+    COOL_BITS_OPTION,
+    ACPID_SOCKET_PATH_OPTION,
+    HANDLE_SPECIAL_KEYS_OPTION,
+    PRESERVE_DRIVER_NAME_OPTION,
+    CONNECTED_MONITOR_OPTION,
+    REGISTRY_DWORDS_OPTION,
+    META_MODES_OPTION,
+    COLOR_SPACE_OPTION,
+    COLOR_RANGE_OPTION,
+    BUSID_OPTION,
+    DEVICE_OPTION,
+    FLATPANEL_PROPERTIES_OPTION,
+    NVIDIA_3DVISION_USB_PATH_OPTION,
+    NVIDIA_3DVISIONPRO_CONFIG_FILE_OPTION,
+    NVIDIA_3DVISION_DISPLAY_TYPE_OPTION,
+    RESTORE_ORIGINAL_BACKUP_OPTION,
+};
 
 /*
  * To add a boolean option to nvidia-xconfig:

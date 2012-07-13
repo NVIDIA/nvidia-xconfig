@@ -80,13 +80,14 @@ SRC += $(addprefix $(COMMON_UTILS_DIR)/,$(COMMON_UTILS_SRC))
 
 OBJS = $(call BUILD_OBJECT_LIST,$(SRC))
 
-CFLAGS += -I XF86Config-parser
-CFLAGS += -I $(OUTPUTDIR)
-CFLAGS += -I $(NVIDIA_CFG_DIR)
-CFLAGS += -I $(COMMON_UTILS_DIR)
-CFLAGS += -DPROGRAM_NAME=\"nvidia-xconfig\"
+common_cflags += -I XF86Config-parser
+common_cflags += -I $(OUTPUTDIR)
+common_cflags += -I $(NVIDIA_CFG_DIR)
+common_cflags += -I $(COMMON_UTILS_DIR)
+common_cflags += -DPROGRAM_NAME=\"nvidia-xconfig\"
 
-HOST_CFLAGS += $(CFLAGS)
+CFLAGS += $(common_cflags)
+HOST_CFLAGS += $(common_cflags)
 
 LIBS += -lm
 
@@ -123,7 +124,7 @@ $(NVIDIA_XCONFIG): $(OBJS)
 	$(call quiet_cmd,STRIP_CMD) $@
 
 # define the rule to build each object file
-$(foreach src, $(SRC), $(eval $(call DEFINE_OBJECT_RULE,CC,$(src))))
+$(foreach src, $(SRC), $(eval $(call DEFINE_OBJECT_RULE,TARGET,$(src))))
 
 # define the rule to generate $(STAMP_C)
 $(eval $(call DEFINE_STAMP_C_RULE, $(OBJS),$(NVIDIA_XCONFIG_PROGRAM_NAME)))
@@ -148,7 +149,7 @@ GEN_MANPAGE_OPTS_SRC += $(COMMON_UTILS_DIR)/gen-manpage-opts-helper.c
 GEN_MANPAGE_OPTS_OBJS = $(call BUILD_OBJECT_LIST,$(GEN_MANPAGE_OPTS_SRC))
 
 $(foreach src, $(GEN_MANPAGE_OPTS_SRC), \
-    $(eval $(call DEFINE_OBJECT_RULE,HOST_CC,$(src))))
+    $(eval $(call DEFINE_OBJECT_RULE,HOST,$(src))))
 
 $(GEN_MANPAGE_OPTS): $(GEN_MANPAGE_OPTS_OBJS)
 	$(call quiet_cmd,HOST_LINK) \
