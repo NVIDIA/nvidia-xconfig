@@ -64,6 +64,21 @@ typedef struct {
 } NvCfgPciDevice;
 
 
+/*
+ * NvCfgGSyncDeviceType - type of the GSync device
+ */
+
+typedef enum {
+    NVCFG_TYPE_GSYNC1 = 0,
+    NVCFG_TYPE_GSYNC2,
+    NVCFG_TYPE_GSYNC3
+} NvCfgGSyncDeviceType;
+
+
+
+#define NV_CFG_GSYNC_DEVICE_FIRMWARE_FORMAT_1 1
+
+
 
 /*
  * NvCfgDisplayDeviceInformation - this data structure contains
@@ -129,6 +144,15 @@ typedef struct {
  */
 
 typedef void * NvCfgDeviceHandle;
+
+
+
+/*
+ * NvCfgGSyncHandle - this is an opaque handle identifying a
+ * GSync device.
+ */
+
+typedef void * NvCfgGSyncHandle;
 
 
 
@@ -328,5 +352,55 @@ NvCfgBool nvCfgIsPrimaryDevice(NvCfgDeviceHandle handle,
  */
 
 NvCfgBool nvCfgGetTeslaSerialNumbers(char ***serials);
+
+
+/*
+ * nvCfgOpenAllGSyncDevices() - returns an array of NvCfgGSyncHandle's
+ * indicating what GSync devices are present in the system. On success,
+ * NVCFG_TRUE will be returned, n will contain the number of GSync devices
+ * present in the system, and handles will be an allocated array containing
+ * a handle for each of the GSync devices.The caller should free the
+ * handles array when no longer needed. On failure, NVCFG_FALSE will be
+ * returned.
+ */
+
+NvCfgBool nvCfgOpenAllGSyncDevices(int *n, NvCfgGSyncHandle **handles);
+
+
+/*
+ * nvCfgCloseAllGSyncDevices() - close all the GSync device connections
+ * opened by a previous call to nvCfgOpenAllGSyncDevices().
+ */
+
+NvCfgBool nvCfgCloseAllGSyncDevices(void);
+
+
+/*
+ * nvCfgGetGSyncDeviceType() - returns the type of GSync device referenced
+ * by handle.
+ */
+
+NvCfgGSyncDeviceType nvCfgGetGSyncDeviceType(NvCfgGSyncHandle handle);
+
+
+/*
+ * nvCfgGetGSyncDeviceFirmwareVersion() - returns the firmware version of
+ * the GSync device referenced by handle.
+ */
+
+int nvCfgGetGSyncDeviceFirmwareVersion(NvCfgGSyncHandle handle);
+
+
+/*
+ * nvCfgFlashGSyncDevice() - flashes the GSync device referenced by handle.
+ * format contains the firmware format, newFirmwareImage contains the
+ * new firmware image to be flashed, and size contains the size of
+ * newFirmwareImage. On success, NVCFG_TRUE will be returned.
+ * On failure, NVCFG_FALSE will be returned.
+ */
+
+NvCfgBool nvCfgFlashGSyncDevice(NvCfgGSyncHandle handle, int format,
+                                const unsigned char *newFirmwareImage,
+                                int size);
 
 #endif /* __NVIDIA_CFG__ */

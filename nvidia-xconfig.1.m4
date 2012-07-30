@@ -4,6 +4,11 @@ define(__OPTIONS__, [[[include([[[options.1.inc]]])dnl]]])dnl
 .\" Copyright (C) 2005-2010 NVIDIA Corporation.
 .\"
 __HEADER__
+.\" Define the URL macro and then load the URL package if it exists.
+.de URL
+\\$2 \(laURL: \\$1 \(ra\\$3
+..
+.if \n[.g] .mso www.tmac
 .TH nvidia\-xconfig 1 "__DATE__" "nvidia\-xconfig __VERSION__"
 .SH NAME
 nvidia-xconfig \- manipulate X configuration files for the NVIDIA driver
@@ -61,6 +66,15 @@ The
 option can be used to print the new configuration to standard out in tree form instead.  This option is useful to see what
 .B nvidia-xconfig
 will do while leaving the original configuration intact.
+.PP
+The source code to
+.B nvidia\-xconfig
+is released under the GPL and available here:
+.sp
+.ti +5
+.URL "ftp://download.nvidia.com/XFree86/nvidia\-xconfig/"
+.sp
+Patches are welcome.
 dnl Call gen-manpage-opts to generate this section.
 __OPTIONS__
 .SH EXAMPLES
