@@ -229,31 +229,6 @@ static void parse_commandline(Options *op, int argc, char *argv[])
                 break;
             }
 
-        case NVAGP_OPTION:
-
-            /* mark as disabled, so we can remove the option later */
-            
-            if (disable) {
-                op->nvagp = -2;
-                break;
-            }
-
-            if      (strcasecmp(strval, "none")    == 0) op->nvagp = 0;
-            else if (strcasecmp(strval, "nvagp")   == 0) op->nvagp = 1;
-            else if (strcasecmp(strval, "agpgart") == 0) op->nvagp = 2;
-            else if (strcasecmp(strval, "any")     == 0) op->nvagp = 3;
-            else if ((strval[0] == '0') && (strval[1] == '\0')) op->nvagp = 0;
-            else if ((strval[0] == '1') && (strval[1] == '\0')) op->nvagp = 1;
-            else if ((strval[0] == '2') && (strval[1] == '\0')) op->nvagp = 2;
-            else if ((strval[0] == '3') && (strval[1] == '\0')) op->nvagp = 3;
-            else {
-                fprintf(stderr, "\n");
-                fprintf(stderr, "Invalid nvagp: %s.\n", strval);
-                fprintf(stderr, "\n");
-                goto fail;
-            }
-            break;
-
         case TRANSPARENT_INDEX_OPTION:
 
             /* mark as disabled, so we can remove the option later */
@@ -338,23 +313,6 @@ static void parse_commandline(Options *op, int argc, char *argv[])
             }
             break;
 
-        case TV_OVER_SCAN_OPTION:
-            
-            /* mark as disabled, so we can remove the option later */
-
-            if (disable) {
-                op->tv_over_scan = -2.0;
-                break;
-            }
-
-            if (doubleval >= 0.0 && doubleval <= 1.0) {
-                op->tv_over_scan = doubleval;
-            } else {
-                fprintf(stderr, "Invalid TVOverScan value: %f.\n", doubleval);
-                goto fail;
-            }
-            break;
-
         case COOL_BITS_OPTION:
 
             /* mark as disabled, so we can remove the option later */
@@ -376,7 +334,7 @@ static void parse_commandline(Options *op, int argc, char *argv[])
                 break;
             }
 
-            if (intval < 0 || intval > 11) {
+            if (intval < 0 || intval > 12) {
                 fprintf(stderr, "\n");
                 fprintf(stderr, "Invalid stereo: %d.\n", intval);
                 fprintf(stderr, "\n");
@@ -718,7 +676,6 @@ static Options *load_default_options(void)
     op = (Options *) nvalloc(sizeof(Options));
     if (!op) return NULL;
     
-    op->nvagp = -1;
     op->transparent_index = -1;
     op->stereo = -1;
     op->cool_bits = -1;

@@ -38,7 +38,6 @@
 #define OVERLAY_BOOL_OPTION                     4
 #define CIOVERLAY_BOOL_OPTION                   5
 #define OVERLAY_DEFAULT_VISUAL_BOOL_OPTION      6
-#define NO_BANDWIDTH_TEST_BOOL_OPTION           7
 #define NO_POWER_CONNECTOR_CHECK_BOOL_OPTION    8
 #define ALLOW_GLX_WITH_COMPOSITE_BOOL_OPTION    10
 #define RANDR_ROTATION_BOOL_OPTION              11
@@ -49,10 +48,8 @@
 #define DAC_8BIT_BOOL_OPTION                    17
 #define USE_EDID_FREQS_BOOL_OPTION              18
 #define USE_EDID_BOOL_OPTION                    19
-#define USE_INT10_MODULE_BOOL_OPTION            20
 #define FORCE_STEREO_FLIPPING_BOOL_OPTION       21
 #define MULTISAMPLE_COMPATIBILITY_BOOL_OPTION   22
-#define XVMC_USES_TEXTURES_BOOL_OPTION          23
 #define EXACT_MODE_TIMINGS_DVI_BOOL_OPTION      24
 #define ADD_ARGB_GLX_VISUALS_BOOL_OPTION        27
 #define COMPOSITE_BOOL_OPTION                   28
@@ -120,7 +117,6 @@ typedef struct __options {
     u32 boolean_option_values[XCONFIG_BOOL_OPTION_SLOTS];
 
     int depth;
-    int nvagp;
     int transparent_index;
     int stereo;
     int cool_bits;

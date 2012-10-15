@@ -43,7 +43,6 @@ static const NvidiaXConfigOption __options[] = {
     { OVERLAY_BOOL_OPTION,                   FALSE, "Overlay" },
     { CIOVERLAY_BOOL_OPTION,                 FALSE, "CIOverlay" },
     { OVERLAY_DEFAULT_VISUAL_BOOL_OPTION,    FALSE, "OverlayDefaultVisual" },
-    { NO_BANDWIDTH_TEST_BOOL_OPTION,         TRUE,  "NoBandWidthTest" },
     { NO_POWER_CONNECTOR_CHECK_BOOL_OPTION,  TRUE,  "NoPowerConnectorCheck" },
     { THERMAL_CONFIGURATION_CHECK_BOOL_OPTION, FALSE, "ThermalConfigurationCheck" },
     { ALLOW_GLX_WITH_COMPOSITE_BOOL_OPTION,  FALSE, "AllowGLXWithComposite" },
@@ -54,10 +53,8 @@ static const NvidiaXConfigOption __options[] = {
     { DAC_8BIT_BOOL_OPTION,                  FALSE, "Dac8Bit" },
     { USE_EDID_FREQS_BOOL_OPTION,            FALSE, "UseEdidFreqs" },
     { USE_EDID_BOOL_OPTION,                  FALSE, "UseEdid" },
-    { USE_INT10_MODULE_BOOL_OPTION,          FALSE, "UseInt10Module" },
     { FORCE_STEREO_FLIPPING_BOOL_OPTION,     FALSE, "ForceStereoFlipping" },
     { MULTISAMPLE_COMPATIBILITY_BOOL_OPTION, FALSE, "MultisampleCompatibility" },
-    { XVMC_USES_TEXTURES_BOOL_OPTION,        FALSE, "XvmcUsesTextures" },
     { EXACT_MODE_TIMINGS_DVI_BOOL_OPTION,    FALSE, "ExactModeTimingsDVI" },
     { ADD_ARGB_GLX_VISUALS_BOOL_OPTION,      FALSE, "AddARGBGLXVisuals" },
     { DISABLE_GLX_ROOT_CLIPPING_BOOL_OPTION, FALSE, "DisableGLXRootClipping" },
@@ -545,16 +542,6 @@ void update_options(Options *op, XConfigScreenPtr screen)
     
     update_display_options(op, screen);
 
-    /* add the nvagp option */
-    
-    if (op->nvagp != -1) {
-        remove_option(screen, "nvagp");
-        if (op->nvagp != -2) {
-            snprintf(scratch, 8, "%d", op->nvagp);
-            set_option_value(screen, "NvAGP", scratch);
-        }
-    }
-
     /* add the transparent index option */
     
     if (op->transparent_index != -1) {
@@ -697,16 +684,6 @@ void update_options(Options *op, XConfigScreenPtr screen)
         remove_option(screen, "TVOutFormat");
         if (op->tv_out_format != NV_DISABLE_STRING_OPTION) {
            set_option_value(screen, "TVOutFormat", op->tv_out_format);
-        }
-    }
-
-    /* add the TVOverScan option */
-
-    if (op->tv_over_scan != -1.0) {
-        remove_option(screen, "TVOverScan");
-        if (op->tv_over_scan != -2.0) {
-            snprintf(scratch, 8, "%f", op->tv_over_scan);
-            set_option_value(screen, "TVOverScan", scratch);
         }
     }
 

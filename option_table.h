@@ -26,7 +26,6 @@ enum {
     MODE_LIST_OPTION,
     REMOVE_MODE_OPTION,
     NVIDIA_CFG_PATH_OPTION,
-    NVAGP_OPTION,
     SLI_OPTION,
     DISABLE_SCF_OPTION,
     TRANSPARENT_INDEX_OPTION,
@@ -148,10 +147,6 @@ static const NVGetoptOption __options[] = {
       NVGETOPT_IS_BOOLEAN, NULL,
       "Enable or disable the \"AllowGLXWithComposite\" X configuration "
       "option." },
-
-    { "bandwidth-test", XCONFIG_BOOL_VAL(NO_BANDWIDTH_TEST_BOOL_OPTION),
-      NVGETOPT_IS_BOOLEAN, NULL,
-      "Disable or enable the \"NoBandWidthTest\" X configuration option." },
 
     { "busid", BUSID_OPTION,
       NVGETOPT_STRING_ARGUMENT | NVGETOPT_ALLOW_DISABLE, NULL,
@@ -412,13 +407,6 @@ static const NVGetoptOption __options[] = {
       "Enable or disable the use of separate front and "
       "back multisample buffers." },
 
-    { "nvagp", NVAGP_OPTION,
-      NVGETOPT_STRING_ARGUMENT | NVGETOPT_ALLOW_DISABLE, NULL,
-      "Set the NvAGP X config option value.  Possible values are 0 (no AGP), "
-      "1 (NVIDIA's AGP), 2 (AGPGART), 3 (try AGPGART, then try NVIDIA's AGP); "
-      "these values can also be specified as 'none', 'nvagp', 'agpgart', or "
-      "'any'." },
-
     { "nvidia-cfg-path",
       NVIDIA_CFG_PATH_OPTION, NVGETOPT_STRING_ARGUMENT, "PATH",
       "The nvidia-cfg library is used to communicate with the NVIDIA kernel "
@@ -525,7 +513,7 @@ static const NVGetoptOption __options[] = {
       "4 (multi-display clone mode stereo), 5 (SeeReal digital flat panel), 6 "
       "(Sharp3D digital flat panel), 7 (Arisawa/Hyundai/Zalman/Pavione/Miracube), "
       "8 (3D DLP), 9 (3D DLP INV), 10 (NVIDIA 3D VISION), "
-      "11 (NVIDIA 3D VISION PRO)." },
+      "11 (NVIDIA 3D VISION PRO), 12 (HDMI 3D)." },
 
     { "thermal-configuration-check",
       XCONFIG_BOOL_VAL(THERMAL_CONFIGURATION_CHECK_BOOL_OPTION),
@@ -545,11 +533,6 @@ static const NVGetoptOption __options[] = {
       NVGETOPT_STRING_ARGUMENT | NVGETOPT_ALLOW_DISABLE, "TV-OUT-FORMAT",
       "Enable or disable the \"TVOutFormat\" X configuration option. Valid "
       "values for \"TVOutFormat\" are: \"SVIDEO\" and \"COMPOSITE\"." },
-
-    { "tv-over-scan", TV_OVER_SCAN_OPTION,
-      NVGETOPT_DOUBLE_ARGUMENT | NVGETOPT_ALLOW_DISABLE, NULL,
-      "Enable or disable the \"TVOverScan\" X configuration option. Valid "
-      "values are decimal values in the range 1.0 and 0.0." },
 
     { "metamode-orientation", METAMODE_ORIENTATION_OPTION,
       NVGETOPT_STRING_ARGUMENT | NVGETOPT_ALLOW_DISABLE, "ORIENTATION",
@@ -602,12 +585,6 @@ static const NVGetoptOption __options[] = {
       "NVIDIA X driver will use frequency information from the EDID, when "
       "available)." },
 
-    { "use-int10-module",
-      XCONFIG_BOOL_VAL(USE_INT10_MODULE_BOOL_OPTION),
-      NVGETOPT_IS_BOOLEAN, NULL,
-      "Enable use of the X Int10 module to soft-boot all secondary cards, "
-      "rather than POSTing the cards through the NVIDIA kernel module." },
-
     { "use-display-device", USE_DISPLAY_DEVICE_OPTION,
       NVGETOPT_STRING_ARGUMENT | NVGETOPT_ALLOW_DISABLE, "DISPLAY-DEVICE",
       "Force the X driver to use the display device specified." },
@@ -630,12 +607,6 @@ static const NVGetoptOption __options[] = {
 
     { "xinerama", XCONFIG_BOOL_VAL(XINERAMA_BOOL_OPTION),
       NVGETOPT_IS_BOOLEAN, NULL, "Enable or disable Xinerama." },
-
-    { "xvmc-uses-textures",
-      XCONFIG_BOOL_VAL(XVMC_USES_TEXTURES_BOOL_OPTION),
-      NVGETOPT_IS_BOOLEAN, NULL,
-      "Forces XvMC to use the 3D engine for XvMCPutSurface requests rather "
-      "than the video overlay." },
 
     { "color-space", COLOR_SPACE_OPTION,
       NVGETOPT_STRING_ARGUMENT | NVGETOPT_ALLOW_DISABLE, "COLORSPACE",
