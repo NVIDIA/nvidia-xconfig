@@ -1,12 +1,15 @@
 dnl This file is to be preprocessed by m4.
 changequote([[[, ]]])dnl
 define(__OPTIONS__, [[[include([[[options.1.inc]]])dnl]]])dnl
+dnl Solaris man chokes on three-letter macros.
+ifelse(__BUILD_OS__,SunOS,[[[define(__URL__,UR)]]],[[[define(__URL__,URL)]]])dnl
 .\" Copyright (C) 2005-2010 NVIDIA Corporation.
 .\"
 __HEADER__
-.\" Define the URL macro and then load the URL package if it exists.
-.de URL
-\\$2 \(laURL: \\$1 \(ra\\$3
+.\" Define the .__URL__ macro and then override it with the www.tmac package if it
+.\" exists.
+.de __URL__
+\\$2 \(la \\$1 \(ra\\$3
 ..
 .if \n[.g] .mso www.tmac
 .TH nvidia\-xconfig 1 "__DATE__" "nvidia\-xconfig __VERSION__"
@@ -72,7 +75,7 @@ The source code to
 is released under the GPL and available here:
 .sp
 .ti +5
-.URL "ftp://download.nvidia.com/XFree86/nvidia\-xconfig/"
+.__URL__ "ftp://download.nvidia.com/XFree86/nvidia\-xconfig/"
 .sp
 Patches are welcome.
 dnl Call gen-manpage-opts to generate this section.

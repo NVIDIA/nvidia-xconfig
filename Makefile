@@ -162,6 +162,7 @@ $(MANPAGE_not_gzipped): nvidia-xconfig.1.m4 $(OPTIONS_1_INC) $(VERSION_MK)
 	$(call quiet_cmd,M4) -D__HEADER__=$(AUTO_TEXT) -I $(OUTPUTDIR) \
 	  -D__VERSION__=$(NVIDIA_VERSION) \
 	  -D__DATE__="`$(DATE) +%F`" \
+	  -D__BUILD_OS__=$(TARGET_OS) \
 	  $< > $@
 
 $(MANPAGE_gzipped): $(MANPAGE_not_gzipped)
