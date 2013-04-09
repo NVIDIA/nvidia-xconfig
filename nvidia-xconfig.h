@@ -40,7 +40,6 @@
 #define OVERLAY_DEFAULT_VISUAL_BOOL_OPTION      6
 #define NO_POWER_CONNECTOR_CHECK_BOOL_OPTION    8
 #define ALLOW_GLX_WITH_COMPOSITE_BOOL_OPTION    10
-#define RANDR_ROTATION_BOOL_OPTION              11
 #define SEPARATE_X_SCREENS_BOOL_OPTION          13
 #define XINERAMA_BOOL_OPTION                    14
 #define NVIDIA_XINERAMA_INFO_BOOL_OPTION        15
@@ -130,7 +129,6 @@ typedef struct __options {
     char *busid;
     char *multigpu;
     char *sli;
-    char *rotate;
 
     char *nvidia_cfg_path;
     char *extract_edids_from_file;

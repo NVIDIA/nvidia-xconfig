@@ -30,7 +30,6 @@ enum {
     DISABLE_SCF_OPTION,
     TRANSPARENT_INDEX_OPTION,
     STEREO_OPTION,
-    ROTATE_OPTION,
     QUERY_GPU_INFO_OPTION,
     EXTRACT_EDIDS_OUTPUT_FILE_OPTION,
     MULTI_GPU_OPTION,
@@ -458,10 +457,6 @@ static const NVGetoptOption __options[] = {
     { "query-gpu-info", QUERY_GPU_INFO_OPTION, 0, NULL,
       "Print information about all recognized NVIDIA GPUs in the system." },
 
-    { "randr-rotation",
-      XCONFIG_BOOL_VAL(RANDR_ROTATION_BOOL_OPTION), NVGETOPT_IS_BOOLEAN, NULL,
-      "Enable or disable the \"RandRRotation\" X configuration option." },
-
     { "registry-dwords", REGISTRY_DWORDS_OPTION,
       NVGETOPT_STRING_ARGUMENT | NVGETOPT_ALLOW_DISABLE, NULL,
       "Enable or disable the \"RegistryDwords\" X configuration option." },
@@ -474,12 +469,6 @@ static const NVGetoptOption __options[] = {
       XCONFIG_BOOL_VAL(NO_RENDER_EXTENSION_BOOL_OPTION),
       NVGETOPT_IS_BOOLEAN, NULL,
       "Disable or enable the \"NoRenderExtension\" X configuration option." },
-
-    { "rotate",
-      ROTATE_OPTION, NVGETOPT_STRING_ARGUMENT | NVGETOPT_ALLOW_DISABLE, NULL,
-      "Enable or disable the \"Rotate\" X configuration option.  Valid values "
-      "for &ROTATE& are 'normal', 'left', 'CCW', 'inverted', "
-      "'right', and 'CW'.  Rotation can be disabled " },
 
     { "screen", SCREEN_OPTION, NVGETOPT_STRING_ARGUMENT, NULL,
       "The nvidia-xconfig utility operates on one or more screens within a "

@@ -463,43 +463,6 @@ static void parse_commandline(Options *op, int argc, char *argv[])
             }
             break;
 
-        case ROTATE_OPTION:
-            {
-                const char* valid_values[] = {
-                    "0",
-                    "no",
-                    "off",
-                    "normal",
-                    "left",
-                    "CCW",
-                    "inverted",
-                    "right",
-                    "CW",
-                    NULL
-                };
-                int i;
-
-                /* mark as disabled, so we can remove the option later */
-
-                if (disable) {
-                    op->rotate = NV_DISABLE_STRING_OPTION;
-                    break;
-                }
-
-                for (i = 0; valid_values[i]; i++) {
-                    if (!strcasecmp(strval, valid_values[i]))
-                        break;
-                }
-
-                if (valid_values[i]) {
-                    op->rotate = strval;
-                } else {
-                    fprintf(stderr, "Invalid Rotate option: %s.\n", strval);
-                    goto fail;
-                }
-            }
-            break;
-
         case PRESERVE_DRIVER_NAME_OPTION: op->preserve_driver = TRUE; break;
         
         case DISABLE_SCF_OPTION: op->disable_scf = TRUE; break;

@@ -211,6 +211,17 @@ NvCfgBool nvCfgOpenDevice(int bus, int slot, NvCfgDeviceHandle *handle);
 
 
 /*
+ * nvCfgAttachPciDevice() - open a limited, display-less connection to
+ * the NVIDIA device identified by the domain:bus:slot:function PCI
+ * address.  On success, NVCFG_TRUE will be returned and handle will be
+ * assigned.  On failure, NVCFG_FALSE will be returned.
+ */
+NvCfgBool nvCfgAttachPciDevice(int domain, int bus, int device, int function,
+                               NvCfgDeviceHandle *handle);
+
+
+
+/*
  * nvCfgOpenPciDevice() - open a connection to the NVIDIA device
  * identified by the domain:bus:slot:function PCI address.  On
  * success, NVCFG_TRUE will be returned and handle will be assigned.
@@ -237,8 +248,16 @@ NvCfgBool nvCfgOpenAllPciDevices(int *n, NvCfgDeviceHandle **handles);
 
 
 /*
+ * nvCfgDetachDevice() - close the previously opened limited, display-less
+ * connection to an NVIDIA device created by nvCfgAttachPciDevice().
+ */
+NvCfgBool nvCfgDetachDevice(NvCfgDeviceHandle handle);
+
+
+
+/*
  * nvCfgCloseDevice() - close the previously opened connection to an
- * NVIDIA device.
+ * NVIDIA device created by nvCfgOpenPciDevice().
  */
 
 NvCfgBool nvCfgCloseDevice(NvCfgDeviceHandle handle);

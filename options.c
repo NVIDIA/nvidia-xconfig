@@ -46,7 +46,6 @@ static const NvidiaXConfigOption __options[] = {
     { NO_POWER_CONNECTOR_CHECK_BOOL_OPTION,  TRUE,  "NoPowerConnectorCheck" },
     { THERMAL_CONFIGURATION_CHECK_BOOL_OPTION, FALSE, "ThermalConfigurationCheck" },
     { ALLOW_GLX_WITH_COMPOSITE_BOOL_OPTION,  FALSE, "AllowGLXWithComposite" },
-    { RANDR_ROTATION_BOOL_OPTION,            FALSE, "RandRRotation" },
     { XINERAMA_BOOL_OPTION,                  FALSE, "Xinerama" },
     { NVIDIA_XINERAMA_INFO_BOOL_OPTION,      FALSE, "nvidiaXineramaInfo" },
     { NOFLIP_BOOL_OPTION,                    TRUE,  "NoFlip" },
@@ -586,15 +585,6 @@ void update_options(Options *op, XConfigScreenPtr screen)
         remove_option(screen, "MetaModes");
         if (op->metamodes_str != NV_DISABLE_STRING_OPTION) {
             set_option_value(screen, "MetaModes", op->metamodes_str);
-        }
-    }
-
-    /* add the rotate option */
-
-    if (op->rotate) {
-        remove_option(screen, "Rotate");
-        if (op->rotate != NV_DISABLE_STRING_OPTION) {
-            set_option_value(screen, "Rotate", op->rotate);
         }
     }
 
