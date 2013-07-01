@@ -178,9 +178,10 @@ typedef struct _device_rec {
     NvCfgDeviceHandle handle;
     int crtcs;
     char *name;
+    char *uuid;
     unsigned int displayDeviceMask;
     int nDisplayDevices;
-    DisplayDevicePtr displayDevices;    
+    DisplayDevicePtr displayDevices;
 } DeviceRec, *DevicePtr;
 
 typedef struct {

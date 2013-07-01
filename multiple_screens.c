@@ -131,6 +131,7 @@ DevicesPtr find_devices(Options *op)
     NvCfgBool (*__isPrimaryDevice)(NvCfgDeviceHandle handle,
                                   NvCfgBool *is_primary_device);
     NvCfgBool (*__closeDevice)(NvCfgDeviceHandle handle);
+    NvCfgBool (*__getDeviceUUID)(NvCfgDeviceHandle handle, char **uuid);
     
     /* dlopen() the nvidia-cfg library */
     
@@ -170,6 +171,7 @@ DevicesPtr find_devices(Options *op)
     __GET_FUNC(__getDisplayDevices, "nvCfgGetDisplayDevices");
     __GET_FUNC(__getEDID, "nvCfgGetEDID");
     __GET_FUNC(__closeDevice, "nvCfgCloseDevice");
+    __GET_FUNC(__getDeviceUUID, "nvCfgGetDeviceUUID");
 
     /* optional functions */
     __isPrimaryDevice = dlsym(lib_handle, "nvCfgIsPrimaryDevice");
@@ -205,6 +207,10 @@ DevicesPtr find_devices(Options *op)
             goto fail;
         }
 
+        if (__getDeviceUUID(pDevices->devices[i].handle,
+                            &pDevices->devices[i].uuid) != NVCFG_TRUE) {
+            goto fail;
+        }
         if (__getDisplayDevices(pDevices->devices[i].handle, &mask) !=
             NVCFG_TRUE) {
             goto fail;

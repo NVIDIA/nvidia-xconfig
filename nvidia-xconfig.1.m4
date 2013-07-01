@@ -66,7 +66,8 @@ will copy it to
 before writing the new configuration.
 The
 .B \-\-post\-tree (\-T)
-option can be used to print the new configuration to standard out in tree form instead.  This option is useful to see what
+option can be used to print the new configuration to standard out in tree form instead.
+This option is useful to see what
 .B nvidia-xconfig
 will do while leaving the original configuration intact.
 .PP

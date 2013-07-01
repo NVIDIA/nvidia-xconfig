@@ -59,7 +59,8 @@ int query_gpu_info(Options *op)
         fmtout("");
         fmtout("GPU #%d:", i);
         fmtoutp(TAB, "Name      : %s", pDevices->devices[i].name);
-        
+        fmtoutp(TAB, "UUID      : %s", pDevices->devices[i].uuid);
+
         memset(busid, 0, BUS_ID_STRING_LENGTH);
         xconfigFormatPciBusString(busid, BUS_ID_STRING_LENGTH,
                                   pDevices->devices[i].dev.domain,
