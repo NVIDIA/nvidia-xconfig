@@ -183,7 +183,7 @@ void xconfigPrint(MsgType t, const char *msg)
     }
     
     if (newline) fmt(stream, NULL, "");
-    fmt(stream, prefix, msg);
+    fmt(stream, prefix, "%s", msg);
     if (newline) fmt(stream, NULL, "");
     
 } /* xconfigPrint */

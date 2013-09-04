@@ -50,7 +50,7 @@ extern const char *pNV_ID;
 static void print_version(void)
 {
     fmtout("");
-    fmtout(pNV_ID);
+    fmtout("%s", pNV_ID);
     fmtoutp(TAB, "The NVIDIA X Configuration Tool.");
     fmtout("");
     fmtoutp(TAB, "This program is used to manipulate X configuration files, "
@@ -87,8 +87,8 @@ static void print_summary(void)
 
 static void print_help_helper(const char *name, const char *description)
 {
-    fmtoutp(TAB, name);
-    fmtoutp(BIGTAB, description);
+    fmtoutp(TAB, "%s", name);
+    fmtoutp(BIGTAB, "%s", description);
     fmtout("");
 }
 
