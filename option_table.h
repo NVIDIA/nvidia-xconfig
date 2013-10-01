@@ -291,7 +291,7 @@ static const NVGetoptOption __options[] = {
     { "flatpanel-properties", FLATPANEL_PROPERTIES_OPTION,
       NVGETOPT_STRING_ARGUMENT | NVGETOPT_ALLOW_DISABLE, NULL,
       "Set the flat panel properties. The supported properties are "
-      "'scaling', 'dithering' and 'ditheringmode'.  Please see the NVIDIA "
+      "'dithering' and 'ditheringmode'.  Please see the NVIDIA "
       "README 'Appendix B. X Config Options' for more details on the "
       "possible values and syntax." },
 
