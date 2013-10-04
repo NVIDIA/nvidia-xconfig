@@ -245,10 +245,6 @@ static const NVGetoptOption __options[] = {
       "update." },
 #endif
 
-    { "dynamic-twinview", XCONFIG_BOOL_VAL(DYNAMIC_TWINVIEW_BOOL_OPTION),
-      NVGETOPT_IS_BOOLEAN, NULL,
-      "Enable or disable support for dynamically configuring TwinView." },
-    
     { "preserve-driver-name", PRESERVE_DRIVER_NAME_OPTION, 0, NULL,
       "By default nvidia-xconfig changes the  display  driver  to \"nvidia\" "
       "for all configured X screens; this option preserves the existing driver "
@@ -291,7 +287,7 @@ static const NVGetoptOption __options[] = {
     { "flatpanel-properties", FLATPANEL_PROPERTIES_OPTION,
       NVGETOPT_STRING_ARGUMENT | NVGETOPT_ALLOW_DISABLE, NULL,
       "Set the flat panel properties. The supported properties are "
-      "'scaling', 'dithering' and 'ditheringmode'.  Please see the NVIDIA "
+      "'dithering' and 'ditheringmode'.  Please see the NVIDIA "
       "README 'Appendix B. X Config Options' for more details on the "
       "possible values and syntax." },
 
@@ -482,13 +478,13 @@ static const NVGetoptOption __options[] = {
       XCONFIG_BOOL_VAL(SEPARATE_X_SCREENS_BOOL_OPTION),
       NVGETOPT_IS_BOOLEAN, NULL,
       "A GPU that supports multiple simultaneous display devices can either "
-      "drive these display devices in TwinView, or as separate X screens.  "
-      "When the '--separate-x-screens' option is specified, each GPU on which "
-      "an X screen is currently configured will be updated to have two X "
-      "screens configured.  The '--no-separate-x-screens' option will remove "
-      "the second configured X screen on each GPU.  Please see the NVIDIA "
-      "README description of \"Separate X Screens on One GPU\" for further "
-      "details." },
+      "drive these display devices in a single X screen, or as separate X "
+      "screens.  When the '--separate-x-screens' option is specified, each GPU "
+      "on which an X screen is currently configured will be updated to have "
+      "two X screens configured.  The '--no-separate-x-screens' option will "
+      "remove the second configured X screen on each GPU.  Please see the "
+      "NVIDIA README description of \"Separate X Screens on One GPU\" for "
+      "further details." },
 
     { "sli", SLI_OPTION,
       NVGETOPT_STRING_ARGUMENT | NVGETOPT_ALLOW_DISABLE, NULL,
@@ -639,6 +635,10 @@ static const NVGetoptOption __options[] = {
       "of the NVIDIA X driver. As an example, nvidia-xconfig will copy an "
       "X configuration file at /etc/X11/xorg.conf to /etc/X11/xorg.conf."
       "nvidia-xconfig-original the first time it makes changes to that file."},
+
+    { "allow-empty-initial-configuration", XCONFIG_BOOL_VAL(ALLOW_EMPTY_INITIAL_CONFIGURATION),
+      NVGETOPT_IS_BOOLEAN, NULL, "Allow the X server to start even if no "
+      "connected display devices could be detected." },
 
     { NULL, 0, 0, NULL, NULL },
 };

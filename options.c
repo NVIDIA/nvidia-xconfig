@@ -61,13 +61,13 @@ static const NvidiaXConfigOption __options[] = {
     { DAMAGE_EVENTS_BOOL_OPTION,             FALSE, "DamageEvents" },
     { CONSTANT_DPI_BOOL_OPTION,              FALSE, "ConstantDPI" },
     { PROBE_ALL_GPUS_BOOL_OPTION,            FALSE, "ProbeAllGpus" },
-    { DYNAMIC_TWINVIEW_BOOL_OPTION,          FALSE, "DynamicTwinView" },
     { INCLUDE_IMPLICIT_METAMODES_BOOL_OPTION,FALSE, "IncludeImplicitMetaModes" },
     { USE_EVENTS_BOOL_OPTION,                FALSE, "UseEvents" },
     { CONNECT_TO_ACPID_BOOL_OPTION,          FALSE, "ConnectToAcpid" },
     { ENABLE_ACPI_HOTKEYS_BOOL_OPTION,       FALSE, "EnableACPIHotkeys" },
     { MODE_DEBUG_BOOL_OPTION,                FALSE, "ModeDebug" },
     { BASE_MOSAIC_BOOL_OPTION,               FALSE, "BaseMosaic" },
+    { ALLOW_EMPTY_INITIAL_CONFIGURATION,     FALSE, "AllowEmptyInitialConfiguration" },
     { 0,                                     FALSE, NULL },
 };
 
@@ -120,69 +120,50 @@ void set_boolean_option(Options *op, const int c, const int boolval)
 
 void validate_composite(Options *op, XConfigPtr config)
 {
-    int i, n, opt, disable_composite;
-    char scratch[256], *s;
-    
-    
-    /*
-     * the composite_incompatible_options[] array lists all the
-     * options that are incompatible with the composite extension; we
-     * list boolean options and then special-case any non-boolean options
-     */
+    int composite_specified;
+    int xinerama_enabled;
+    int overlay_enabled;
+    int cioverlay_enabled;
+    int ubb_enabled;
+    int stereo_enabled;
+    const char *err_str;
 
-    static int composite_incompatible_options[] = {
-        XINERAMA_BOOL_OPTION,
-        OVERLAY_BOOL_OPTION,
-        CIOVERLAY_BOOL_OPTION,
-        UBB_BOOL_OPTION,
-        -1, /* stereo */
-        -2 /* end */
-    };
-    
-    disable_composite = FALSE;
-    s = scratch;
-    n = 0;
-    
-    /*
-     * loop through all the incompatible options, and check if the
-     * user specified any of them
-     */
 
-    for (i = 0; composite_incompatible_options[i] != -2; i++) {
+    composite_specified = GET_BOOL_OPTION(op->boolean_options,
+                                          COMPOSITE_BOOL_OPTION);
 
-        int present = 0;
-        const char *name;
-        
-        opt = composite_incompatible_options[i];
-     
-        if (opt == -1) { /* special case stereo */
-            
-            present = (op->stereo > 0);
-            name = "Stereo";
-            
-        } else {
-            const NvidiaXConfigOption *o;
-            
-            present = (GET_BOOL_OPTION(op->boolean_options, opt) &&
-                       GET_BOOL_OPTION(op->boolean_option_values, opt));
-            
-            o = get_option(opt);
-            name = o->name;
-        }
-        
-        /*
-         * if the option is present, then we have to disable
-         * composite; append to the scratch string that lists all the
-         * present conflicting options
-         */
-        
-        if (present) {
-            disable_composite = TRUE;
-            n++;
-            s += sprintf(s, "%s%s", (n > 1) ? " or " : "", name);
-        }
-    }
-    
+    xinerama_enabled = (GET_BOOL_OPTION(op->boolean_options,
+                                        XINERAMA_BOOL_OPTION) &&
+                        GET_BOOL_OPTION(op->boolean_option_values,
+                                        XINERAMA_BOOL_OPTION));
+
+    overlay_enabled = (GET_BOOL_OPTION(op->boolean_options,
+                                       OVERLAY_BOOL_OPTION) &&
+                       GET_BOOL_OPTION(op->boolean_option_values,
+                                       OVERLAY_BOOL_OPTION));
+
+    cioverlay_enabled = (GET_BOOL_OPTION(op->boolean_options,
+                                         CIOVERLAY_BOOL_OPTION) &&
+                         GET_BOOL_OPTION(op->boolean_option_values,
+                                         CIOVERLAY_BOOL_OPTION));
+
+    ubb_enabled = (GET_BOOL_OPTION(op->boolean_options,
+                                   UBB_BOOL_OPTION) &&
+                   GET_BOOL_OPTION(op->boolean_option_values,
+                                   UBB_BOOL_OPTION));
+
+    stereo_enabled = !!(op->stereo > 0);
+
+    err_str = xconfigValidateComposite(config,
+                                       &(op->gop),
+                                       composite_specified,
+                                       xinerama_enabled,
+                                       op->depth,
+                                       overlay_enabled,
+                                       cioverlay_enabled,
+                                       ubb_enabled,
+                                       stereo_enabled);
+
     /*
      * if we have to disable the composite extension, print a warning
      * and set the option value.
@@ -195,16 +176,12 @@ void validate_composite(Options *op, XConfigPtr config)
      * already has an extension section, or the user specified the
      * composite option.
      */
-    
-    if (disable_composite &&
-        (op->gop.supports_extension_section ||
-         config->extensions ||
-         GET_BOOL_OPTION(op->boolean_options, COMPOSITE_BOOL_OPTION))) {
-        
+
+    if (err_str) {
         fmtwarn("The Composite X extension does not currently interact well "
-                "with the %s option%s; the Composite X extension will be "
-                "disabled.", scratch, (n > 1) ? "s": "");
-        
+                "with the %s option(s); the Composite X extension will be "
+                "disabled.", err_str);
+
         set_boolean_option(op, COMPOSITE_BOOL_OPTION, FALSE);
     }
 } /* validate_composite() */
