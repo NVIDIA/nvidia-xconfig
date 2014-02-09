@@ -33,6 +33,7 @@
 
 #include "nvidia-xconfig.h"
 #include "nvgetopt.h"
+#include "msg.h"
 
 #define TAB    "  "
 #define BIGTAB "      "
@@ -49,31 +50,31 @@ extern const char *pNV_ID;
 
 static void print_version(void)
 {
-    fmtout("");
-    fmtout("%s", pNV_ID);
-    fmtoutp(TAB, "The NVIDIA X Configuration Tool.");
-    fmtout("");
-    fmtoutp(TAB, "This program is used to manipulate X configuration files, "
-            "specifically to enable NVIDIA X driver functionality.");
-    fmtout("");
-    fmtoutp(TAB, "Copyright (C) 2005 - 2010 NVIDIA Corporation.");
-    fmtout("");
-    
+    nv_info_msg(NULL, "");
+    nv_info_msg(NULL, "%s", pNV_ID);
+    nv_info_msg(TAB, "The NVIDIA X Configuration Tool.");
+    nv_info_msg(NULL, "");
+    nv_info_msg(TAB, "This program is used to manipulate X configuration files, "
+                     "specifically to enable NVIDIA X driver functionality.");
+    nv_info_msg(NULL, "");
+    nv_info_msg(TAB, "Copyright (C) 2005 - 2010 NVIDIA Corporation.");
+    nv_info_msg(NULL, "");
 } /* print_version() */
 
 
 static void print_summary(void)
 {
-    fmtout("");
-    fmtoutp(TAB, "In its normal operation, nvidia-xconfig finds the system "
-            "X configuration file (or generates a new X configuration if it "
-            "cannot find the system file), makes sure the configuration is "
-            "usable by the NVIDIA X driver, applies any updates requested "
-            "on the commandline, and writes the new configuration to file.");
-    fmtout("");
-    fmtoutp(TAB, "Please see the NVIDIA README for a description of NVIDIA "
-            "X configuration file options.");
-    fmtout("");
+    nv_info_msg(NULL, "");
+    nv_info_msg(TAB, "In its normal operation, nvidia-xconfig finds the system "
+                     "X configuration file (or generates a new X configuration "
+                     "if it cannot find the system file), makes sure the "
+                     "configuration is usable by the NVIDIA X driver, applies "
+                     "any updates requested on the commandline, and writes the "
+                     "new configuration to file.");
+    nv_info_msg(NULL, "");
+    nv_info_msg(TAB, "Please see the NVIDIA README for a description of NVIDIA "
+                     "X configuration file options.");
+    nv_info_msg(NULL, "");
 }
 
 
@@ -87,9 +88,9 @@ static void print_summary(void)
 
 static void print_help_helper(const char *name, const char *description)
 {
-    fmtoutp(TAB, "%s", name);
-    fmtoutp(BIGTAB, "%s", description);
-    fmtout("");
+    nv_info_msg(TAB, "%s", name);
+    nv_info_msg(BIGTAB, "%s", description);
+    nv_info_msg(NULL, "");
 }
 
 static void print_help(int advanced)
@@ -99,9 +100,9 @@ static void print_help(int advanced)
     print_version();
     print_summary();
 
-    fmtout("");
-    fmtout("nvidia-xconfig [options]");
-    fmtout("");
+    nv_info_msg(NULL, "");
+    nv_info_msg(NULL, "nvidia-xconfig [options]");
+    nv_info_msg(NULL, "");
 
     if (!advanced) {
         /* only print options with the ALWAYS flag */
@@ -153,7 +154,7 @@ static void parse_commandline(Options *op, int argc, char *argv[])
         case 'T': op->post_tree = TRUE; break;
         case 'h': print_help(FALSE); exit(0); break;
         case 'A': print_help(TRUE); exit(0); break;
-        case 's': silence_fmt(1); break;
+        case 's': nv_set_verbosity(NV_VERBOSITY_WARNING); break;
         case 'a': op->enable_all_gpus = TRUE; break;
         case '1': op->only_one_screen = TRUE; break;
         
@@ -602,6 +603,23 @@ static void parse_commandline(Options *op, int argc, char *argv[])
             op->restore_original_backup = TRUE;
             break;
 
+        case NUM_X_SCREENS_OPTION:
+
+            if (intval < 1) {
+                fprintf(stderr, "\n");
+                fprintf(stderr, "Invalid number of X screens: %d.\n", intval);
+                fprintf(stderr, "\n");
+                goto fail;
+            }
+
+            /* Enable separate X screens */
+            set_boolean_option(op,
+                    XCONFIG_BOOL_VAL(SEPARATE_X_SCREENS_BOOL_OPTION) -
+                    XCONFIG_BOOL_OPTION_START, TRUE);
+
+            op->num_x_screens = intval;
+            break;
+
         default:
             goto fail;
         }
@@ -639,11 +657,13 @@ static Options *load_default_options(void)
     op = (Options *) nvalloc(sizeof(Options));
     if (!op) return NULL;
     
+    op->depth = 24;
     op->transparent_index = -1;
     op->stereo = -1;
     op->cool_bits = -1;
     op->nvidia_3dvision_display_type = -1;
     op->tv_over_scan = -1.0;
+    op->num_x_screens = -1;
 
     xconfigGenerateLoadDefaultOptions(&op->gop);
 
@@ -687,8 +707,8 @@ static int backup_file(Options *op, const char *orig_filename,
 
     if (access(filename, F_OK) == 0) {
         if (unlink(filename) != 0) {
-            fmterr("Unable to create backup file '%s' (%s)",
-                   filename, strerror(errno));
+            nv_error_msg("Unable to create backup file '%s' (%s)",
+                         filename, strerror(errno));
             goto done;
         }
     }
@@ -700,7 +720,7 @@ static int backup_file(Options *op, const char *orig_filename,
         goto done;
     }
     
-    fmtout("Backed up file '%s' as '%s'", orig_filename, filename);
+    nv_info_msg(NULL, "Backed up file '%s' as '%s'", orig_filename, filename);
     ret = TRUE;
     
  done:
@@ -783,8 +803,8 @@ static int restore_backup(Options *op, XConfigPtr config, const char *suffix)
     int ret = FALSE;
 
     if (lstat(backup, &st) != 0) {
-        fmterr("Unable to restore from original backup file '%s' (%s)",
-              backup, strerror(errno));
+        nv_error_msg("Unable to restore from original backup file '%s' (%s)",
+                     backup, strerror(errno));
         goto done;
     }
 
@@ -797,8 +817,8 @@ static int restore_backup(Options *op, XConfigPtr config, const char *suffix)
         st.st_uid != 0        /* not owned by root*/  ||
         (st.st_gid != 0 && (st.st_mode & S_IWGRP)) /* non-root group write */ ||
         (st.st_mode & S_IWOTH) /* world writable */ ) {
-        fmterr("The permissions of the original backup file '%s' are too loose "
-               "to be trusted. The file will not be restored.", backup);
+        nv_error_msg("The permissions of the original backup file '%s' are too "
+                     "loose to be trusted. The file will not be restored.", backup);
         goto done;
     }
     
@@ -809,8 +829,8 @@ static int restore_backup(Options *op, XConfigPtr config, const char *suffix)
 
     if (st.st_size == 0) {
         if (unlink(filename) != 0) {
-            fmterr("Unable to remove file '%s' (%s)",
-                   filename, strerror(errno));
+            nv_error_msg("Unable to remove file '%s' (%s)",
+                         filename, strerror(errno));
              goto done;
         }
     } else {
@@ -826,19 +846,20 @@ static int restore_backup(Options *op, XConfigPtr config, const char *suffix)
 
     if (access(backup, F_OK) == 0) {
         if (unlink(backup) != 0) {
-            fmterr("Unable to remove backup file '%s' (%s)",
-                   backup, strerror(errno));
+            nv_error_msg("Unable to remove backup file '%s' (%s)",
+                         backup, strerror(errno));
             goto done;
         }
     }
 
     if (st.st_size == 0) {
-        fmtout("The backup file '%s' was empty. This usually means that nvidia-"
-               "xconfig did not find an X configuration file the first time it "
-               "was run. The X configuration file '%s' was deleted.",
-               backup, filename);
+        nv_info_msg(NULL, "The backup file '%s' was empty. This usually means "
+                          "that nvidia-xconfig did not find an X configuration "
+                          "file the first time it was run. The X configuration "
+                          "file '%s' was deleted.",
+                    backup, filename);
     } else {
-        fmtout("Restored backup file '%s' to '%s'", backup, filename);
+        nv_info_msg(NULL, "Restored backup file '%s' to '%s'", backup, filename);
     }
 
     ret = TRUE;
@@ -878,7 +899,7 @@ static int write_xconfig(Options *op, XConfigPtr config, int first_touch)
     tmp = nvstrdup(filename);
     d = dirname(tmp);
     if (access(d, W_OK) != 0) {
-        fmterr("Unable to write to directory '%s'.", d);
+        nv_error_msg("Unable to write to directory '%s'.", d);
         goto done;
     }
     
@@ -900,7 +921,8 @@ static int write_xconfig(Options *op, XConfigPtr config, int first_touch)
     else if (first_touch) {
         char *fakeorig = nvstrcat(filename, ORIG_SUFFIX, NULL);
         if (!copy_file("/dev/null", fakeorig, 0644)) {
-            fmtwarn("Unable to write an empty backup file \"%s\".", fakeorig);
+            nv_warning_msg("Unable to write an empty backup file \"%s\".",
+                           fakeorig);
         }
         free(fakeorig);
     }
@@ -908,14 +930,14 @@ static int write_xconfig(Options *op, XConfigPtr config, int first_touch)
     /* write the config file */
 
     if (!xconfigWriteConfigFile(filename, config)) {
-        fmterr("Unable to write file \"%s\"; please use the "
-               "\"--output-xconfig\" commandline "
-               "option to specify an alternative output file.", filename);
+        nv_error_msg("Unable to write file \"%s\"; please use the "
+                     "\"--output-xconfig\" commandline option to specify "
+                     "an alternative output file.", filename);
         goto done;
     }
 
-    fmtout("New X configuration file written to '%s'", filename);
-    fmtout("");
+    nv_info_msg(NULL, "New X configuration file written to '%s'", filename);
+    nv_info_msg(NULL, "");
     
     
     /* Set the default depth in the Solaris Management Facility 
@@ -1054,10 +1076,10 @@ static XConfigPtr find_system_xconfig(Options *op)
     filename = xconfigOpenConfigFile(op->xconfig, op->gop.x_project_root);
     
     if (filename) {
-        fmtout("");
-        fmtout("Using X configuration file: \"%s\".", filename);
+        nv_info_msg(NULL, "");
+        nv_info_msg(NULL, "Using X configuration file: \"%s\".", filename);
     } else {
-        fmtwarn("Unable to locate/open X configuration file.");
+        nv_warning_msg("Unable to locate/open X configuration file.");
         return NULL;
     }
     
@@ -1136,12 +1158,12 @@ static int update_xconfig(Options *op, XConfigPtr config)
     }
 
     if (op->screen && !updated) {
-        fmterr("Unable to find screen '%s'", op->screen);
+        nv_error_msg("Unable to find screen '%s'", op->screen);
         return FALSE;
     }
 
     if (op->device && !updated) {
-        fmterr("Unable to find device '%s'", op->device);
+        nv_error_msg("Unable to find device '%s'", op->device);
         return FALSE;
     }
 
@@ -1177,7 +1199,6 @@ int main(int argc, char *argv[])
     XConfigPtr config = NULL;
     int first_touch = 0;
     
-
     /* Load defaults */
 
     op = load_default_options();
@@ -1196,15 +1217,15 @@ int main(int argc, char *argv[])
      */
 
     if (op->keyboard_list) {
-        fmtout("\nPossible keyboard types; the short name is what should be "
-               "passed to the \"--keyboard\" option.\n\n");
+        nv_info_msg(NULL, "\nPossible keyboard types; the short name is what "
+                          "should be passed to the \"--keyboard\" option.\n\n");
         xconfigGeneratePrintPossibleKeyboards();
         return 0;
     }
 
     if (op->mouse_list) {
-        fmtout("\nPossible mouse types; the short name is what should be "
-               "passed to the \"--mouse\" option.\n\n");
+        nv_info_msg(NULL, "\nPossible mouse types; the short name is what should "
+                          "be passed to the \"--mouse\" option.\n\n");
         xconfigGeneratePrintPossibleMice();
         return 0;
     }
@@ -1265,7 +1286,7 @@ int main(int argc, char *argv[])
      */
 
     if (!config) {
-        fmterr("Unable to generate a usable X configuration file.");
+        nv_error_msg("Unable to generate a usable X configuration file.");
         return 1;
     }
 

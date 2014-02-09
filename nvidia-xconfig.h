@@ -66,8 +66,10 @@
 #define PRESERVE_BUSID_BOOL_OPTION              40
 #define BASE_MOSAIC_BOOL_OPTION                 41
 #define ALLOW_EMPTY_INITIAL_CONFIGURATION       42
+#define DELETE_UNUSED_DP12_DPYS                 43
+#define INBAND_STEREO_SIGNALING                 44
 
-#define XCONFIG_BOOL_OPTION_COUNT (ALLOW_EMPTY_INITIAL_CONFIGURATION + 1)
+#define XCONFIG_BOOL_OPTION_COUNT (INBAND_STEREO_SIGNALING + 1)
 
 /* # of 32-bit variables needed to hold all the boolean options (bits) */
 #define XCONFIG_BOOL_OPTION_SLOTS  \
@@ -120,6 +122,8 @@ typedef struct __options {
     int stereo;
     int cool_bits;
     int nvidia_3dvision_display_type;
+
+    int num_x_screens;
 
     char *xconfig;
     char *output_xconfig;

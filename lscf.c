@@ -20,6 +20,7 @@
 
 
 #include <libscf.h>
+#include "msg.h"
 
 static int lscf_init_handle(scf_handle_t **scf_handle, 
                             scf_scope_t **scf_scope);
@@ -75,8 +76,8 @@ done:
                     scf_handle_destroy(scf_handle);
     }
     if (!status) {
-        fmterr("Unable to set X server default depth through "
-               "Solaris Service Management Facility");
+        nv_error_msg("Unable to set X server default depth through "
+                     "Solaris Service Management Facility");
     }
     return status;
 }
@@ -118,8 +119,8 @@ done:
                     scf_handle_destroy(scf_handle);
     }
     if (!status) {
-        fmterr("Unable to get X server default depth from "
-               "Solaris Service Management Facility");
+        nv_error_msg("Unable to get X server default depth from "
+                     "Solaris Service Management Facility");
     }
     return status;
 }

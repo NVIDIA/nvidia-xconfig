@@ -28,6 +28,7 @@
 #include "nvidia-xconfig.h"
 #include "xf86Parser.h"
 #include "configProcs.h"
+#include "msg.h"
 
 
 static void ensure_module_loaded(XConfigPtr config, char *name);
@@ -139,7 +140,7 @@ XConfigLayoutPtr get_layout(Options *op, XConfigPtr config)
         
         layout = xconfigFindLayout(op->layout, config->layouts);
         if (!layout) {
-            fmterr("Unable to find layout \"%s\".\n", op->layout);
+            nv_error_msg("Unable to find layout \"%s\".\n", op->layout);
             return NULL;
         }
     } else {
@@ -147,7 +148,7 @@ XConfigLayoutPtr get_layout(Options *op, XConfigPtr config)
         /* otherwise, use the first layout in the config file */
         
         if (!config->layouts) {
-            fmterr("unable to select ScreenLayout to use.\n");
+            nv_error_msg("unable to select ScreenLayout to use.\n");
             return NULL;
         }
         
@@ -331,9 +332,10 @@ static void update_depth(Options *op, XConfigScreenPtr screen)
         int scf_depth;
         
         if (read_scf_depth(&scf_depth) && scf_depth != screen->defaultdepth) {
-            fmtwarn("The default depth of %d read from "
-                "the Solaris Management Facility is set as the default "
-                "depth for screen \"%s\"", scf_depth, screen->identifier);
+            nv_warning_msg("The default depth of %d read from "
+                           "the Solaris Management Facility is set as the "
+                           "default depth for screen \"%s\"", scf_depth,
+                           screen->identifier);
             screen->defaultdepth = scf_depth;
         }
     }         

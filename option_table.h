@@ -58,6 +58,7 @@ enum {
     NVIDIA_3DVISIONPRO_CONFIG_FILE_OPTION,
     NVIDIA_3DVISION_DISPLAY_TYPE_OPTION,
     RESTORE_ORIGINAL_BACKUP_OPTION,
+    NUM_X_SCREENS_OPTION,
 };
 
 /*
@@ -481,10 +482,21 @@ static const NVGetoptOption __options[] = {
       "drive these display devices in a single X screen, or as separate X "
       "screens.  When the '--separate-x-screens' option is specified, each GPU "
       "on which an X screen is currently configured will be updated to have "
-      "two X screens configured.  The '--no-separate-x-screens' option will "
-      "remove the second configured X screen on each GPU.  Please see the "
-      "NVIDIA README description of \"Separate X Screens on One GPU\" for "
-      "further details." },
+      "two or more (depending on the capabilities of that GPU) X screens "
+      "configured.  The '--no-separate-x-screens' option will remove any "
+      "extra configured X screens on each GPU.  Please see the NVIDIA README "
+      "description of \"Separate X Screens on One GPU\" for further details." },
+
+    { "x-screens-per-gpu", NUM_X_SCREENS_OPTION,
+      NVGETOPT_INTEGER_ARGUMENT, NULL,
+      "A GPU that supports multiple simultaneous display devices can either "
+      "drive these display devices in a single X screen, or as separate X "
+      "screens.  When the '--x-screens-per-gpu=<quantity>' option is "
+      "specified, each GPU on which an X screen is currently configured will "
+      "be updated to have <quantity> X screens. <quantity> has to be greater "
+      "than 0. Setting <quantity> to 1 is equivalent to specifying the "
+      "'--no-separate-x-screens' option.  Please see the NVIDIA README "
+      "description of \"Separate X Screens on One GPU\" for further details." },
 
     { "sli", SLI_OPTION,
       NVGETOPT_STRING_ARGUMENT | NVGETOPT_ALLOW_DISABLE, NULL,
@@ -639,6 +651,14 @@ static const NVGetoptOption __options[] = {
     { "allow-empty-initial-configuration", XCONFIG_BOOL_VAL(ALLOW_EMPTY_INITIAL_CONFIGURATION),
       NVGETOPT_IS_BOOLEAN, NULL, "Allow the X server to start even if no "
       "connected display devices could be detected." },
+
+    { "delete-unused-dp12-displays", XCONFIG_BOOL_VAL(DELETE_UNUSED_DP12_DPYS),
+      NVGETOPT_IS_BOOLEAN, NULL, "Delete DisplayPort 1.2 RandR outputs that "
+      "are disconnected and not named in any MetaModes." },
+
+    { "inband-stereo-signaling", XCONFIG_BOOL_VAL(INBAND_STEREO_SIGNALING),
+      NVGETOPT_IS_BOOLEAN, NULL, "Enable or disable the "
+      "\"InbandStereoSignaling\" X configuration option." },
 
     { NULL, 0, 0, NULL, NULL },
 };

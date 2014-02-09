@@ -26,6 +26,7 @@
 
 #include "nvidia-xconfig.h"
 #include "xf86Parser.h"
+#include "msg.h"
 
 
 typedef struct {
@@ -68,6 +69,8 @@ static const NvidiaXConfigOption __options[] = {
     { MODE_DEBUG_BOOL_OPTION,                FALSE, "ModeDebug" },
     { BASE_MOSAIC_BOOL_OPTION,               FALSE, "BaseMosaic" },
     { ALLOW_EMPTY_INITIAL_CONFIGURATION,     FALSE, "AllowEmptyInitialConfiguration" },
+    { DELETE_UNUSED_DP12_DPYS,               FALSE, "DeleteUnusedDP12Displays" },
+    { INBAND_STEREO_SIGNALING,               FALSE, "InbandStereoSignaling" },
     { 0,                                     FALSE, NULL },
 };
 
@@ -126,7 +129,7 @@ void validate_composite(Options *op, XConfigPtr config)
     int cioverlay_enabled;
     int ubb_enabled;
     int stereo_enabled;
-    const char *err_str;
+    char *err_str;
 
 
     composite_specified = GET_BOOL_OPTION(op->boolean_options,
@@ -178,11 +181,12 @@ void validate_composite(Options *op, XConfigPtr config)
      */
 
     if (err_str) {
-        fmtwarn("The Composite X extension does not currently interact well "
-                "with the %s option(s); the Composite X extension will be "
-                "disabled.", err_str);
+        nv_warning_msg("The Composite X extension does not currently interact "
+                       "well with the %s option(s); the Composite X extension "
+                       "will be disabled.", err_str);
 
         set_boolean_option(op, COMPOSITE_BOOL_OPTION, FALSE);
+        nvfree(err_str);
     }
 } /* validate_composite() */
 
@@ -498,7 +502,7 @@ void update_options(Options *op, XConfigScreenPtr screen)
             o = get_option(i);
             
             if (!o) {
-                fmterr("Unrecognized X Config option %d", i);
+                nv_error_msg("Unrecognized X Config option %d", i);
                 continue;
             }
 
@@ -509,8 +513,8 @@ void update_options(Options *op, XConfigScreenPtr screen)
             }
             
             set_option_value(screen, o->name, val);
-            fmtout("Option \"%s\" \"%s\" added to "
-                   "Screen \"%s\".", o->name, val, screen->identifier);
+            nv_info_msg(NULL, "Option \"%s\" \"%s\" added to Screen \"%s\".",
+                        o->name, val, screen->identifier);
         }
     }
 
@@ -594,14 +598,14 @@ void update_options(Options *op, XConfigScreenPtr screen)
                              op->metamode_orientation);
             if (remove_metamode_offsets(screen,
                                         &old_metamodes, &new_metamodes)) {
-                fmtwarn("The MetaModes option contained explicit offsets, "
-                        "which would have overridden the specified "
-                        "MetaModeOrientation; in order to honor the "
-                        "requested MetaModeOrientation, the explicit offsets "
-                        "have been removed from the MetaModes option.\n\n"
-                        "Old MetaModes option: \"%s\"\n"
-                        "New MetaModes option: \"%s\".",
-                        old_metamodes, new_metamodes);
+                nv_warning_msg("The MetaModes option contained explicit offsets, "
+                               "which would have overridden the specified "
+                               "MetaModeOrientation; in order to honor the "
+                               "requested MetaModeOrientation, the explicit offsets "
+                               "have been removed from the MetaModes option.\n\n"
+                               "Old MetaModes option: \"%s\"\n"
+                               "New MetaModes option: \"%s\".",
+                               old_metamodes, new_metamodes);
                 nvfree(old_metamodes);
                 nvfree(new_metamodes);
             }

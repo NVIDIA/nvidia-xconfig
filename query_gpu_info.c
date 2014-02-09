@@ -21,6 +21,7 @@
  */
 
 #include "nvidia-xconfig.h"
+#include "msg.h"
 #include <string.h>
 
 static char *display_device_mask_to_display_device_name(unsigned int mask);
@@ -46,32 +47,32 @@ int query_gpu_info(Options *op)
     pDevices = find_devices(op);
     
     if (!pDevices) {
-        fmterr("Unable to query GPU information");
+        nv_error_msg("Unable to query GPU information");
         return FALSE;
     }
     
     /* print the GPU information */
 
-    fmtout("Number of GPUs: %d", pDevices->nDevices);
+    nv_info_msg(NULL, "Number of GPUs: %d", pDevices->nDevices);
 
     for (i = 0; i < pDevices->nDevices; i++) {
         
-        fmtout("");
-        fmtout("GPU #%d:", i);
-        fmtoutp(TAB, "Name      : %s", pDevices->devices[i].name);
-        fmtoutp(TAB, "UUID      : %s", pDevices->devices[i].uuid);
+        nv_info_msg(NULL, "");
+        nv_info_msg(NULL, "GPU #%d:", i);
+        nv_info_msg(TAB, "Name      : %s", pDevices->devices[i].name);
+        nv_info_msg(TAB, "UUID      : %s", pDevices->devices[i].uuid);
 
         memset(busid, 0, BUS_ID_STRING_LENGTH);
         xconfigFormatPciBusString(busid, BUS_ID_STRING_LENGTH,
                                   pDevices->devices[i].dev.domain,
                                   pDevices->devices[i].dev.bus,
                                   pDevices->devices[i].dev.slot, 0);
-        fmtoutp(TAB, "PCI BusID : %s", busid);
+        nv_info_msg(TAB, "PCI BusID : %s", busid);
 
-        fmtout("");
-        fmtoutp(TAB, "Number of Display Devices: %d",
-                pDevices->devices[i].nDisplayDevices);
-        fmtout("");
+        nv_info_msg(NULL, "");
+        nv_info_msg(TAB, "Number of Display Devices: %d",
+                    pDevices->devices[i].nDisplayDevices);
+        nv_info_msg(NULL, "");
 
         for (j = 0; j < pDevices->devices[i].nDisplayDevices; j++) {
 
@@ -82,7 +83,7 @@ int query_gpu_info(Options *op)
             
             if (!name) name = nvstrdup("Unknown");
 
-            fmtoutp(TAB, "Display Device %d (%s):", j, name);
+            nv_info_msg(TAB, "Display Device %d (%s):", j, name);
         
             nvfree(name);
 
@@ -91,9 +92,9 @@ int query_gpu_info(Options *op)
              * non-zero
              */
             
-            #define PRT(_fmt, _val)                  \
-                if (_val) {                          \
-                    fmtoutp(BIGTAB, (_fmt), (_val)); \
+            #define PRT(_fmt, _val)                      \
+                if (_val) {                              \
+                    nv_info_msg(BIGTAB, (_fmt), (_val)); \
                 }
             
             if (pDisplayDevice->info_valid) {
@@ -138,10 +139,10 @@ int query_gpu_info(Options *op)
                     pDisplayDevice->info.physical_height);
                 
             } else {
-                fmtoutp(BIGTAB, "No EDID information available.");
+                nv_info_msg(BIGTAB, "No EDID information available.");
             }
             
-            fmtout("");
+            nv_info_msg(NULL, "");
         }
     }
     

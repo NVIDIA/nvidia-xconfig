@@ -95,6 +95,7 @@
 #include <strings.h> /* bzero() */
 
 #include "nvidia-xconfig.h"
+#include "msg.h"
 
 
 #define NIBBLE_TO_HEX(n) (((n) <= 9) ? ('0' + (n)) : ('a' - 0xa + (n)))
@@ -198,22 +199,22 @@ int extract_edids(Options *op)
     fd = open(op->extract_edids_from_file, O_RDONLY);
     
     if (fd == -1) {
-        fmterr("Unable to open file \"%s\".", op->extract_edids_from_file);
+        nv_error_msg("Unable to open file \"%s\".", op->extract_edids_from_file);
         goto done;
     }
     
     ret = fstat(fd, &stat_buf);
 
     if (ret == -1) {
-        fmterr("Unable to get length of file \"%s\".",
-               op->extract_edids_from_file);
+        nv_error_msg("Unable to get length of file \"%s\".",
+                     op->extract_edids_from_file);
         goto done;
     }
     
     file.length = stat_buf.st_size;
 
     if (file.length == 0) {
-        fmterr("File \"%s\" is empty.", op->extract_edids_from_file);
+        nv_error_msg("File \"%s\" is empty.", op->extract_edids_from_file);
         goto done;
     }
     
@@ -223,7 +224,7 @@ int extract_edids(Options *op)
                       MAP_SHARED, fd, 0);
 
     if (file.start == (void *) -1) {
-        fmterr("Unable to map file \"%s\".", op->extract_edids_from_file);
+        nv_error_msg("Unable to map file \"%s\".", op->extract_edids_from_file);
         goto done;
     }
     
@@ -298,9 +299,9 @@ int extract_edids(Options *op)
      * writeEdidFile; it will unique-ify from there
      */
 
-    fmtout("");
-    fmtout("Found %d EDID%s in \"%s\".",
-           nEdids, (nEdids == 1) ? "": "s", op->extract_edids_from_file);
+    nv_info_msg(NULL, "");
+    nv_info_msg(NULL, "Found %d EDID%s in \"%s\".",
+                nEdids, (nEdids == 1) ? "": "s", op->extract_edids_from_file);
 
     filename = findFileName(op->extract_edids_output_file);
     
@@ -317,7 +318,7 @@ int extract_edids(Options *op)
 
     nvfree(filename);
     
-    fmtout("");
+    nv_info_msg(NULL, "");
 
     return funcRet;
 
@@ -1075,11 +1076,11 @@ static int writeEdidFile(EdidPtr pEdid, char *filename)
     /* report what happened */
 
     if (ret) {
-        fmtout("  Wrote EDID for \"%s\" to \"%s\" (%d bytes).",
-               pEdid->name, working_filename, pEdid->size);
+        nv_info_msg(NULL, "  Wrote EDID for \"%s\" to \"%s\" (%d bytes).",
+                    pEdid->name, working_filename, pEdid->size);
     } else {
-        fmterr("Failed to write EDID for \"%s\" to \"%s\" (%s)",
-               pEdid->name, working_filename, msg);
+        nv_error_msg("Failed to write EDID for \"%s\" to \"%s\" (%s)",
+                     pEdid->name, working_filename, msg);
     }
     
     nvfree(working_filename);

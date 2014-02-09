@@ -22,6 +22,7 @@
 
 #include "nvidia-xconfig.h"
 #include "xf86Parser.h"
+#include "msg.h"
 
 #include <stdlib.h>
 #include <string.h>
@@ -36,8 +37,8 @@ static int disable_separate_x_screens(Options *op, XConfigPtr config,
 static int set_xinerama(int xinerama_enabled, XConfigLayoutPtr layout);
 
 static XConfigDisplayPtr clone_display_list(XConfigDisplayPtr display0);
-static XConfigDevicePtr clone_device(XConfigDevicePtr device0);
-static XConfigScreenPtr clone_screen(XConfigScreenPtr screen0);
+static XConfigDevicePtr clone_device(XConfigDevicePtr device0, int idx);
+static XConfigScreenPtr clone_screen(XConfigScreenPtr screen0, int idx);
 
 static void create_adjacencies(Options *op, XConfigPtr config,
                                XConfigLayoutPtr layout);
@@ -50,6 +51,199 @@ static void free_unused_monitors(Options *op, XConfigPtr config);
 
 static int only_one_screen(Options *op, XConfigPtr config,
                            XConfigLayoutPtr layout);
+
+/*
+ * get_screens_to_clone() - try to detect automatically how many heads has each
+ * device in order to use that number to create more than two separate X
+ * screens. If the user specifies the option --num-x-screens <quantity>, that
+ * value is used. If neither the user specifies the quantity or the number of
+ * heads can be detected automatically, it uses 2 heads (the standard
+ * behavior). This function returns an array of size nscreens with the number
+ * of screens to clone per screen candidate. The caller is responsible of
+ * freeing the memory of that array.
+ */
+static int* get_screens_to_clone(Options *op,
+                                 const XConfigScreenPtr *screen_candidates,
+                                 int nscreens)
+{
+    DevicesPtr pDevices;
+    int *screens_to_clone, *supported_screens;
+    int i, j, devs_found;
+
+    screens_to_clone = nvalloc(nscreens * sizeof(int));
+    supported_screens = nvalloc(nscreens * sizeof(int));
+
+    /* Detect the number of supported screens per screen candidate */
+    devs_found = FALSE;
+    pDevices = find_devices(op);
+    if (pDevices) {
+        for (i = 0; i < nscreens; i++) {
+            int bus, slot, scratch;
+
+            if (!screen_candidates[i]) {
+                continue;
+            }
+
+            /* parse the bus id for this candidate screen */
+            if (!xconfigParsePciBusString(screen_candidates[i]->device->busid,
+                                          &bus, &slot, &scratch)) {
+                continue;
+            }
+
+            for (j = 0; j < pDevices->nDevices; j++) {
+                if ((pDevices->devices[j].dev.bus == bus) &&
+                    (pDevices->devices[j].dev.slot == slot)) {
+
+                    if (pDevices->devices[j].crtcs > 0) {
+                        supported_screens[i] = pDevices->devices[j].crtcs;
+                    }
+                    break;
+                }
+            }
+        }
+        free_devices(pDevices);
+        devs_found = TRUE;
+    }
+
+    /* If user has defined a number of screens per GPU, use that value */
+    if (op->num_x_screens > 0) {
+        for (i = 0; i < nscreens; i++) {
+            if (!screen_candidates[i]) {
+                continue;
+            }
+
+            /* Print error when user specifies more X screens than supported */
+            if (devs_found && op->num_x_screens > supported_screens[i]) {
+                nv_warning_msg("Number of X screens specified is higher than the "
+                               "supported quantity (%d)", supported_screens[i]);
+            }
+
+            screens_to_clone[i] = op->num_x_screens;
+        }
+
+        goto done;
+    }
+
+    for (i = 0; i < nscreens; i++) {
+        if (screen_candidates[i]) {
+            if (devs_found) {
+                /* If devices found, use the supported screens number */
+                screens_to_clone[i] = supported_screens[i];
+            }
+            else {
+                /* Default behavior (2 heads per GPU) */
+                screens_to_clone[i] = 2;
+            }
+        }
+    }
+
+done:
+    nvfree(supported_screens);
+    return screens_to_clone;
+}
+
+/*
+ * clean_screen_list() - Used by enable_separate_x_screens and
+ * disable_separate_x_screens. Given the array screen_list and the config
+ * pointer, this function will leave only one screen per different busid in both
+ * screen_list array and config->screens list (i.e all the resulting screens in
+ * screen_list and config->screens will have an unique busid).
+ */
+static void clean_screen_list(XConfigScreenPtr *screen_list,
+                              XConfigPtr config,
+                              int nscreens)
+{
+    int i, j;
+    int *bus, *slot, scratch;
+
+    /* trim out duplicates and get the bus ids*/
+
+    bus = nvalloc(sizeof(int) * nscreens);
+    slot = nvalloc(sizeof(int) * nscreens);
+
+    for (i = 0; i < nscreens; i++) {
+        bus[i] = -1;
+    }
+    
+    for (i = 0; i < nscreens; i++) {
+        if (!screen_list[i] || (bus[i] == -1 &&
+            !xconfigParsePciBusString(screen_list[i]->device->busid,
+                                      &bus[i], &slot[i], &scratch))) {
+            continue;
+        }
+
+        for (j = i+1; j < nscreens; j++) {
+            if (!screen_list[j] || (bus[j] == -1 &&
+                !xconfigParsePciBusString(screen_list[j]->device->busid,
+                                          &bus[j], &slot[j], &scratch))) {
+                continue;
+            }
+
+            if ((bus[i] == bus[j]) && (slot[i] == slot[j])) {
+                screen_list[j] = NULL;
+            }
+        }
+    }
+
+    /*
+     * for every screen in the screen list, scan through all
+     * screens; if any screen, other than *this* screen has the same
+     * busid, remove it
+     */
+    
+    for (i = 0; i < nscreens; i++) {
+        XConfigScreenPtr screen, prev;
+        int bus0, slot0;
+
+        if (!screen_list[i]) {
+            continue;
+        }
+
+        screen = config->screens;
+        prev = NULL;
+        
+        while (screen) {
+            if (screen_list[i] == screen) {
+                goto next_screen;
+            }
+            if (!screen->device) {
+                goto next_screen;
+            }
+            if (!screen->device->busid) {
+                goto next_screen;
+            }
+            if (!xconfigParsePciBusString(screen->device->busid,
+                                          &bus0, &slot0, &scratch)) {
+                goto next_screen;
+            }
+            
+            if ((bus[i] == bus0) && (slot[i] == slot0)) {
+                XConfigScreenPtr next;
+
+                if (prev) {
+                    prev->next = screen->next;
+                }
+                else {
+                    config->screens = screen->next;
+                }
+
+                next = screen->next;
+                screen->next = NULL;
+                xconfigFreeScreenList(&screen);
+                screen = next;
+            }
+            else {
+                
+            next_screen:
+                
+                prev = screen;
+                screen = screen->next;
+            }
+        }
+
+        screen_list[i]->device->screen = -1;
+    }
+}
 
 /*
  * apply_multi_screen_options() - there are 4 options that can affect
@@ -148,17 +342,17 @@ DevicesPtr find_devices(Options *op)
     nvfree(lib_path);
     
     if (!lib_handle) {
-        fmtwarn("error opening %s: %s.", __LIB_NAME, dlerror());
+        nv_warning_msg("error opening %s: %s.", __LIB_NAME, dlerror());
         return NULL;
     }
     
-#define __GET_FUNC(proc, name)                                 \
-    (proc) = dlsym(lib_handle, (name));                        \
-    if (!(proc)) {                                             \
-        fmtwarn("error retrieving symbol %s from %s: %s",      \
-                (name), __LIB_NAME, dlerror());                \
-        dlclose(lib_handle);                                   \
-        return NULL;                                           \
+#define __GET_FUNC(proc, name)                                        \
+    (proc) = dlsym(lib_handle, (name));                               \
+    if (!(proc)) {                                                    \
+        nv_warning_msg("error retrieving symbol %s from %s: %s",      \
+                       (name), __LIB_NAME, dlerror());                \
+        dlclose(lib_handle);                                          \
+        return NULL;                                                  \
     }
 
     /* required functions */
@@ -275,8 +469,8 @@ DevicesPtr find_devices(Options *op)
     
  fail:
 
-    fmtwarn("Unable to use the nvidia-cfg library to query NVIDIA "
-            "hardware.");
+    nv_warning_msg("Unable to use the nvidia-cfg library to query NVIDIA "
+                   "hardware.");
 
     for (i = 0; i < pDevices->nDevices; i++) {
         /* close the opened device */
@@ -354,16 +548,13 @@ static int set_xinerama(int xinerama_enabled, XConfigLayoutPtr layout)
  * step 2: assign a busID to every screen that is in the list (if
  * BusIDs are not already assigned)
  *
- * step 3: for every candidate screen, check if it is already one of
- * multiple screens on a gpu; if so, then it is not eligible for
- * cloning.  Note that this has to check all screens in the adjacency
- * list, not just the ones in the candidate list.
+ * step 3: clean the candidate list
+ *
+ * step 4: get the number of clones per screen candidate
  *
  * step 4: clone each eligible screen
  * 
  * step 5: update adjacency list (just wipe the list and restart)
- *
- * XXX we need to check that there are actually 2 CRTCs on this GPU
  */
 
 static int enable_separate_x_screens(Options *op, XConfigPtr config,
@@ -371,16 +562,17 @@ static int enable_separate_x_screens(Options *op, XConfigPtr config,
 {
     XConfigScreenPtr screen, *screenlist = NULL;
     XConfigAdjacencyPtr adj;
+    int* screens_to_clone = NULL;
 
     int i, nscreens = 0;
     int have_busids;
     
-    /* build the list of screens that are candidate to be cloned */
+    /* step 1: build the list of screens that are candidate to be cloned */
     
     if (op->screen) {
         screen = xconfigFindScreen(op->screen, config->screens);
         if (!screen) {
-            fmterr("Unable to find screen '%s'.", op->screen);
+            nv_error_msg("Unable to find screen '%s'.", op->screen);
             return FALSE;
         }
         
@@ -400,7 +592,7 @@ static int enable_separate_x_screens(Options *op, XConfigPtr config,
     
     if (!nscreens) return FALSE;
     
-    /* do all screens in the list have a bus ID? */
+    /* step 2: do all screens in the list have a bus ID? */
     
     have_busids = TRUE;
     
@@ -426,9 +618,9 @@ static int enable_separate_x_screens(Options *op, XConfigPtr config,
         
         pDevices = find_devices(op);
         if (!pDevices) {
-            fmterr("Unable to determine number or location of "
-                   "GPUs in system; cannot "
-                   "honor '--separate-x-screens' option.");
+            nv_error_msg("Unable to determine number or location of "
+                         "GPUs in system; cannot "
+                         "honor '--separate-x-screens' option.");
             return FALSE;
         }
         
@@ -453,64 +645,35 @@ static int enable_separate_x_screens(Options *op, XConfigPtr config,
 
         free_devices(pDevices);
     }
-    
-    /*
-     * step 3: for every candidate screen, check if it is already one
-     * of multiple screens on a gpu; if so, then it is not eligible
-     * for cloning.  Note that this has to check all screens in the
-     * adjacency list, not just the ones in the candidate list
-     */
-    
-    for (i = 0; i < nscreens; i++) {
-        int bus0, bus1, slot0, slot1, scratch;
-        if (!screenlist[i]) continue;
-        
-        /* parse the bus id for this candidate screen */
 
-        if (!xconfigParsePciBusString(screenlist[i]->device->busid,
-                                      &bus0, &slot0, &scratch)) {
-            /* parsing failed; this screen is no longer a candidate */
-            screenlist[i] = NULL;
-            continue;
-        }
+    /* step 3 */
+    clean_screen_list(screenlist, config, nscreens);
     
-        /*
-         * scan through all the screens; if any screen, other than
-         * *this* screen, have the same busid, then this screen is no
-         * longer a candidate
-         */
-        
-        for (screen = config->screens; screen; screen = screen->next) {
-            if (screen == screenlist[i]) continue;
-            if (!screen->device) continue;
-            if (!screen->device->busid) continue;
-            if (!xconfigParsePciBusString(screen->device->busid,
-                                          &bus1, &slot1, &scratch)) continue;
-            if ((bus0 == bus1) && (slot0 == slot1)) {
-                screenlist[i] = NULL; /* no longer a candidate */
-                break;
-            }
-        }
-    }
+    /* step 4 */
+    screens_to_clone = get_screens_to_clone(op, screenlist, nscreens);
     
-    /* clone each eligible screen */
+    /* step 5: clone each eligible screen */
     
     for (i = 0; i < nscreens; i++) {
         if (!screenlist[i]) continue;
-        clone_screen(screenlist[i]);
+
+        while (--screens_to_clone[i] > 0) {
+            clone_screen(screenlist[i], screens_to_clone[i]);
+        }
     }
+
+    nvfree(screens_to_clone);
     
-    /*
-     * wipe the existing adjacencies and recreate them
-     * 
-     * XXX we should really only use the screens in the current
-     * adjacency list, plus the new cloned screens, when building the
-     * new adjacencies
-     */
+    /* step 6: wipe the existing adjacencies and recreate them */
     
     xconfigFreeAdjacencyList(&layout->adjacencies);
     
     create_adjacencies(op, config, layout);
+
+    /* free unused device and monitor sections */
+    
+    free_unused_devices(op, config);
+    free_unused_monitors(op, config);
 
     /* free stuff */
 
@@ -533,27 +696,25 @@ static int enable_separate_x_screens(Options *op, XConfigPtr config,
  * step 2: narrow that list down to screens that have a busid
  * specified
  *
- * step 3: find all other screens that have the same busid and remove
- * them
+ * step 3: clean the candidate list
  *
- * step 3: recompute the adjacency list
+ * step 4: recompute the adjacency list
  */
 
 static int disable_separate_x_screens(Options *op, XConfigPtr config,
                                       XConfigLayoutPtr layout)
 {
-    XConfigScreenPtr screen, prev, next, *screenlist = NULL;
+    XConfigScreenPtr screen, *screenlist = NULL;
     XConfigAdjacencyPtr adj;
     
-    int i, j, nscreens = 0;
-    int *bus, *slot, scratch;
+    int i, nscreens = 0;
     
-    /* build the list of screens that are candidate to be de-cloned */
+    /* step 1: build the list of screens that are candidate to be de-cloned */
     
     if (op->screen) {
         screen = xconfigFindScreen(op->screen, config->screens);
         if (!screen) {
-            fmterr("Unable to find screen '%s'.", op->screen);
+            nv_error_msg("Unable to find screen '%s'.", op->screen);
             return FALSE;
         }
         
@@ -572,83 +733,27 @@ static int disable_separate_x_screens(Options *op, XConfigPtr config,
     }
     
     /*
-     * limit the list to screens that have a BusID; parse the busIDs
+     * step 2: limit the list to screens that have a BusID; parse the busIDs
      * while we're at it
      */
     
-    bus = nvalloc(sizeof(int) * nscreens);
-    slot = nvalloc(sizeof(int) * nscreens);
-    
     for (i = 0; i < nscreens; i++) {
+        int bus, slot, scratch;
         if (screenlist[i] &&
             screenlist[i]->device &&
             screenlist[i]->device->busid &&
             xconfigParsePciBusString(screenlist[i]->device->busid,
-                                     &bus[i], &slot[i], &scratch)) {
+                                     &bus, &slot, &scratch)) {
             // this screen has a valid busid
         } else {
             screenlist[i] = NULL;
         }
     }
-    
-    /* trim out duplicates */
-    
-    for (i = 0; i < nscreens; i++) {
-        
-        if (!screenlist[i]) continue;
-        
-        for (j = i+1; j < nscreens; j++) {
-            if (!screenlist[j]) continue;
-            if ((bus[i] == bus[j]) && (slot[i] == slot[j])) {
-                screenlist[j] = NULL;
-            }
-        }
-    }
-    
-    /*
-     * for every screen in the de-clone list, scan through all
-     * screens; if any screen, other than *this* screen has the same
-     * busid, remove it
-     */
-    
-    for (i = 0; i < nscreens; i++) {
-        int bus0, slot0;
-        if (!screenlist[i]) continue;
 
-        screen = config->screens;
-        prev = NULL;
-        
-        while (screen) {
-            if (screenlist[i] == screen) goto next_screen;
-            if (!screen->device) goto next_screen;
-            if (!screen->device->busid) goto next_screen;
-            if (!xconfigParsePciBusString(screen->device->busid,
-                                          &bus0, &slot0, &scratch))
-                goto next_screen;
-            
-            if ((bus0 == bus[i]) && (slot0 == slot[i])) {
-                if (prev) {
-                    prev->next = screen->next;
-                } else {
-                    config->screens = screen->next;
-                }
-                next = screen->next;
-                screen->next = NULL;
-                xconfigFreeScreenList(&screen);
-                screen = next;
-            } else {
-                
-            next_screen:
-                
-                prev = screen;
-                screen = screen->next;
-            }
-        }
-
-        screenlist[i]->device->screen = -1;
-    }
+    /* step 3 */
+    clean_screen_list(screenlist, config, nscreens);
     
-    /* wipe the existing adjacencies and recreate them */
+    /* step 4: wipe the existing adjacencies and recreate them */
     
     xconfigFreeAdjacencyList(&layout->adjacencies);
     
@@ -662,8 +767,6 @@ static int disable_separate_x_screens(Options *op, XConfigPtr config,
     /* free stuff */
 
     free(screenlist);
-    free(bus);
-    free(slot);
     
     return TRUE;
     
@@ -703,13 +806,13 @@ static XConfigDisplayPtr clone_display_list(XConfigDisplayPtr display0)
  * the screen indices as approprate for multiple X screens on one GPU
  */
 
-static XConfigDevicePtr clone_device(XConfigDevicePtr device0)
+static XConfigDevicePtr clone_device(XConfigDevicePtr device0, int idx)
 {
     XConfigDevicePtr device;
 
     device = nvalloc(sizeof(XConfigDeviceRec));
     
-    device->identifier = nvstrcat(device0->identifier, " (2nd)", NULL);
+    device->identifier = nvasprintf("%s (%d)", device0->identifier, idx);
     
     if (device0->vendor)  device->vendor  = nvstrdup(device0->vendor);
     if (device0->board)   device->board   = nvstrdup(device0->board);
@@ -722,9 +825,9 @@ static XConfigDevicePtr clone_device(XConfigDevicePtr device0)
 
     /* these are needed for multiple X screens on one GPU */
 
-    device->screen = 1;
+    device->screen = idx;
     device0->screen = 0;
-          
+
     device->chipid = -1;
     device->chiprev = -1;
     device->irq = -1;
@@ -743,17 +846,17 @@ static XConfigDevicePtr clone_device(XConfigDevicePtr device0)
 
 
 /*
- * clone_screen() - duplicate the given screen, for use as the second
+ * clone_screen() - duplicate the given screen, for use as the ith
  * X screen on one GPU
  */
 
-static XConfigScreenPtr clone_screen(XConfigScreenPtr screen0)
+static XConfigScreenPtr clone_screen(XConfigScreenPtr screen0, int idx)
 {
     XConfigScreenPtr screen = nvalloc(sizeof(XConfigScreenRec));
     
-    screen->identifier = nvstrcat(screen0->identifier, " (2nd)", NULL);
+    screen->identifier = nvasprintf("%s (%d)", screen0->identifier, idx);
     
-    screen->device = clone_device(screen0->device);
+    screen->device = clone_device(screen0->device, idx);
     screen->device_name = nvstrdup(screen->device->identifier);
     
     screen->monitor = screen0->monitor;
@@ -833,8 +936,8 @@ static int enable_all_gpus(Options *op, XConfigPtr config,
 
     pDevices = find_devices(op);
     if (!pDevices) {
-        fmterr("Unable to determine number of GPUs in system; cannot "
-               "honor '--enable-all-gpus' option.");
+        nv_error_msg("Unable to determine number of GPUs in system; cannot "
+                     "honor '--enable-all-gpus' option.");
         return FALSE;
     }
     

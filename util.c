@@ -39,6 +39,7 @@
 #include <sys/termios.h>
 
 #include "nvidia-xconfig.h"
+#include "msg.h"
 
 Options *__op = NULL;
 
@@ -59,18 +60,18 @@ int copy_file(const char *srcfile, const char *dstfile, mode_t mode)
     int ret = FALSE;
 
     if ((src_fd = open(srcfile, O_RDONLY)) == -1) {
-        fmterr("Unable to open '%s' for copying (%s)",
-               srcfile, strerror (errno));
+        nv_error_msg("Unable to open '%s' for copying (%s)",
+                     srcfile, strerror (errno));
         goto done;
     }
     if ((dst_fd = open(dstfile, O_RDWR | O_CREAT | O_TRUNC, mode)) == -1) {
-        fmterr("Unable to create '%s' for copying (%s)",
-               dstfile, strerror (errno));
+        nv_error_msg("Unable to create '%s' for copying (%s)",
+                     dstfile, strerror (errno));
         goto done;
     }
     if (fstat(src_fd, &stat_buf) == -1) {
-        fmterr("Unable to determine size of '%s' (%s)",
-               srcfile, strerror (errno));
+        nv_error_msg("Unable to determine size of '%s' (%s)",
+                     srcfile, strerror (errno));
         goto done;
     }
     if (stat_buf.st_size == 0) {
@@ -79,38 +80,38 @@ int copy_file(const char *srcfile, const char *dstfile, mode_t mode)
         goto done;
     }
     if (lseek(dst_fd, stat_buf.st_size - 1, SEEK_SET) == -1) {
-        fmterr("Unable to set file size for '%s' (%s)",
-               dstfile, strerror (errno));
+        nv_error_msg("Unable to set file size for '%s' (%s)",
+                     dstfile, strerror (errno));
         goto done;
     }
     if (write(dst_fd, "", 1) != 1) {
-        fmterr("Unable to write file size for '%s' (%s)",
-               dstfile, strerror (errno));
+        nv_error_msg("Unable to write file size for '%s' (%s)",
+                     dstfile, strerror (errno));
         goto done;
     }
     if ((src = mmap(0, stat_buf.st_size, PROT_READ,
                     MAP_SHARED, src_fd, 0)) == (void *) -1) {
-        fmterr("Unable to map source file '%s' for "
-               "copying (%s)", srcfile, strerror (errno));
+        nv_error_msg("Unable to map source file '%s' for "
+                     "copying (%s)", srcfile, strerror (errno));
         goto done;
     }
     if ((dst = mmap(0, stat_buf.st_size, PROT_READ | PROT_WRITE,
                     MAP_SHARED, dst_fd, 0)) == (void *) -1) {
-        fmterr("Unable to map destination file '%s' for "
-               "copying (%s)", dstfile, strerror (errno));
+        nv_error_msg("Unable to map destination file '%s' for "
+                     "copying (%s)", dstfile, strerror (errno));
         goto done;
     }
     
     memcpy(dst, src, stat_buf.st_size);
     
     if (munmap (src, stat_buf.st_size) == -1) {
-        fmterr("Unable to unmap source file '%s' after "
-               "copying (%s)", srcfile, strerror (errno));
+        nv_error_msg("Unable to unmap source file '%s' after "
+                     "copying (%s)", srcfile, strerror (errno));
         goto done;
     }
     if (munmap (dst, stat_buf.st_size) == -1) {
-        fmterr("Unable to unmap destination file '%s' after "
-               "copying (%s)", dstfile, strerror (errno));
+        nv_error_msg("Unable to unmap destination file '%s' after "
+                     "copying (%s)", dstfile, strerror (errno));
         goto done;
     }
     
@@ -182,8 +183,8 @@ void xconfigPrint(MsgType t, const char *msg)
         }
     }
     
-    if (newline) fmt(stream, NULL, "");
-    fmt(stream, prefix, "%s", msg);
-    if (newline) fmt(stream, NULL, "");
+    if (newline) nv_info_msg_to_file(stream, NULL, "");
+    nv_info_msg_to_file(stream, prefix, "%s", msg);
+    if (newline) nv_info_msg_to_file(stream, NULL, "");
     
 } /* xconfigPrint */
