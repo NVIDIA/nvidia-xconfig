@@ -66,8 +66,9 @@
 #define PRESERVE_BUSID_BOOL_OPTION              40
 #define BASE_MOSAIC_BOOL_OPTION                 41
 #define ALLOW_EMPTY_INITIAL_CONFIGURATION       42
+#define INBAND_STEREO_SIGNALING                 43
 
-#define XCONFIG_BOOL_OPTION_COUNT (ALLOW_EMPTY_INITIAL_CONFIGURATION + 1)
+#define XCONFIG_BOOL_OPTION_COUNT (INBAND_STEREO_SIGNALING + 1)
 
 /* # of 32-bit variables needed to hold all the boolean options (bits) */
 #define XCONFIG_BOOL_OPTION_SLOTS  \

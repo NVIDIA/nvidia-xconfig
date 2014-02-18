@@ -68,6 +68,7 @@ static const NvidiaXConfigOption __options[] = {
     { MODE_DEBUG_BOOL_OPTION,                FALSE, "ModeDebug" },
     { BASE_MOSAIC_BOOL_OPTION,               FALSE, "BaseMosaic" },
     { ALLOW_EMPTY_INITIAL_CONFIGURATION,     FALSE, "AllowEmptyInitialConfiguration" },
+    { INBAND_STEREO_SIGNALING,               FALSE, "InbandStereoSignaling" },
     { 0,                                     FALSE, NULL },
 };
 

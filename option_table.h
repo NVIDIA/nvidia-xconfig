@@ -498,7 +498,7 @@ static const NVGetoptOption __options[] = {
       "4 (multi-display clone mode stereo), 5 (SeeReal digital flat panel), 6 "
       "(Sharp3D digital flat panel), 7 (Arisawa/Hyundai/Zalman/Pavione/Miracube), "
       "8 (3D DLP), 9 (3D DLP INV), 10 (NVIDIA 3D VISION), "
-      "11 (NVIDIA 3D VISION PRO), 12 (HDMI 3D)." },
+      "11 (NVIDIA 3D VISION PRO), 12 (HDMI 3D), 13 (Tridelity SL)." },
 
     { "thermal-configuration-check",
       XCONFIG_BOOL_VAL(THERMAL_CONFIGURATION_CHECK_BOOL_OPTION),
@@ -639,6 +639,10 @@ static const NVGetoptOption __options[] = {
     { "allow-empty-initial-configuration", XCONFIG_BOOL_VAL(ALLOW_EMPTY_INITIAL_CONFIGURATION),
       NVGETOPT_IS_BOOLEAN, NULL, "Allow the X server to start even if no "
       "connected display devices could be detected." },
+
+    { "inband-stereo-signaling", XCONFIG_BOOL_VAL(INBAND_STEREO_SIGNALING),
+      NVGETOPT_IS_BOOLEAN, NULL, "Enable or disable the "
+      "\"InbandStereoSignaling\" X configuration option." },
 
     { NULL, 0, 0, NULL, NULL },
 };
