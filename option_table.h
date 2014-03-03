@@ -510,7 +510,7 @@ static const NVGetoptOption __options[] = {
       "4 (multi-display clone mode stereo), 5 (SeeReal digital flat panel), 6 "
       "(Sharp3D digital flat panel), 7 (Arisawa/Hyundai/Zalman/Pavione/Miracube), "
       "8 (3D DLP), 9 (3D DLP INV), 10 (NVIDIA 3D VISION), "
-      "11 (NVIDIA 3D VISION PRO), 12 (HDMI 3D)." },
+      "11 (NVIDIA 3D VISION PRO), 12 (HDMI 3D), 13 (Tridelity SL)." },
 
     { "thermal-configuration-check",
       XCONFIG_BOOL_VAL(THERMAL_CONFIGURATION_CHECK_BOOL_OPTION),
