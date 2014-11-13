@@ -198,8 +198,6 @@ typedef struct {
 
 int copy_file(const char *srcfile, const char *dstfile, mode_t mode);
 
-int directory_exists(const char *dir);
-
 /* make_usable.c */
 
 int update_modules(XConfigPtr config);

@@ -128,23 +128,6 @@ int copy_file(const char *srcfile, const char *dstfile, mode_t mode)
 
 
 /*
- * directory_exists() - 
- */
-
-int directory_exists(const char *dir)
-{
-    struct stat stat_buf;
-
-    if ((stat (dir, &stat_buf) == -1) || (!S_ISDIR(stat_buf.st_mode))) {
-        return FALSE;
-    } else {
-        return TRUE;
-    }
-} /* directory_exists() */
-
-
-
-/*
  * xconfigPrint() - this is the one entry point that a user of the
  * XF86Config-Parser library must provide.
  */
