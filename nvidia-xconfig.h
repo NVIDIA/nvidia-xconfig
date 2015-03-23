@@ -60,16 +60,16 @@
 #define INCLUDE_IMPLICIT_METAMODES_BOOL_OPTION  34
 #define USE_EVENTS_BOOL_OPTION                  35
 #define CONNECT_TO_ACPID_BOOL_OPTION            36
-#define ENABLE_ACPI_HOTKEYS_BOOL_OPTION         37
-#define MODE_DEBUG_BOOL_OPTION                  38
-#define THERMAL_CONFIGURATION_CHECK_BOOL_OPTION 39
-#define PRESERVE_BUSID_BOOL_OPTION              40
-#define BASE_MOSAIC_BOOL_OPTION                 41
-#define ALLOW_EMPTY_INITIAL_CONFIGURATION       42
-#define DELETE_UNUSED_DP12_DPYS                 43
-#define INBAND_STEREO_SIGNALING                 44
+#define MODE_DEBUG_BOOL_OPTION                  37
+#define THERMAL_CONFIGURATION_CHECK_BOOL_OPTION 38
+#define PRESERVE_BUSID_BOOL_OPTION              39
+#define BASE_MOSAIC_BOOL_OPTION                 40
+#define ALLOW_EMPTY_INITIAL_CONFIGURATION       41
+#define DELETE_UNUSED_DP12_DPYS                 42
+#define INBAND_STEREO_SIGNALING                 43
+#define FORCE_YUV_420                           44
 
-#define XCONFIG_BOOL_OPTION_COUNT (INBAND_STEREO_SIGNALING + 1)
+#define XCONFIG_BOOL_OPTION_COUNT (FORCE_YUV_420 + 1)
 
 /* # of 32-bit variables needed to hold all the boolean options (bits) */
 #define XCONFIG_BOOL_OPTION_SLOTS  \

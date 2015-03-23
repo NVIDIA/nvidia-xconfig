@@ -250,13 +250,6 @@ static const NVGetoptOption __options[] = {
       "By default nvidia-xconfig changes the  display  driver  to \"nvidia\" "
       "for all configured X screens; this option preserves the existing driver "
       "name of each X screen." },
-    
-    { "enable-acpi-hotkeys",
-      XCONFIG_BOOL_VAL(ENABLE_ACPI_HOTKEYS_BOOL_OPTION), 
-      NVGETOPT_IS_BOOLEAN, NULL,
-      "The \"EnableACPIHotkeys\" option can be specified to override the "
-      "NVIDIA X driver's default decision to enable or disable ACPI "
-      "display change hotkey events." },
 
     { "enable-all-gpus", 'a', 0, NULL,
       "Configure an X screen on every GPU in the system." },
@@ -659,6 +652,13 @@ static const NVGetoptOption __options[] = {
     { "inband-stereo-signaling", XCONFIG_BOOL_VAL(INBAND_STEREO_SIGNALING),
       NVGETOPT_IS_BOOLEAN, NULL, "Enable or disable the "
       "\"InbandStereoSignaling\" X configuration option." },
+
+    { "force-yuv-420", XCONFIG_BOOL_VAL(FORCE_YUV_420),
+      NVGETOPT_IS_BOOLEAN, NULL, "Enable or disable the "
+      "\"ForceYUV420\" X configuration option. Setting this option "
+      "will enable YUV 4:2:0 compression on HDMI 2.0 4K@60hz modes "
+      "if possible, even if the current display and GPU both support "
+      "uncompressed RGB 4:4:4 output with these modes." },
 
     { NULL, 0, 0, NULL, NULL },
 };
