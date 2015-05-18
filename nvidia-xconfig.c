@@ -57,8 +57,6 @@ static void print_version(void)
     nv_info_msg(TAB, "This program is used to manipulate X configuration files, "
                      "specifically to enable NVIDIA X driver functionality.");
     nv_info_msg(NULL, "");
-    nv_info_msg(TAB, "Copyright (C) 2005 - 2010 NVIDIA Corporation.");
-    nv_info_msg(NULL, "");
 } /* print_version() */
 
 
