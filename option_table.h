@@ -647,7 +647,8 @@ static const NVGetoptOption __options[] = {
 
     { "delete-unused-dp12-displays", XCONFIG_BOOL_VAL(DELETE_UNUSED_DP12_DPYS),
       NVGETOPT_IS_BOOLEAN, NULL, "Delete DisplayPort 1.2 RandR outputs that "
-      "are disconnected and not named in any MetaModes." },
+      "are disconnected and not named in any MetaModes.  This option is "
+      "deprecated." },
 
     { "inband-stereo-signaling", XCONFIG_BOOL_VAL(INBAND_STEREO_SIGNALING),
       NVGETOPT_IS_BOOLEAN, NULL, "Enable or disable the "
