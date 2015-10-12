@@ -65,9 +65,8 @@
 #define PRESERVE_BUSID_BOOL_OPTION              39
 #define BASE_MOSAIC_BOOL_OPTION                 40
 #define ALLOW_EMPTY_INITIAL_CONFIGURATION       41
-#define DELETE_UNUSED_DP12_DPYS                 42
-#define INBAND_STEREO_SIGNALING                 43
-#define FORCE_YUV_420                           44
+#define INBAND_STEREO_SIGNALING                 42
+#define FORCE_YUV_420                           43
 
 #define XCONFIG_BOOL_OPTION_COUNT (FORCE_YUV_420 + 1)
 

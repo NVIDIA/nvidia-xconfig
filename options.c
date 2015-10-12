@@ -68,7 +68,6 @@ static const NvidiaXConfigOption __options[] = {
     { MODE_DEBUG_BOOL_OPTION,                FALSE, "ModeDebug" },
     { BASE_MOSAIC_BOOL_OPTION,               FALSE, "BaseMosaic" },
     { ALLOW_EMPTY_INITIAL_CONFIGURATION,     FALSE, "AllowEmptyInitialConfiguration" },
-    { DELETE_UNUSED_DP12_DPYS,               FALSE, "DeleteUnusedDP12Displays" },
     { INBAND_STEREO_SIGNALING,               FALSE, "InbandStereoSignaling" },
     { FORCE_YUV_420,                         FALSE, "ForceYUV420" },
     { 0,                                     FALSE, NULL },
