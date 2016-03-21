@@ -118,10 +118,10 @@ MANPAGE_install: $(MANPAGE)
 	$(MKDIR) $(MANDIR)
 	$(INSTALL) $(INSTALL_DOC_ARGS) $< $(MANDIR)/$(notdir $<)
 
-$(NVIDIA_XCONFIG): $(OBJS)
+$(eval $(call DEBUG_INFO_RULES, $(NVIDIA_XCONFIG)))
+$(NVIDIA_XCONFIG).unstripped: $(OBJS)
 	$(call quiet_cmd,LINK) $(CFLAGS) $(LDFLAGS) $(BIN_LDFLAGS) \
 	    -o $@ $(OBJS) $(LIBS)
-	$(call quiet_cmd,STRIP_CMD) $@
 
 # define the rule to build each object file
 $(foreach src, $(SRC), $(eval $(call DEFINE_OBJECT_RULE,TARGET,$(src))))
