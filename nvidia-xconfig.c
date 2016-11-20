@@ -618,6 +618,16 @@ static void parse_commandline(Options *op, int argc, char *argv[])
             op->num_x_screens = intval;
             break;
 
+        case FORCE_COMPOSITION_PIPELINE_OPTION:
+            op->force_composition_pipeline =
+                disable ? NV_DISABLE_STRING_OPTION : strval;
+            break;
+
+        case FORCE_FULL_COMPOSITION_PIPELINE_OPTION:
+            op->force_full_composition_pipeline =
+                disable ? NV_DISABLE_STRING_OPTION : strval;
+            break;
+
         default:
             goto fail;
         }

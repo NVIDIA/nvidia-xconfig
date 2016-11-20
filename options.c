@@ -735,4 +735,24 @@ void update_options(Options *op, XConfigScreenPtr screen)
         }
     }
 
+    /* add the ForceCompositionPipeline option */
+
+    if (op->force_composition_pipeline) {
+        remove_option(screen, "ForceCompositionPipeline");
+        if (op->force_composition_pipeline != NV_DISABLE_STRING_OPTION) {
+            set_option_value(screen, "ForceCompositionPipeline",
+                             op->force_composition_pipeline);
+        }
+    }
+
+    /* add the ForceFullCompositionPipeline option */
+
+    if (op->force_full_composition_pipeline) {
+        remove_option(screen, "ForceFullCompositionPipeline");
+        if (op->force_full_composition_pipeline != NV_DISABLE_STRING_OPTION) {
+            set_option_value(screen, "ForceFullCompositionPipeline",
+                             op->force_full_composition_pipeline);
+        }
+    }
+
 } /* update_options() */

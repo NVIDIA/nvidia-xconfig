@@ -59,6 +59,8 @@ enum {
     NVIDIA_3DVISION_DISPLAY_TYPE_OPTION,
     RESTORE_ORIGINAL_BACKUP_OPTION,
     NUM_X_SCREENS_OPTION,
+    FORCE_COMPOSITION_PIPELINE_OPTION,
+    FORCE_FULL_COMPOSITION_PIPELINE_OPTION,
 };
 
 /*
@@ -655,6 +657,16 @@ static const NVGetoptOption __options[] = {
       "will enable YUV 4:2:0 compression on HDMI 2.0 4K@60hz modes "
       "if possible, even if the current display and GPU both support "
       "uncompressed RGB 4:4:4 output with these modes." },
+
+    { "force-composition-pipeline", FORCE_COMPOSITION_PIPELINE_OPTION,
+      NVGETOPT_STRING_ARGUMENT | NVGETOPT_ALLOW_DISABLE, NULL,
+      "Enable or disable the \"ForceCompositionPipeline\" X "
+      "configuration option." },
+
+    { "force-full-composition-pipeline", FORCE_FULL_COMPOSITION_PIPELINE_OPTION,
+      NVGETOPT_STRING_ARGUMENT | NVGETOPT_ALLOW_DISABLE, NULL,
+      "Enable or disable the \"ForceFullCompositionPipeline\" X "
+      "configuration option." },
 
     { NULL, 0, 0, NULL, NULL },
 };
