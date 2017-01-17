@@ -755,4 +755,13 @@ void update_options(Options *op, XConfigScreenPtr screen)
         }
     }
 
+    /* add the AllowHMD option */
+
+    if (op->allow_hmd) {
+        remove_option(screen, "AllowHMD");
+        if (op->allow_hmd != NV_DISABLE_STRING_OPTION) {
+            set_option_value(screen, "AllowHMD", op->allow_hmd);
+        }
+    }
+
 } /* update_options() */

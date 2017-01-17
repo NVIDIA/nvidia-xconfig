@@ -155,6 +155,7 @@ typedef struct __options {
     char *nvidia_3dvisionpro_config_file;
     char *force_composition_pipeline;
     char *force_full_composition_pipeline;
+    char *allow_hmd;
 
     double tv_over_scan;
 

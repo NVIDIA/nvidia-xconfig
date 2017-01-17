@@ -628,6 +628,10 @@ static void parse_commandline(Options *op, int argc, char *argv[])
                 disable ? NV_DISABLE_STRING_OPTION : strval;
             break;
 
+        case ALLOW_HMD_OPTION:
+            op->allow_hmd = disable ? NV_DISABLE_STRING_OPTION : strval;
+            break;
+
         default:
             goto fail;
         }

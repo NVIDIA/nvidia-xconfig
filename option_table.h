@@ -61,6 +61,7 @@ enum {
     NUM_X_SCREENS_OPTION,
     FORCE_COMPOSITION_PIPELINE_OPTION,
     FORCE_FULL_COMPOSITION_PIPELINE_OPTION,
+    ALLOW_HMD_OPTION,
 };
 
 /*
@@ -667,6 +668,10 @@ static const NVGetoptOption __options[] = {
       NVGETOPT_STRING_ARGUMENT | NVGETOPT_ALLOW_DISABLE, NULL,
       "Enable or disable the \"ForceFullCompositionPipeline\" X "
       "configuration option." },
+
+    { "allow-hmd", ALLOW_HMD_OPTION,
+      NVGETOPT_STRING_ARGUMENT | NVGETOPT_ALLOW_DISABLE, NULL,
+      "Enable or disable the \"AllowHMD\" X configuration option." },
 
     { NULL, 0, 0, NULL, NULL },
 };
