@@ -536,10 +536,6 @@ static void parse_commandline(Options *op, int argc, char *argv[])
                 break;
             }
 
-        case LOGO_PATH_OPTION:
-            op->logo_path = disable ? NV_DISABLE_STRING_OPTION : strval;
-            break;
-  
         case USE_DISPLAY_DEVICE_OPTION:
             op->use_display_device = 
                 disable ? NV_DISABLE_STRING_OPTION : strval;

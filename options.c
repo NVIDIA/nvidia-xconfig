@@ -37,7 +37,6 @@ typedef struct {
 
 static const NvidiaXConfigOption __options[] = {
     
-    { NOLOGO_BOOL_OPTION,                    TRUE,  "NoLogo" },
     { UBB_BOOL_OPTION,                       FALSE, "UBB" },
     { RENDER_ACCEL_BOOL_OPTION,              FALSE, "RenderAccel" },
     { NO_RENDER_EXTENSION_BOOL_OPTION,       TRUE,  "NoRenderExtension" },
@@ -610,16 +609,7 @@ void update_options(Options *op, XConfigScreenPtr screen)
             }
         }
     }
-    
-    /* add the LogoPath option */
 
-    if (op->logo_path) {
-        remove_option(screen, "LogoPath");
-        if (op->logo_path != NV_DISABLE_STRING_OPTION) {
-            set_option_value(screen, "LogoPath", op->logo_path);
-        }
-    }
-   
     /* add the UseDisplayDevice option */
  
     if (op->use_display_device) {

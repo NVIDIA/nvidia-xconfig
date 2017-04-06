@@ -34,7 +34,6 @@ enum {
     EXTRACT_EDIDS_OUTPUT_FILE_OPTION,
     MULTI_GPU_OPTION,
     NVIDIA_XINERAMA_INFO_ORDER_OPTION,
-    LOGO_PATH_OPTION,
     METAMODE_ORIENTATION_OPTION,
     VIRTUAL_OPTION,
     USE_DISPLAY_DEVICE_OPTION,
@@ -345,15 +344,6 @@ static const NVGetoptOption __options[] = {
       "&LAYOUT& in the X configuration file will be used.  If this option is "
       "not specified, the first Server Layout in the X configuration "
       "file is used." },
-
-    { "logo",
-      XCONFIG_BOOL_VAL(NOLOGO_BOOL_OPTION), NVGETOPT_IS_BOOLEAN, NULL,
-      "Disable or enable the \"NoLogo\" X configuration option." },
-
-    { "logo-path", LOGO_PATH_OPTION,
-      NVGETOPT_STRING_ARGUMENT | NVGETOPT_ALLOW_DISABLE, "PATH",
-      "Set the path to the PNG file to be used as the logo splash screen at X "
-      "server startup." },
 
     { "mode",
       MODE_OPTION, NVGETOPT_IS_BOOLEAN | NVGETOPT_STRING_ARGUMENT, NULL,

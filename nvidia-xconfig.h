@@ -31,7 +31,6 @@
 
 
 /* Boolean options */
-#define NOLOGO_BOOL_OPTION                      0
 #define UBB_BOOL_OPTION                         1
 #define RENDER_ACCEL_BOOL_OPTION                2
 #define NO_RENDER_EXTENSION_BOOL_OPTION         3
@@ -137,7 +136,6 @@ typedef struct __options {
     char *extract_edids_from_file;
     char *extract_edids_output_file;
     char *nvidia_xinerama_info_order;
-    char *logo_path;
     char *metamode_orientation;
     char *use_display_device;
     char *custom_edid;
