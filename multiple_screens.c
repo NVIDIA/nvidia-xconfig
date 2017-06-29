@@ -398,7 +398,8 @@ DevicesPtr find_devices(Options *op)
 
         if (__getProductName(pDevices->devices[i].handle,
                              &pDevices->devices[i].name) != NVCFG_TRUE) {
-            goto fail;
+            /* This call may fail with little impact to the Device section */
+            pDevices->devices[i].name = NULL;
         }
 
         if (__getDeviceUUID(pDevices->devices[i].handle,
