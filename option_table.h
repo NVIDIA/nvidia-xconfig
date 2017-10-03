@@ -644,10 +644,11 @@ static const NVGetoptOption __options[] = {
 
     { "force-yuv-420", XCONFIG_BOOL_VAL(FORCE_YUV_420),
       NVGETOPT_IS_BOOLEAN, NULL, "Enable or disable the "
-      "\"ForceYUV420\" X configuration option. Setting this option "
-      "will enable YUV 4:2:0 compression on HDMI 2.0 4K@60hz modes "
-      "if possible, even if the current display and GPU both support "
-      "uncompressed RGB 4:4:4 output with these modes." },
+      "\"ForceYUV420\" X configuration option. If the current display and GPU "
+      "both support uncompressed RGB 4:4:4 output and YUV 4:2:0 compressed "
+      "output with the current mode, then RGB 4:4:4 output is selected by "
+      "default. This option forces the use of YUV 4:2:0 output (where "
+      "supported) instead." },
 
     { "force-composition-pipeline", FORCE_COMPOSITION_PIPELINE_OPTION,
       NVGETOPT_STRING_ARGUMENT | NVGETOPT_ALLOW_DISABLE, NULL,
