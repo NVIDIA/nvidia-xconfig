@@ -333,7 +333,7 @@ static void parse_commandline(Options *op, int argc, char *argv[])
                 break;
             }
 
-            if (intval < 0 || intval > 13) {
+            if (intval < 0 || intval > 14) {
                 fprintf(stderr, "\n");
                 fprintf(stderr, "Invalid stereo: %d.\n", intval);
                 fprintf(stderr, "\n");
