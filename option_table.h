@@ -254,7 +254,8 @@ static const NVGetoptOption __options[] = {
       "name of each X screen." },
 
     { "enable-all-gpus", 'a', 0, NULL,
-      "Configure an X screen on every GPU in the system." },
+      "Delete all existing X screens in the current configuration, "
+      "then configure an X screen on every GPU in your system." },
 
     { "exact-mode-timings-dvi",
       XCONFIG_BOOL_VAL(EXACT_MODE_TIMINGS_DVI_BOOL_OPTION),
