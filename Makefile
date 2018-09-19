@@ -73,8 +73,6 @@ COMMON_UTILS_DIR          ?= common-utils
 
 include dist-files.mk
 
-SRC += $(STAMP_C)
-
 include $(COMMON_UTILS_DIR)/src.mk
 SRC += $(addprefix $(COMMON_UTILS_DIR)/,$(COMMON_UTILS_SRC))
 
@@ -126,11 +124,8 @@ $(NVIDIA_XCONFIG).unstripped: $(OBJS)
 # define the rule to build each object file
 $(foreach src, $(SRC), $(eval $(call DEFINE_OBJECT_RULE,TARGET,$(src))))
 
-# define the rule to generate $(STAMP_C)
-$(eval $(call DEFINE_STAMP_C_RULE, $(OBJS),$(NVIDIA_XCONFIG_PROGRAM_NAME)))
-
 clean clobber:
-	$(RM) -rf $(NVIDIA_XCONFIG) $(MANPAGE) *~ $(STAMP_C) \
+	$(RM) -rf $(NVIDIA_XCONFIG) $(MANPAGE) *~ \
 		$(OUTPUTDIR)/*.o $(OUTPUTDIR)/*.d \
 		$(GEN_MANPAGE_OPTS) $(OPTIONS_1_INC)
 

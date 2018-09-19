@@ -46,12 +46,10 @@
  * print_version() - print version information
  */
 
-extern const char *pNV_ID;
-
 static void print_version(void)
 {
     nv_info_msg(NULL, "");
-    nv_info_msg(NULL, "%s", pNV_ID);
+    nv_info_msg(NULL, "%s", NV_ID_STRING);
     nv_info_msg(TAB, "The NVIDIA X Configuration Tool.");
     nv_info_msg(NULL, "");
     nv_info_msg(TAB, "This program is used to manipulate X configuration files, "
@@ -1060,7 +1058,7 @@ static void update_banner(XConfigPtr config)
     
     /* add our prefix lines at the start of the comment */
     
-    config->comment = nvstrcat(prefix, banner, "# ", pNV_ID, "\n", s, NULL);
+    config->comment = nvstrcat(prefix, banner, "# " NV_ID_STRING "\n", s, NULL);
     
     if (s) free(s);
     

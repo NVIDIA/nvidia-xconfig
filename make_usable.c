@@ -183,9 +183,10 @@ int update_extensions(Options *op, XConfigPtr config)
         }
 
         /* remove any existing composite extension option */
-        
-        xconfigRemoveNamedOption(&(config->extensions->options), "Composite",
+        xconfigRemoveNamedOption(&(config->extensions->options), 
+                                 op->gop.compositeExtensionName,
                                  NULL);
+
 
         /* determine the value to set for the Composite option */
 
@@ -194,8 +195,9 @@ int update_extensions(Options *op, XConfigPtr config)
             "Enable" : "Disable";
         
         /* add the option */
-
-        xconfigAddNewOption(&config->extensions->options, "Composite", value);
+        xconfigAddNewOption(&config->extensions->options, 
+                            op->gop.compositeExtensionName,
+                            value);
     }
     
     return TRUE;
