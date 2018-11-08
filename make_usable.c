@@ -251,9 +251,11 @@ static int update_device(Options *op, XConfigPtr config, XConfigDevicePtr device
 {
     char *identifier, *vendor, *comment, *board, *busid, *driver;
     int screen;
+    size_t index_id;
     XConfigDevicePtr next;
     XConfigOptionPtr options;
-    
+    DevicesPtr pDevices;
+
     next = device->next;
     options = device->options;
     identifier = device->identifier;
@@ -263,7 +265,8 @@ static int update_device(Options *op, XConfigPtr config, XConfigDevicePtr device
     board = device->board;
     busid = device->busid;
     driver = device->driver;
-    
+    index_id = device->index_id;
+
     memset(device, 0, sizeof(XConfigDeviceRec));
 
     device->next = next;
@@ -273,16 +276,35 @@ static int update_device(Options *op, XConfigPtr config, XConfigDevicePtr device
     device->comment = comment;
     device->screen = screen;
     device->board = board;
+    device->index_id = index_id;
 
     /*
-     * Considering four conditions, in order, while populating busid field
-     * 1. If the user specified "--no-busid", obey that
-     * 2. If we want to write busid with option --busid
-     * 3. If we want to preserve existing bus id
-     * 4. If there are multiple screens
+     * Considering five conditions, in order, while populating busid field
+     * 1. If the field is required for the configuration chosen and not passed in
+     * 2. If the user specified "--no-busid", obey that
+     * 3. If we want to write busid with option --busid
+     * 4. If we want to preserve existing bus id
+     * 5. If there are multiple screens
      */
 
-    if (op->busid == NV_DISABLE_STRING_OPTION) {
+    if (GET_BOOL_OPTION(op->boolean_option_values, ENABLE_PRIME_OPTION) &&
+        op->busid == NULL) {
+        pDevices = find_devices(op);
+        if (!pDevices || pDevices->nDevices < 1) {
+            nv_error_msg("Unable to find any GPUs in the system.");
+            return FALSE;
+        }
+        if (device->index_id >= pDevices->nDevices) {
+            nv_error_msg("Invalid GPU index value.");
+            return FALSE;
+        }
+        device->busid = nvalloc(32);
+
+        xconfigFormatPciBusString(device->busid, 32,
+                                  pDevices->devices[device->index_id].dev.domain,
+                                  pDevices->devices[device->index_id].dev.bus,
+                                  pDevices->devices[device->index_id].dev.slot, 0);
+    } else if (op->busid == NV_DISABLE_STRING_OPTION) {
         device->busid = NULL;
     } else if (op->busid) {
         device->busid = op->busid;

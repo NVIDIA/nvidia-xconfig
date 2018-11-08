@@ -665,5 +665,14 @@ static const NVGetoptOption __options[] = {
       NVGETOPT_STRING_ARGUMENT | NVGETOPT_ALLOW_DISABLE, NULL,
       "Enable or disable the \"AllowHMD\" X configuration option." },
 
+    { "prime", XCONFIG_BOOL_VAL(ENABLE_PRIME_OPTION),
+      NVGETOPT_IS_BOOLEAN, NULL,
+      "Enable PRIME for the generated X config file. Cannot be run with "
+      "--no-busid or --no-allow-empty-initial-configuration. On a system with "
+      "more than 1 GPU, specify the GPU to use for PRIME with --busid or the "
+      "first available will be chosen. Note that to enable PRIME it is "
+      "necessary to run \"xrandr --setprovideroutputsource modesetting "
+      "NVIDIA-0\" and \"xrandr --auto\" after completion." },
+
     { NULL, 0, 0, NULL, NULL },
 };

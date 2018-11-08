@@ -33,14 +33,9 @@ The system X configuration file is found and read into memory.
 If no configuration file can be found,
 .B nvidia-xconfig
 generates one from scratch using default settings; in this case, 
-.B nvidia-xconfig 
-will automatically determine the name of the X 
-configuration file to create:
+.B nvidia-xconfig
+will write the configuration to
 .I /etc/X11/xorg.conf
-if the X server
-in use is X.org or 
-.I /etc/X11/XF86Config
-if the X server in use is XFree86.
 .TP
 2)
 The configuration in memory is modified to support the NVIDIA driver.
@@ -76,7 +71,7 @@ The source code to
 is released under the GPL and available here:
 .sp
 .ti +5
-.__URL__ "ftp://download.nvidia.com/XFree86/nvidia\-xconfig/"
+.__URL__ "https://download.nvidia.com/XFree86/nvidia-xconfig/"
 .sp
 Patches are welcome.
 dnl Call gen-manpage-opts to generate this section.
@@ -85,7 +80,7 @@ __OPTIONS__
 .TP
 .B nvidia-xconfig
 Reads an existing X config file and adapts it to use the NVIDIA driver.
-If no X config file can be found, a new one is created at /etc/X11/XF86Config with default settings.
+If no X config file can be found, a new one is created at /etc/X11/xorg.conf with default settings.
 .TP
 .B nvidia-xconfig \-\-post\-tree \-\-metamode\-orientation=clone
 Reads the existing X configuration file, adds the MetaModeOrientation option, and then prints the resulting config file to standard out in tree form.
@@ -106,7 +101,6 @@ Adds the MetaMode "1024x768 +0+0, 1024x768 +1024+0" to the existing X configurat
 .B nvidia-xconfig \-\-only\-one\-x\-screen \-\-sli=Auto
 Configures the X server to have just one X screen that will use SLI when available.
 .\" .SH FILES
-.\" .I /etc/X11/XF86Config
 .\" .I /etc/X11/xorg.conf
 .SH AUTHOR
 Aaron Plattner

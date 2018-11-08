@@ -956,7 +956,8 @@ static int enable_all_gpus(Options *op, XConfigPtr config,
                                  pDevices->devices[i].dev.bus,
                                  pDevices->devices[i].dev.domain,
                                  pDevices->devices[i].dev.slot,
-                                 pDevices->devices[i].name, i);
+                                 pDevices->devices[i].name, i,
+                                 "nvidia", "NVIDIA Corporation");
     }
     
     free_devices(pDevices);

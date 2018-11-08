@@ -23,7 +23,7 @@
  * Note that the tree is just printed to stdout (not through an
  * ncurses ui) so we can just call printf directly here.
  *
- * TODO: there are many fields that we are not yet printed
+ * TODO: there are many fields that we are not yet printing
  */
 
 

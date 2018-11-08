@@ -66,8 +66,9 @@
 #define ALLOW_EMPTY_INITIAL_CONFIGURATION       41
 #define INBAND_STEREO_SIGNALING                 42
 #define FORCE_YUV_420                           43
+#define ENABLE_PRIME_OPTION                     44
 
-#define XCONFIG_BOOL_OPTION_COUNT (FORCE_YUV_420 + 1)
+#define XCONFIG_BOOL_OPTION_COUNT (ENABLE_PRIME_OPTION + 1)
 
 /* # of 32-bit variables needed to hold all the boolean options (bits) */
 #define XCONFIG_BOOL_OPTION_SLOTS  \
@@ -221,6 +222,7 @@ int print_tree(Options *op, XConfigPtr config);
 
 /* options.c */
 
+int check_boolean_option(Options *op, const int c, const int boolval);
 void set_boolean_option(Options *op, const int c, const int boolval);
 void validate_composite(Options *op, XConfigPtr config);
 void update_options(Options *op, XConfigScreenPtr screen);

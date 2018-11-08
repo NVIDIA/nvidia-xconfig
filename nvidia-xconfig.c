@@ -136,6 +136,9 @@ static void parse_commandline(Options *op, int argc, char *argv[])
         if ((c >= XCONFIG_BOOL_OPTION_START) &&
             (c <= (XCONFIG_BOOL_OPTION_START + XCONFIG_BOOL_OPTION_COUNT))) {
 
+            if (!check_boolean_option(op, c - XCONFIG_BOOL_OPTION_START, boolval)) {
+                goto fail;
+            }
             set_boolean_option(op, c - XCONFIG_BOOL_OPTION_START, boolval);
             
             continue;
@@ -171,6 +174,10 @@ static void parse_commandline(Options *op, int argc, char *argv[])
         case SCREEN_OPTION: op->screen = strval; break;
         case DEVICE_OPTION: op->device = strval; break;
         case BUSID_OPTION:
+            if (GET_BOOL_OPTION(op->boolean_option_values, ENABLE_PRIME_OPTION)) {
+                fprintf(stderr, "Unable to disable BUSID with PRIME enabled.\n");
+                goto fail;
+            }
             op->busid = disable ? NV_DISABLE_STRING_OPTION : strval;
             break;
 
@@ -749,9 +756,6 @@ static int backup_file(Options *op, const char *orig_filename,
  * 2) config->filename
  *
  * 3) use xf86openConfigFile()
- *
- * 4) If the detected X server is XFree86, we use use "/etc/X11/XF86Config"
- *    Otherwise we use "/etc/X11/xorg.conf".
  */
 
 static char *find_xconfig(Options *op, XConfigPtr config)
@@ -782,15 +786,9 @@ static char *find_xconfig(Options *op, XConfigPtr config)
             xconfigCloseConfigFile();
         }
     }
-    
-    /* fall back to "/etc/X11/XF86Config" or "/etc/X11/xorg.conf" */
-    
+
     if (!filename) {
-        if (op->gop.xserver == X_IS_XF86) {
-            filename = nvstrdup("/etc/X11/XF86Config");
-        } else {
-            filename = nvstrdup("/etc/X11/xorg.conf");
-        }
+        filename = nvstrdup("/etc/X11/xorg.conf");
     }
 
     return filename;
@@ -1114,6 +1112,36 @@ static XConfigPtr find_system_xconfig(Options *op)
 
 
 
+/*
+ * apply_enable_prime_settings() -  if the ENABLE PRIME boolean option is
+ * enabled, add the required xconfig additions.
+ * returns a sucess/fail boolean.
+ */
+
+static int apply_enable_prime_settings(Options *op, XConfigPtr config,
+                                       XConfigLayoutPtr layout)
+{
+    DevicesPtr pDevices;
+
+    if (GET_BOOL_OPTION(op->boolean_option_values, ENABLE_PRIME_OPTION)) {
+        /* Add an inactive device for the integrated graphics */
+        pDevices = find_devices(op);
+        if (!pDevices) {
+            nv_error_msg("Unable to find any GPUs in the system.");
+            return FALSE;
+        }
+        xconfigAddInactiveDevice(config, layout, pDevices->nDevices);
+
+        nv_info_msg(NULL, "X Configuration file set up for PRIME. Please run "
+                          "\"xrandr --setprovideroutputsource modesetting "
+                          "NVIDIA-0\" and \"xrandr --auto\" to enable. "
+                          "See the README for more details.");
+    }
+    return TRUE;
+} /* apply_enable_prime_settings() */
+
+
+
 static int update_xconfig(Options *op, XConfigPtr config)
 {
     XConfigLayoutPtr layout;
@@ -1130,6 +1158,12 @@ static int update_xconfig(Options *op, XConfigPtr config)
     /* apply multi-display options */
     
     if (!apply_multi_screen_options(op, config, layout)) {
+        return FALSE;
+    }
+
+    /* apply PRIME settings */
+
+    if (!apply_enable_prime_settings(op, config, layout)) {
         return FALSE;
     }
 

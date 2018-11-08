@@ -90,7 +90,52 @@ static const NvidiaXConfigOption *get_option(const int n)
     
 } /* get_option() */
 
+/*
+ * check_boolean_option() - verify the boolean option 'c' can be
+ * applied given other set options.
+ */
 
+int check_boolean_option(Options *op, const int c, const int boolval)
+{
+    switch (c) {
+
+    case ENABLE_PRIME_OPTION:
+        /*
+         * Prime requires these features, so if the user
+         * has disabled it we have a conflict.
+         */
+        if (GET_BOOL_OPTION(op->boolean_options,
+                            ALLOW_EMPTY_INITIAL_CONFIGURATION)
+            &&
+            !GET_BOOL_OPTION(op->boolean_option_values,
+                             ALLOW_EMPTY_INITIAL_CONFIGURATION))
+        {
+            fprintf(stderr, "Unable to enable PRIME with "
+                            "ALLOW_EMPTY_INITIAL_CONFIGURATION disabled.\n");
+            return FALSE;
+        } else if (op->busid == NV_DISABLE_STRING_OPTION) {
+            fprintf(stderr, "Unable to enable PRIME with BUSID disabled.\n");
+            return FALSE;
+        }
+        break;
+
+    case ALLOW_EMPTY_INITIAL_CONFIGURATION:
+        if (GET_BOOL_OPTION(op->boolean_option_values,
+            ENABLE_PRIME_OPTION)
+            && !boolval)
+        {
+            fprintf(stderr, "Unable to disable"
+                            "ALLOW_EMPTY_INITIAL_CONFIGURATION with"
+                            "PRIME enabled.\n");
+            return FALSE;
+        }
+        break;
+
+    default: break;
+    }
+
+    return TRUE;
+}
 
 /*
  * set_boolean_option() - set boolean option 'c' to the given 'boolval'
@@ -106,6 +151,14 @@ void set_boolean_option(Options *op, const int c, const int boolval)
     
     if (boolval) {
         GET_BOOL_OPTION_SLOT(op->boolean_option_values, c) |= bit;
+
+        /* Options that must be paired together */
+        switch (c) {
+         case ENABLE_PRIME_OPTION: {
+             set_boolean_option(op, ALLOW_EMPTY_INITIAL_CONFIGURATION, TRUE);
+             break;
+         }
+        }
     } else {
         GET_BOOL_OPTION_SLOT(op->boolean_option_values, c) &= ~bit;
     }
@@ -496,7 +549,8 @@ void update_options(Options *op, XConfigScreenPtr screen)
             if (i == XINERAMA_BOOL_OPTION) continue;
             if (i == COMPOSITE_BOOL_OPTION) continue;
             if (i == PRESERVE_BUSID_BOOL_OPTION) continue;
-            
+            if (i == ENABLE_PRIME_OPTION) continue;
+
             o = get_option(i);
             
             if (!o) {
