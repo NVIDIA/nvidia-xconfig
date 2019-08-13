@@ -31,12 +31,12 @@
 #include <fcntl.h>
 #include <ctype.h>
 #include <pwd.h>
+#include <termios.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/mman.h>
 #include <sys/ioctl.h>
-#include <sys/termios.h>
 
 #include "nvidia-xconfig.h"
 #include "msg.h"
