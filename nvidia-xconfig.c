@@ -383,47 +383,7 @@ static void parse_commandline(Options *op, int argc, char *argv[])
             op->metamodes_str = strval;
             break;
 
-        case MULTI_GPU_OPTION:
-            {
-                const char* valid_values[] = {
-                    "0",
-                    "no",
-                    "off",
-                    "false",
-                    "single",
-                    "1",
-                    "yes",
-                    "on",
-                    "true",
-                    "auto",
-                    "afr",
-                    "sfr",
-                    "aa",
-                    NULL
-                };
-                int i;
-
-                /* mark as disabled, so we can remove the option later */
-                
-                if (disable) {
-                    op->multigpu = NV_DISABLE_STRING_OPTION;
-                    break;
-                }
-
-                for (i = 0; valid_values[i]; i++) {
-                    if (!strcasecmp(strval, valid_values[i]))
-                        break;
-                }
-
-                if (valid_values[i]) {
-                    op->multigpu = strval;
-                } else {
-                    fprintf(stderr, "Invalid MultiGPU option: %s.\n", strval);
-                    goto fail;
-                }
-            }
-            break;
-
+        case MULTI_GPU_OPTION: /* fall through */
         case SLI_OPTION:
             {
                 const char* valid_values[] = {
@@ -432,37 +392,35 @@ static void parse_commandline(Options *op, int argc, char *argv[])
                     "off",
                     "false",
                     "single",
-                    "1",
-                    "yes",
-                    "on",
-                    "true",
-                    "auto",
-                    "afr",
-                    "sfr",
-                    "aa",
-                    "afrofaa",
                     "mosaic",
                     NULL
                 };
-                int i;
 
-                /* mark as disabled, so we can remove the option later */
-                
                 if (disable) {
-                    op->sli = NV_DISABLE_STRING_OPTION;
-                    break;
-                }
 
-                for (i = 0; valid_values[i]; i++) {
-                    if (!strcasecmp(strval, valid_values[i]))
-                        break;
-                }
+                    /* mark as disabled, so we can remove the option later */
+                    strval = NV_DISABLE_STRING_OPTION;
 
-                if (valid_values[i]) {
-                    op->sli = strval;
                 } else {
-                    fprintf(stderr, "Invalid SLI option: %s.\n", strval);
-                    goto fail;
+
+                    /* check that the string is valid */
+                    int i;
+
+                    for (i = 0; valid_values[i]; i++) {
+                        if (!strcasecmp(strval, valid_values[i]))
+                            break;
+                    }
+
+                    if (!valid_values[i]) {
+                        fprintf(stderr, "Invalid SLI option: %s.\n", strval);
+                        goto fail;
+                    }
+                }
+
+                if (c == MULTI_GPU_OPTION) {
+                    op->multigpu = strval;
+                } else {
+                    op->sli = strval;
                 }
             }
             break;

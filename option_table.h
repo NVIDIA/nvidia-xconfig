@@ -382,7 +382,7 @@ static const NVGetoptOption __options[] = {
     { "multigpu", MULTI_GPU_OPTION,
       NVGETOPT_STRING_ARGUMENT | NVGETOPT_ALLOW_DISABLE, NULL,
       "Enable or disable MultiGPU.  Valid values for &MULTIGPU& are "
-      "'Off', 'On', 'Auto', 'AFR', 'SFR', 'AA'." },
+      "'Off' and 'Mosaic'." },
 
     { "multisample-compatibility",
       XCONFIG_BOOL_VAL(MULTISAMPLE_COMPATIBILITY_BOOL_OPTION),
@@ -487,8 +487,7 @@ static const NVGetoptOption __options[] = {
 
     { "sli", SLI_OPTION,
       NVGETOPT_STRING_ARGUMENT | NVGETOPT_ALLOW_DISABLE, NULL,
-      "Enable or disable SLI.  Valid values for &SLI& are 'Off', 'On', 'Auto', "
-      "'AFR', 'SFR', 'AA', 'AFRofAA', 'Mosaic'." },
+      "Enable or disable SLI.  Valid values for &SLI& are 'Off' and 'Mosaic'." },
 
     { "stereo", STEREO_OPTION,
       NVGETOPT_INTEGER_ARGUMENT | NVGETOPT_ALLOW_DISABLE, NULL,
