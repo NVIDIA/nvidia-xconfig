@@ -253,6 +253,9 @@ static const NVGetoptOption __options[] = {
       "for all configured X screens; this option preserves the existing driver "
       "name of each X screen." },
 
+    { "egpu", XCONFIG_BOOL_VAL(ENABLE_EXTERNAL_GPU_BOOL_OPTION), NVGETOPT_IS_BOOLEAN, NULL,
+      "Enable or disable the \"AllowExternalGpus\" X configuration option." },
+
     { "enable-all-gpus", 'a', 0, NULL,
       "Delete all existing X screens in the current configuration, "
       "then configure an X screen on every GPU in your system." },
@@ -266,7 +269,7 @@ static const NVGetoptOption __options[] = {
     { "extract-edids-from-file", 'E', NVGETOPT_STRING_ARGUMENT, "FILE",
       "Extract any raw EDID byte blocks contained in the specified X "
       "log file &LOG&; raw EDID bytes are printed by the NVIDIA X driver to "
-      "the X log as hexidecimal when verbose logging is enabled with the "
+      "the X log as hexadecimal when verbose logging is enabled with the "
       "\"-logverbose 6\" X server commandline option.  Any extracted EDIDs "
       "are then written as binary data to individual files.  These files "
       "can later be used by the NVIDIA X driver through the \"CustomEDID\" "

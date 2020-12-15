@@ -69,6 +69,7 @@ static const NvidiaXConfigOption __options[] = {
     { ALLOW_EMPTY_INITIAL_CONFIGURATION,     FALSE, "AllowEmptyInitialConfiguration" },
     { INBAND_STEREO_SIGNALING,               FALSE, "InbandStereoSignaling" },
     { FORCE_YUV_420,                         FALSE, "ForceYUV420" },
+    { ENABLE_EXTERNAL_GPU_BOOL_OPTION,       FALSE, "AllowExternalGpus" },
     { 0,                                     FALSE, NULL },
 };
 
@@ -541,8 +542,8 @@ void update_options(Options *op, XConfigScreenPtr screen)
             
             /*
              * SEPARATE_X_SCREENS_BOOL_OPTION, XINERAMA_BOOL_OPTION,
-             * COMPOSITE_BOOL_OPTION, and PRESERVE_BUSID_BOOL_OPTION
-             * are handled separately
+             * COMPOSITE_BOOL_OPTION, PRESERVE_BUSID_BOOL_OPTION,
+             * and ENABLE_EXTERNAL_GPU_BOOL_OPTION are handled separately
              */
 
             if (i == SEPARATE_X_SCREENS_BOOL_OPTION) continue;
@@ -550,6 +551,7 @@ void update_options(Options *op, XConfigScreenPtr screen)
             if (i == COMPOSITE_BOOL_OPTION) continue;
             if (i == PRESERVE_BUSID_BOOL_OPTION) continue;
             if (i == ENABLE_PRIME_OPTION) continue;
+            if (i == ENABLE_EXTERNAL_GPU_BOOL_OPTION) continue;
 
             o = get_option(i);
             

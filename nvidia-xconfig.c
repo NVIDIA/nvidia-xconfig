@@ -1073,7 +1073,7 @@ static XConfigPtr find_system_xconfig(Options *op)
 /*
  * apply_enable_prime_settings() -  if the ENABLE PRIME boolean option is
  * enabled, add the required xconfig additions.
- * returns a sucess/fail boolean.
+ * returns a success/fail boolean.
  */
 
 static int apply_enable_prime_settings(Options *op, XConfigPtr config,
@@ -1098,6 +1098,37 @@ static int apply_enable_prime_settings(Options *op, XConfigPtr config,
     return TRUE;
 } /* apply_enable_prime_settings() */
 
+/*
+ * apply_enable_external_gpu_option() - if the ENABLE EXTERNAL GPU boolean
+ * option is enabled, add the AllowExternalGpus option to the ServerLayout
+ * section
+ * returns a success/fail boolean
+ */
+
+static int apply_enable_external_gpu_option(Options *op, XConfigPtr config,
+                                            XConfigLayoutPtr layout)
+{
+    int egpu = GET_BOOL_OPTION(op->boolean_option_values,
+                               ENABLE_EXTERNAL_GPU_BOOL_OPTION);
+
+    if (GET_BOOL_OPTION(op->boolean_options, ENABLE_EXTERNAL_GPU_BOOL_OPTION)) {
+        xconfigAddNewOption(&(layout->options),
+                            "AllowExternalGpus",
+                            (egpu ? "1" : "0"));
+
+        if (egpu) {
+            nv_info_msg(NULL, "X configuration file set up to allow detection "
+                              "of External GPUs. If the eGPU does not work, "
+                              "you may need to authorize the associated "
+                              "Thunderbolt device.\n"
+                              "Warning: System may become unstable if the "
+                              "eGPU is hot-unplugged while X is running.\n"
+                              "See \"Configuring External and Removable "
+                              "GPUs\" in the README for more details.");
+        }
+    }
+    return TRUE;
+} /* apply_enable_external_gpu_option */
 
 
 static int update_xconfig(Options *op, XConfigPtr config)
@@ -1122,6 +1153,11 @@ static int update_xconfig(Options *op, XConfigPtr config)
     /* apply PRIME settings */
 
     if (!apply_enable_prime_settings(op, config, layout)) {
+        return FALSE;
+    }
+
+    /* apply eGPU setting */
+    if (!apply_enable_external_gpu_option(op, config, layout)) {
         return FALSE;
     }
 
@@ -1208,7 +1244,7 @@ int main(int argc, char *argv[])
     /* parse the commandline */
 
     parse_commandline(op, argc, argv);
-    
+
     /*
      * first, check for any of special options that cause us to exit
      * early

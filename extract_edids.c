@@ -42,7 +42,7 @@
  * (--) Dec 29 15:27:13 NVIDIA(0):   0f 0a 01 02 9e 1e 17 64  ee 04 85 a0 57 4a 9b 26
  *
  * In the above example, we see log for the 0'th screen. But there
- * can be upto 16 screens, so we can expect the X log content as below:
+ * can be up to 16 screens, so we can expect the X log content as below:
  *
  * (--) Dec 29 15:27:13 NVIDIA(13):   00 ff ff ff ff ff ff 00  5a 63 47 4b fc 27 00 00
  * (--) Dec 29 15:27:13 NVIDIA(13):   0f 0a 01 02 9e 1e 17 64  ee 04 85 a0 57 4a 9b 26

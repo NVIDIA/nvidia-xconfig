@@ -67,8 +67,9 @@
 #define INBAND_STEREO_SIGNALING                 42
 #define FORCE_YUV_420                           43
 #define ENABLE_PRIME_OPTION                     44
+#define ENABLE_EXTERNAL_GPU_BOOL_OPTION         45
 
-#define XCONFIG_BOOL_OPTION_COUNT (ENABLE_PRIME_OPTION + 1)
+#define XCONFIG_BOOL_OPTION_COUNT (ENABLE_EXTERNAL_GPU_BOOL_OPTION + 1)
 
 /* # of 32-bit variables needed to hold all the boolean options (bits) */
 #define XCONFIG_BOOL_OPTION_SLOTS  \
