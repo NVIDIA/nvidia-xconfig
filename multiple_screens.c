@@ -302,6 +302,7 @@ DevicesPtr find_devices(Options *op)
     DevicesPtr pDevices = NULL;
     DisplayDevicePtr pDisplayDevice;
     int i, j, n, count = 0;
+    int swappedIndex;
     unsigned int mask, bit;
     DeviceRec tmpDevice;
     NvCfgPciDevice *devs = NULL;
@@ -366,9 +367,7 @@ DevicesPtr find_devices(Options *op)
     __GET_FUNC(__getEDID, "nvCfgGetEDID");
     __GET_FUNC(__closeDevice, "nvCfgCloseDevice");
     __GET_FUNC(__getDeviceUUID, "nvCfgGetDeviceUUID");
-
-    /* optional functions */
-    __isPrimaryDevice = dlsym(lib_handle, "nvCfgIsPrimaryDevice");
+    __GET_FUNC(__isPrimaryDevice,"nvCfgIsPrimaryDevice");
     
     if (__getPciDevices(&count, &devs) != NVCFG_TRUE) {
         return NULL;
@@ -449,17 +448,21 @@ DevicesPtr find_devices(Options *op)
             pDevices->devices[i].displayDevices = NULL;
         }
 
-        if ((i != 0) && (__isPrimaryDevice != NULL) &&
+        /* Use this index instead of i to close device after a possible swap */
+        swappedIndex = i;
+
+        if ((i != 0) &&
             (__isPrimaryDevice(pDevices->devices[i].handle,
                                &is_primary_device) == NVCFG_TRUE) &&
             (is_primary_device == NVCFG_TRUE)) {
             memcpy(&tmpDevice, &pDevices->devices[0], sizeof(DeviceRec));
             memcpy(&pDevices->devices[0], &pDevices->devices[i], sizeof(DeviceRec));
             memcpy(&pDevices->devices[i], &tmpDevice, sizeof(DeviceRec));
+            swappedIndex = 0;
         }
         
-        ret = __closeDevice(pDevices->devices[i].handle);
-        pDevices->devices[i].handle = NULL;
+        ret = __closeDevice(pDevices->devices[swappedIndex].handle);
+        pDevices->devices[swappedIndex].handle = NULL;
 
         if (ret != NVCFG_TRUE) {
             goto fail;
