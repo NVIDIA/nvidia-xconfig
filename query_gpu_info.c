@@ -27,8 +27,6 @@
 static char *display_device_mask_to_display_device_name(unsigned int mask);
 
 
-#define BUS_ID_STRING_LENGTH 32
-
 
 /*
  * query_gpu_info() - query information about the GPU, and print it
@@ -40,7 +38,7 @@ int query_gpu_info(Options *op)
     DevicesPtr pDevices;
     DisplayDevicePtr pDisplayDevice;
     int i, j;
-    char *name, busid[BUS_ID_STRING_LENGTH];
+    char *name, *busid;
 
     /* query the GPU information */
 
@@ -62,12 +60,9 @@ int query_gpu_info(Options *op)
         nv_info_msg(TAB, "Name      : %s", pDevices->devices[i].name);
         nv_info_msg(TAB, "UUID      : %s", pDevices->devices[i].uuid);
 
-        memset(busid, 0, BUS_ID_STRING_LENGTH);
-        xconfigFormatPciBusString(busid, BUS_ID_STRING_LENGTH,
-                                  pDevices->devices[i].dev.domain,
-                                  pDevices->devices[i].dev.bus,
-                                  pDevices->devices[i].dev.slot, 0);
+        busid = nv_format_busid(op, i);
         nv_info_msg(TAB, "PCI BusID : %s", busid);
+        nvfree(busid);
 
         nv_info_msg(NULL, "");
         nv_info_msg(TAB, "Number of Display Devices: %d",

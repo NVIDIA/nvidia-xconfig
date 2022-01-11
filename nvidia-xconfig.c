@@ -906,7 +906,7 @@ static int write_xconfig(Options *op, XConfigPtr config, int first_touch)
      * to the default depth of the first screen 
      */
     if (op->disable_scf == FALSE) {
-        if(!update_scf_depth(config->screens[0].defaultdepth)) {
+        if (!update_scf_depth(config->screens[0].defaultdepth)) {
             goto done;
         }
     }

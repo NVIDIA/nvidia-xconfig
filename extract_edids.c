@@ -249,7 +249,7 @@ int extract_edids(Options *op)
 
     /* scan through the whole file, and build a list of pEdids */
     
-    while(1) {
+    while (1) {
     
         if (fileType == LOG_FILE) {
     
@@ -485,7 +485,7 @@ static int readEdidDataforLogFile(FilePtr pFile, EdidPtr pEdid)
     state = STATE_LOOKING_FOR_TOP_NIBBLE;
     k = 0;
     
-    while(1) {
+    while (1) {
         
         c = pFile->current[0];
 
@@ -673,7 +673,7 @@ static int readEdidDataforTextFile(FilePtr pFile, EdidPtr pEdid)
     state = STATE_LOOKING_FOR_TOP_NIBBLE;
     k = 0;
 
-    while(1) {
+    while (1) {
 
     c = pFile->current[0];
 

@@ -171,3 +171,34 @@ void xconfigPrint(MsgType t, const char *msg)
     if (newline) nv_info_msg_to_file(stream, NULL, "");
     
 } /* xconfigPrint */
+
+/* a round number longer than "PCI:bus@domain:slot:function" */
+#define BUS_ID_STRING_LENGTH 32
+
+/*
+ * nv_format_busid() - returns a newly allocated formatted string with the PCI
+ * Bus ID of the device with the given index, or NULL on failure.
+ */
+char *nv_format_busid(Options *op, int index)
+{
+    char buf[BUS_ID_STRING_LENGTH];
+    DevicesPtr pDevices;
+    NvCfgPciDevice *dev;
+
+    pDevices = find_devices(op);
+    if (!pDevices || pDevices->nDevices < 1) {
+        nv_error_msg("Unable to find any GPUs in the system.");
+        return NULL;
+    }
+    if (index >= pDevices->nDevices) {
+        nv_error_msg("Invalid GPU index value.");
+        return NULL;
+    }
+
+    dev = &pDevices->devices[index].dev;
+
+    xconfigFormatPciBusString(buf, sizeof(buf),
+                              dev->domain, dev->bus, dev->slot, 0);
+
+    return nvstrdup(buf);
+}

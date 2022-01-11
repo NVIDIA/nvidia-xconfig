@@ -638,11 +638,7 @@ static int enable_separate_x_screens(Options *op, XConfigPtr config,
                 continue;
             }
             
-            screenlist[i]->device->busid = nvalloc(32);
-            xconfigFormatPciBusString(screenlist[i]->device->busid, 32,
-                                      pDevices->devices[i].dev.domain,
-                                      pDevices->devices[i].dev.bus,
-                                      pDevices->devices[i].dev.slot, 0);
+            screenlist[i]->device->busid = nv_format_busid(op, i);
 
             screenlist[i]->device->board = nvstrdup(pDevices->devices[i].name);
         }

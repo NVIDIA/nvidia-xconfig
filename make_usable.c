@@ -29,6 +29,7 @@
 #include "xf86Parser.h"
 #include "configProcs.h"
 #include "msg.h"
+#include "nvpci-utils.h"
 
 
 static void ensure_module_loaded(XConfigPtr config, char *name);
@@ -238,6 +239,32 @@ int update_server_flags(Options *op, XConfigPtr config)
 
 
 
+static int count_non_nv_gpus(void)
+{
+    struct pci_device_iterator *iter;
+    struct pci_device *dev;
+    int count = 0;
+
+    if (pci_system_init()) {
+        return -1;
+    }
+
+    iter = nvpci_find_gpu_by_vendor(PCI_MATCH_ANY);
+
+    for (dev = pci_device_next(iter); dev; dev = pci_device_next(iter)) {
+        if (dev->vendor_id != NV_PCI_VENDOR_ID) {
+            count++;
+        }
+    }
+
+    pci_system_cleanup();
+
+    return count;
+}
+
+
+
+
 /*
  * update_device() - update the device; there is a lot of information
  * in the device that is not relevant to the NVIDIA X driver.  In
@@ -254,7 +281,6 @@ static int update_device(Options *op, XConfigPtr config, XConfigDevicePtr device
     size_t index_id;
     XConfigDevicePtr next;
     XConfigOptionPtr options;
-    DevicesPtr pDevices;
 
     next = device->next;
     options = device->options;
@@ -285,25 +311,15 @@ static int update_device(Options *op, XConfigPtr config, XConfigDevicePtr device
      * 3. If we want to write busid with option --busid
      * 4. If we want to preserve existing bus id
      * 5. If there are multiple screens
+     * 6. If the system has any non-NVIDIA GPUs
      */
 
     if (GET_BOOL_OPTION(op->boolean_option_values, ENABLE_PRIME_OPTION) &&
         op->busid == NULL) {
-        pDevices = find_devices(op);
-        if (!pDevices || pDevices->nDevices < 1) {
-            nv_error_msg("Unable to find any GPUs in the system.");
+        device->busid = nv_format_busid(op, device->index_id);
+        if (device->busid == NULL) {
             return FALSE;
-        }
-        if (device->index_id >= pDevices->nDevices) {
-            nv_error_msg("Invalid GPU index value.");
-            return FALSE;
-        }
-        device->busid = nvalloc(32);
-
-        xconfigFormatPciBusString(device->busid, 32,
-                                  pDevices->devices[device->index_id].dev.domain,
-                                  pDevices->devices[device->index_id].dev.bus,
-                                  pDevices->devices[device->index_id].dev.slot, 0);
+    }
     } else if (op->busid == NV_DISABLE_STRING_OPTION) {
         device->busid = NULL;
     } else if (op->busid) {
@@ -317,7 +333,13 @@ static int update_device(Options *op, XConfigPtr config, XConfigDevicePtr device
             device->busid = NULL;
         }
     } else if (config->screens->next) {
+        /* enable_separate_x_screens() already generated a busid string */
         device->busid = busid;
+    } else if (count_non_nv_gpus() > 0) {
+        device->busid = nv_format_busid(op, device->index_id);
+        if (device->busid == NULL) {
+            return FALSE;
+        }
     }
 
     device->chipid = -1;

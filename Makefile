@@ -25,6 +25,7 @@
 # include common variables and functions
 ##############################################################################
 
+COMMON_UTILS_PCIACCESS = 1
 include utils.mk
 
 
@@ -87,14 +88,14 @@ common_cflags += -DPROGRAM_NAME=\"nvidia-xconfig\"
 CFLAGS += $(common_cflags)
 HOST_CFLAGS += $(common_cflags)
 
-LIBS += -lm
+LIBS += -lm -lpciaccess
 
 ifneq ($(TARGET_OS),FreeBSD)
   LIBS += -ldl
 endif
 
 ifeq ($(TARGET_OS),SunOS)
-  LIBS += -lscf
+  LIBS += -lscf -ldevinfo
 endif
 
 
@@ -119,7 +120,10 @@ MANPAGE_install: $(MANPAGE)
 $(eval $(call DEBUG_INFO_RULES, $(NVIDIA_XCONFIG)))
 $(NVIDIA_XCONFIG).unstripped: $(OBJS)
 	$(call quiet_cmd,LINK) $(CFLAGS) $(LDFLAGS) $(BIN_LDFLAGS) \
-	    -o $@ $(OBJS) $(LIBS)
+	    $(PCIACCESS_LDFLAGS) -o $@ $(OBJS) $(LIBS)
+
+# make_usable.c includes pciaccess.h
+$(call BUILD_OBJECT_LIST,make_usable.c): CFLAGS += $(PCIACCESS_CFLAGS)
 
 # define the rule to build each object file
 $(foreach src, $(SRC), $(eval $(call DEFINE_OBJECT_RULE,TARGET,$(src))))

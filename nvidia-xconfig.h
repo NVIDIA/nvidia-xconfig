@@ -200,6 +200,7 @@ typedef struct {
 /* util.c */
 
 int copy_file(const char *srcfile, const char *dstfile, mode_t mode);
+char *nv_format_busid(Options *op, int index);
 
 /* make_usable.c */
 
