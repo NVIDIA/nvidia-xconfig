@@ -103,16 +103,18 @@ endif
 # build rules
 ##############################################################################
 
-.PNONY: all install NVIDIA_XCONFIG_install MANPAGE_install clean clobber
-
+.PHONY: all
 all: $(NVIDIA_XCONFIG) $(MANPAGE)
 
+.PHONY: install
 install: NVIDIA_XCONFIG_install MANPAGE_install
 
+.PHONY: NVIDIA_XCONFIG_install
 NVIDIA_XCONFIG_install: $(NVIDIA_XCONFIG)
 	$(MKDIR) $(BINDIR)
 	$(INSTALL) $(INSTALL_BIN_ARGS) $< $(BINDIR)/$(notdir $<)
 
+.PHONY: MANPAGE_install
 MANPAGE_install: $(MANPAGE)
 	$(MKDIR) $(MANDIR)
 	$(INSTALL) $(INSTALL_DOC_ARGS) $< $(MANDIR)/$(notdir $<)
@@ -128,6 +130,7 @@ $(call BUILD_OBJECT_LIST,make_usable.c): CFLAGS += $(PCIACCESS_CFLAGS)
 # define the rule to build each object file
 $(foreach src, $(SRC), $(eval $(call DEFINE_OBJECT_RULE,TARGET,$(src))))
 
+.PHONY: clean clobber
 clean clobber:
 	$(RM) -rf $(NVIDIA_XCONFIG) $(MANPAGE) *~ \
 		$(OUTPUTDIR)/*.o $(OUTPUTDIR)/*.d \
@@ -140,6 +143,7 @@ clean clobber:
 
 AUTO_TEXT = ".\\\" WARNING: THIS FILE IS AUTO-GENERATED!  Edit $< instead."
 
+.PHONY: doc
 doc: $(MANPAGE)
 
 GEN_MANPAGE_OPTS_SRC  = gen-manpage-opts.c
