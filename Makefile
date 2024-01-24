@@ -88,7 +88,7 @@ common_cflags += -DPROGRAM_NAME=\"nvidia-xconfig\"
 CFLAGS += $(common_cflags)
 HOST_CFLAGS += $(common_cflags)
 
-LIBS += -lm -lpciaccess
+LIBS += -lm
 
 ifneq ($(TARGET_OS),FreeBSD)
   LIBS += -ldl
@@ -122,7 +122,7 @@ MANPAGE_install: $(MANPAGE)
 $(eval $(call DEBUG_INFO_RULES, $(NVIDIA_XCONFIG)))
 $(NVIDIA_XCONFIG).unstripped: $(OBJS)
 	$(call quiet_cmd,LINK) $(CFLAGS) $(LDFLAGS) $(BIN_LDFLAGS) \
-	    $(PCIACCESS_LDFLAGS) -o $@ $(OBJS) $(LIBS)
+	    -o $@ $(OBJS) $(PCIACCESS_LDFLAGS) $(LIBS)
 
 # make_usable.c includes pciaccess.h
 $(call BUILD_OBJECT_LIST,make_usable.c): CFLAGS += $(PCIACCESS_CFLAGS)

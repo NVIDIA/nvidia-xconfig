@@ -131,7 +131,6 @@ typedef struct __options {
     char *screen;
     char *device;
     char *busid;
-    char *multigpu;
     char *sli;
 
     char *nvidia_cfg_path;

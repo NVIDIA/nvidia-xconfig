@@ -596,15 +596,6 @@ void update_options(Options *op, XConfigScreenPtr screen)
         }
     }
 
-    /* add the MultiGPU option */
-
-    if (op->multigpu) {
-        remove_option(screen, "MultiGPU");
-        if (op->multigpu != NV_DISABLE_STRING_OPTION) {
-            set_option_value(screen, "MultiGPU", op->multigpu);
-        }
-    }
-
     /* add the SLI option */
 
     if (op->sli) {

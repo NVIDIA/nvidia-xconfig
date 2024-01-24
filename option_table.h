@@ -32,7 +32,6 @@ enum {
     STEREO_OPTION,
     QUERY_GPU_INFO_OPTION,
     EXTRACT_EDIDS_OUTPUT_FILE_OPTION,
-    MULTI_GPU_OPTION,
     NVIDIA_XINERAMA_INFO_ORDER_OPTION,
     METAMODE_ORIENTATION_OPTION,
     VIRTUAL_OPTION,
@@ -381,11 +380,6 @@ static const NVGetoptOption __options[] = {
     { "mouse-list", MOUSE_LIST_OPTION, 0, NULL,
       "Print to stdout the available mouse types recognized by the "
       "'--mouse' option, and then exit." },
-
-    { "multigpu", MULTI_GPU_OPTION,
-      NVGETOPT_STRING_ARGUMENT | NVGETOPT_ALLOW_DISABLE, NULL,
-      "Enable or disable MultiGPU.  Valid values for &MULTIGPU& are "
-      "'Off' and 'Mosaic'." },
 
     { "multisample-compatibility",
       XCONFIG_BOOL_VAL(MULTISAMPLE_COMPATIBILITY_BOOL_OPTION),

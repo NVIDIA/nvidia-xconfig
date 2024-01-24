@@ -383,7 +383,6 @@ static void parse_commandline(Options *op, int argc, char *argv[])
             op->metamodes_str = strval;
             break;
 
-        case MULTI_GPU_OPTION: /* fall through */
         case SLI_OPTION:
             {
                 const char* valid_values[] = {
@@ -417,11 +416,7 @@ static void parse_commandline(Options *op, int argc, char *argv[])
                     }
                 }
 
-                if (c == MULTI_GPU_OPTION) {
-                    op->multigpu = strval;
-                } else {
-                    op->sli = strval;
-                }
+                op->sli = strval;
             }
             break;
 
