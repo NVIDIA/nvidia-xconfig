@@ -2,7 +2,7 @@
  * nvidia-xconfig: A tool for manipulating X config files,
  * specifically for use by the NVIDIA Linux graphics driver.
  *
- * Copyright (C) 2005 NVIDIA Corporation
+ * Copyright (C) 2005-2025 NVIDIA Corporation
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms and conditions of the GNU General Public License,
@@ -91,7 +91,8 @@ static int* get_screens_to_clone(Options *op,
             }
 
             for (j = 0; j < pDevices->nDevices; j++) {
-                if ((pDevices->devices[j].dev.bus == bus) &&
+                if (((pDevices->devices[j].dev.bus |
+                      (pDevices->devices[j].dev.domain << 8)) == bus) &&
                     (pDevices->devices[j].dev.slot == slot)) {
 
                     if (pDevices->devices[j].crtcs > 0) {
@@ -311,8 +312,6 @@ DevicesPtr find_devices(Options *op)
     char *lib_path;
     void *lib_handle;
 
-    NvCfgBool (*__getDevices)(int *n, NvCfgDevice **devs);
-    NvCfgBool (*__openDevice)(int bus, int slot, NvCfgDeviceHandle *handle);
     NvCfgBool (*__getPciDevices)(int *n, NvCfgPciDevice **devs);
     NvCfgBool (*__openPciDevice)(int domain, int bus, int slot, int function,
                                  NvCfgDeviceHandle *handle);
@@ -357,8 +356,6 @@ DevicesPtr find_devices(Options *op)
     }
 
     /* required functions */
-    __GET_FUNC(__getDevices, "nvCfgGetDevices");
-    __GET_FUNC(__openDevice, "nvCfgOpenDevice");
     __GET_FUNC(__getPciDevices, "nvCfgGetPciDevices");
     __GET_FUNC(__openPciDevice, "nvCfgOpenPciDevice");
     __GET_FUNC(__getNumCRTCs, "nvCfgGetNumCRTCs");
