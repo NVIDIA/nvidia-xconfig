@@ -676,24 +676,6 @@ void update_options(Options *op, XConfigScreenPtr screen)
         }
     }
 
-    /* add the TVStandard option */
-
-    if (op->tv_standard) {
-        remove_option(screen, "TVStandard");
-        if (op->tv_standard != NV_DISABLE_STRING_OPTION) {
-           set_option_value(screen, "TVStandard", op->tv_standard);
-        }
-    }
-
-    /* add the TVOutFormat option */
-
-    if (op->tv_out_format) {
-        remove_option(screen, "TVOutFormat");
-        if (op->tv_out_format != NV_DISABLE_STRING_OPTION) {
-           set_option_value(screen, "TVOutFormat", op->tv_out_format);
-        }
-    }
-
     /* add the Coolbits option */
 
     if (op->cool_bits != -1) {

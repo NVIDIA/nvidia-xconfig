@@ -140,8 +140,6 @@ typedef struct __options {
     char *metamode_orientation;
     char *use_display_device;
     char *custom_edid;
-    char *tv_standard;
-    char *tv_out_format;
     char *acpid_socket_path;
     char *handle_special_keys;
     char *connected_monitor;
@@ -155,8 +153,6 @@ typedef struct __options {
     char *force_composition_pipeline;
     char *force_full_composition_pipeline;
     char *allow_hmd;
-
-    double tv_over_scan;
 
     struct {
         int x;

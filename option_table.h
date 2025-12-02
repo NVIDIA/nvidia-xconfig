@@ -37,9 +37,6 @@ enum {
     VIRTUAL_OPTION,
     USE_DISPLAY_DEVICE_OPTION,
     CUSTOM_EDID_OPTION,
-    TV_STANDARD_OPTION,
-    TV_OUT_FORMAT_OPTION,
-    TV_OVER_SCAN_OPTION,
     COOL_BITS_OPTION,
     ACPID_SOCKET_PATH_OPTION,
     HANDLE_SPECIAL_KEYS_OPTION,
@@ -500,19 +497,6 @@ static const NVGetoptOption __options[] = {
       NVGETOPT_IS_BOOLEAN, NULL,
       "Disable or enable the \"ThermalConfigurationCheck\" "
       "X configuration option." },
-
-    { "tv-standard", TV_STANDARD_OPTION,
-      NVGETOPT_STRING_ARGUMENT | NVGETOPT_ALLOW_DISABLE, "TV-STANDARD",
-      "Enable or disable the \"TVStandard\" X configuration option. Valid "
-      "values for \"TVStandard\" are: \"PAL-B\", \"PAL-D\", \"PAL-G\", "
-      "\"PAL-H\", \"PAL-I\", \"PAL-K1\", \"PAL-M\", \"PAL-N\", \"PAL-NC\", "
-      "\"NTSC-J\", \"NTSC-M\", \"HD480i\", \"HD480p\", \"HD720p\", "
-      "\"HD1080i\", \"HD1080p\", \"HD576i\", \"HD576p\"." },
-
-    { "tv-out-format", TV_OUT_FORMAT_OPTION,
-      NVGETOPT_STRING_ARGUMENT | NVGETOPT_ALLOW_DISABLE, "TV-OUT-FORMAT",
-      "Enable or disable the \"TVOutFormat\" X configuration option. Valid "
-      "values for \"TVOutFormat\" are: \"SVIDEO\" and \"COMPOSITE\"." },
 
     { "metamode-orientation", METAMODE_ORIENTATION_OPTION,
       NVGETOPT_STRING_ARGUMENT | NVGETOPT_ALLOW_DISABLE, "ORIENTATION",

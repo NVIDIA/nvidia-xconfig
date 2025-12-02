@@ -251,72 +251,6 @@ static void parse_commandline(Options *op, int argc, char *argv[])
             op->transparent_index = intval;
             break;
 
-        case TV_STANDARD_OPTION:
-            
-            {
-                const char* valid_values[] = {
-                    "PAL-B",
-                    "PAL-D",
-                    "PAL-G",
-                    "PAL-H",
-                    "PAL-I",
-                    "PAL-K1",
-                    "PAL-M",
-                    "PAL-N",
-                    "PAL-NC",
-                    "NTSC-J",
-                    "NTSC-M",
-                    "HD480i",
-                    "HD480p",
-                    "HD720p",
-                    "HD1080i",
-                    "HD1080p",
-                    "HD576i",
-                    "HD576p",
-                    NULL
-                };
-                int i;
-                
-                /* mark as disabled, so we can remove the option later */
-
-                if (disable) {
-                    op->tv_standard = NV_DISABLE_STRING_OPTION;
-                    break;
-                }
-
-                for (i = 0; valid_values[i]; i++) {
-                    if (!strcasecmp(strval, valid_values[i]))
-                        break;
-                }
-
-                if (valid_values[i]) {
-                    op->tv_standard = strval;
-                } else {
-                    fprintf(stderr, "Invalid TVStandard option: %s.\n", strval);
-                    goto fail;
-                }
-            }
-            break;
-
-        case TV_OUT_FORMAT_OPTION:
-            
-            /* mark as disabled, so we can remove the option later */
-
-            if (disable) {
-                op->tv_out_format = NV_DISABLE_STRING_OPTION;
-                break;
-            }
-
-            if (!strcasecmp(strval, "SVIDEO")) {
-                op->tv_out_format = "SVIDEO";
-            } else if (!strcasecmp(strval, "COMPOSITE")) {
-                op->tv_out_format = "COMPOSITE";
-            } else {
-                fprintf(stderr, "Invalid TVOutFormat option: %s.\n", strval);
-                goto fail;
-            }
-            break;
-
         case COOL_BITS_OPTION:
 
             /* mark as disabled, so we can remove the option later */
@@ -628,7 +562,6 @@ static Options *load_default_options(void)
     op->stereo = -1;
     op->cool_bits = -1;
     op->nvidia_3dvision_display_type = -1;
-    op->tv_over_scan = -1.0;
     op->num_x_screens = -1;
 
     xconfigGenerateLoadDefaultOptions(&op->gop);
