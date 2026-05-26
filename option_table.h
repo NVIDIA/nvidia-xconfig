@@ -569,9 +569,6 @@ static const NVGetoptOption __options[] = {
       "The X installation prefix; the default is /usr/X11R6/.  Only "
       "under rare circumstances should this option be needed." },
 
-    { "xinerama", XCONFIG_BOOL_VAL(XINERAMA_BOOL_OPTION),
-      NVGETOPT_IS_BOOLEAN, NULL, "Enable or disable Xinerama." },
-
     { "color-space", COLOR_SPACE_OPTION,
       NVGETOPT_STRING_ARGUMENT | NVGETOPT_ALLOW_DISABLE, "COLORSPACE",
       "Enable or disable the \"ColorSpace\" X configuration option. "
@@ -653,6 +650,13 @@ static const NVGetoptOption __options[] = {
       "first available will be chosen. Note that to enable PRIME it is "
       "necessary to run \"xrandr --setprovideroutputsource modesetting "
       "NVIDIA-0\" and \"xrandr --auto\" after completion." },
+
+    /* Deprecated options: These options are no longer used, but
+     * nvidia-xconfig will allow the user to set them anyway, for
+     * backwards-compatibility purposes. */
+
+    { "xinerama", XCONFIG_BOOL_VAL(XINERAMA_BOOL_OPTION),
+      NVGETOPT_IS_BOOLEAN, NULL, NULL },
 
     { NULL, 0, 0, NULL, NULL },
 };

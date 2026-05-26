@@ -176,7 +176,6 @@ void set_boolean_option(Options *op, const int c, const int boolval)
 void validate_composite(Options *op, XConfigPtr config)
 {
     int composite_specified;
-    int xinerama_enabled;
     int overlay_enabled;
     int cioverlay_enabled;
     int ubb_enabled;
@@ -186,11 +185,6 @@ void validate_composite(Options *op, XConfigPtr config)
 
     composite_specified = GET_BOOL_OPTION(op->boolean_options,
                                           COMPOSITE_BOOL_OPTION);
-
-    xinerama_enabled = (GET_BOOL_OPTION(op->boolean_options,
-                                        XINERAMA_BOOL_OPTION) &&
-                        GET_BOOL_OPTION(op->boolean_option_values,
-                                        XINERAMA_BOOL_OPTION));
 
     overlay_enabled = (GET_BOOL_OPTION(op->boolean_options,
                                        OVERLAY_BOOL_OPTION) &&
@@ -212,7 +206,6 @@ void validate_composite(Options *op, XConfigPtr config)
     err_str = xconfigValidateComposite(config,
                                        &(op->gop),
                                        composite_specified,
-                                       xinerama_enabled,
                                        op->depth,
                                        overlay_enabled,
                                        cioverlay_enabled,
@@ -541,13 +534,12 @@ void update_options(Options *op, XConfigScreenPtr screen)
         if (GET_BOOL_OPTION(op->boolean_options, i)) {
             
             /*
-             * SEPARATE_X_SCREENS_BOOL_OPTION, XINERAMA_BOOL_OPTION,
+             * SEPARATE_X_SCREENS_BOOL_OPTION,
              * COMPOSITE_BOOL_OPTION, PRESERVE_BUSID_BOOL_OPTION,
              * and ENABLE_EXTERNAL_GPU_BOOL_OPTION are handled separately
              */
 
             if (i == SEPARATE_X_SCREENS_BOOL_OPTION) continue;
-            if (i == XINERAMA_BOOL_OPTION) continue;
             if (i == COMPOSITE_BOOL_OPTION) continue;
             if (i == PRESERVE_BUSID_BOOL_OPTION) continue;
             if (i == ENABLE_PRIME_OPTION) continue;

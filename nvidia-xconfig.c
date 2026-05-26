@@ -1178,6 +1178,11 @@ int main(int argc, char *argv[])
      * early
      */
 
+    if (GET_BOOL_OPTION(op->boolean_options, XINERAMA_BOOL_OPTION)) {
+        nv_error_msg("\nXinerama is not supported.\n\n");
+        return 1;
+    }
+
     if (op->keyboard_list) {
         nv_info_msg(NULL, "\nPossible keyboard types; the short name is what "
                           "should be passed to the \"--keyboard\" option.\n\n");
@@ -1259,6 +1264,13 @@ int main(int argc, char *argv[])
     if (!first_touch) {
         first_touch = (find_banner_prefix(config->comment) == NULL);
     }
+
+    /*
+     * Xinerama is not supported, if the flag was in the system's
+     * config file, remove it.
+     */
+
+    xconfigRemoveNamedOption(&(config->layouts->options), "Xinerama", NULL);
 
     /* now, we have a good config; apply whatever the user requested */
     

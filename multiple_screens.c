@@ -34,8 +34,6 @@ static int enable_separate_x_screens(Options *op, XConfigPtr config,
 static int disable_separate_x_screens(Options *op, XConfigPtr config,
                                       XConfigLayoutPtr layout);
 
-static int set_xinerama(int xinerama_enabled, XConfigLayoutPtr layout);
-
 static XConfigDisplayPtr clone_display_list(XConfigDisplayPtr display0);
 static XConfigDevicePtr clone_device(XConfigDevicePtr device0, int idx);
 static XConfigScreenPtr clone_screen(XConfigScreenPtr screen0, int idx);
@@ -253,7 +251,6 @@ static void clean_screen_list(XConfigScreenPtr *screen_list,
  * - add X screens for all GPUS in the system
  * - separate X screens on one GPU (turned on or off)
  * - only one X screen
- * - Xinerama
  *
  * apply these options in that order
  */
@@ -274,13 +271,6 @@ int apply_multi_screen_options(Options *op, XConfigPtr config,
         } else {
             if (!disable_separate_x_screens(op, config, layout)) return FALSE;
         }
-    }
-    
-    if (GET_BOOL_OPTION(op->boolean_options,
-                        XINERAMA_BOOL_OPTION)) {
-        if (!set_xinerama(GET_BOOL_OPTION(op->boolean_option_values,
-                                          XINERAMA_BOOL_OPTION),
-                          layout)) return FALSE;
     }
     
     if (op->only_one_screen) {
@@ -518,25 +508,6 @@ void free_devices(DevicesPtr pDevices)
     nvfree(pDevices);
     
 } /* free_devices() */
-
-
-
-/*
- * set_xinerama() - This makes sure there is a ServerLayout
- * section and sets the "Xinerama" option
- */
-
-static int set_xinerama(int xinerama_enabled, XConfigLayoutPtr layout)
-{
-    xconfigAddNewOption(&(layout->options),
-                        "Xinerama",
-                        (xinerama_enabled ? "1" : "0"));
-
-    return TRUE;
-
-} /* set_xinerama() */
-
-
 
 /*
  * enable_separate_x_screens() - this effectively clones each screen
